@@ -1,6 +1,7 @@
 # kixi.heimdall
 
-FIXME
+![Heimdall](https://raw.githubusercontent.com/MastodonC/kixi.heimdall/master/docs/Gosforth_Cross_monsters.jpg)
+(image from <https://en.wikipedia.org/wiki/Heimdallr#/media/File:Gosforth_Cross_monsters.jpg>)
 
 ## Prerequisites
 
