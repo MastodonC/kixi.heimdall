@@ -1,28 +1,48 @@
 (ns kixi.heimdall.components.database
   (:require [com.stuartsierra.component :as component]
             [qbits.alia :as alia]
+            [qbits.hayt :as hayt]
+            [qbits.alia.codec.joda-time] ; necessary to get the codec installed.
             [taoensso.timbre :as log]))
 
 ;; (def cluster (alia/cluster {:contact-points ["localhost"]}))
 ;; (def session (alia/connect cluster))
+(require 'qbits.alia.codec.joda-time)
 
-(defrecord CassandraDatabase [host]
+(extend-protocol qbits.hayt.cql/CQLEntities
+  org.joda.time.ReadableInstant
+  (cql-value [x]
+    (.getMillis x)))
+
+(defrecord Cluster [opts]
+  component/Lifecycle
+  (start [this]
+    (assoc this :instance (alia/cluster opts)))
+  (stop [this]
+    (when-let [instance (:instance this)]
+      (alia/shutdown instance)
+      this)))
+
+(def ClusterDefaults
+  {:contact-points ["127.0.0.1"]
+   :port 9042})
+
+(defn new-cluster [opts]
+  (->Cluster (merge ClusterDefaults opts)))
+
+(defrecord CassandraSession [opts]
   ;; Implement the Lifecycle protocol
   component/Lifecycle
   (start [component]
-    (log/info ";; Starting database")
-    (let [cluster (alia/cluster {:contact-points [host]})
-          new-session          (alia/connect cluster)]
-      ;; Return an updated version of the component with
-      ;; the run-time state assoc'd in.
-      (assoc component :session new-session)))
-
+    (log/info ";; Starting session")
+    (assoc component :session
+           (alia/connect (get-in component [:cluster :instance])
+                         (:keyspace opts))))
   (stop [component]
-    (log/info ";; Stopping database")
-    ;; In the 'stop' method, shut down the running
-    ;; component and release any external resources it has
-    ;; acquired.
-    (alia/shutdown (:session component))
-    ;; Return the component, optionally modified. Remember that if you
-    ;; dissoc one of a record's base fields, you get a plain map.
-    (assoc component :session nil)))
+    (log/info ";; Stopping session")
+    (when-let [session (:session component)]
+      (alia/shutdown session)
+      component)))
+
+(defn new-session [opts]
+  (->CassandraSession opts))
