@@ -8,9 +8,11 @@
                  [buddy "1.0.0"]
                  [cc.qbits/alia-all "3.1.10"]
                  [cc.qbits/hayt "3.0.1"]
+                 [cc.qbits/alia-joda-time "3.1.3"]
                  [com.stuartsierra/component "0.3.1"]
                  [ring/ring-jetty-adapter "1.5.0"]
                  [com.taoensso/timbre "4.7.0"]
+                 [clj-time "0.12.0"]
                  ;; these are dependencies around running the server in the repl
                  [org.clojure/tools.namespace    "0.2.11"]
                  [org.clojure/tools.nrepl        "0.2.12"]]
@@ -18,5 +20,6 @@
   :repl-options {:init-ns user}
   :ring {:handler kixi.heimdall.handler/app}
   :profiles
-  {:dev {:dependencies [[javax.servlet/servlet-api "2.5"]
+  {:dev {:source-paths ["dev"]
+         :dependencies [[javax.servlet/servlet-api "2.5"]
                         [ring/ring-mock "0.3.0"]]}})
