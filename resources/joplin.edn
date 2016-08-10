@@ -1,0 +1,6 @@
+{:migrators    {:cass-mig "joplin/migrators/cassandra"}
+ :seeds        {:cass-seed "seeds.cassandra/run"}
+ :databases    {:cass-dev  {:type :cass, :hosts ["127.0.0.1"], :keyspace "heimdall"}
+                :cass-prod {:type :cass, :hosts ["cassandra-dcos-node.cassandra.dcos.mesos"], :keyspace "heimdall"}}
+ :environments {:development [{:db :cass-dev,  :migrator :cass-mig, :seed :cass-seed}]
+                :production [{:db :cass-prod, :migrator :cass-mig, :seed :cass-seed}]}}
