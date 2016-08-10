@@ -9,7 +9,7 @@
 (defn system []
   (let [api-port 3000
         cassandra-host "localhost"
-        profile "dev"]
+        profile :development]
     (-> (component/system-map
          :jetty-server (->JettyServer #'kixi.heimdall.handler/app api-port)
          :repl-server  (Object.) ; dummy - replaced when invoked via uberjar.
