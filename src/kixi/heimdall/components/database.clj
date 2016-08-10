@@ -3,7 +3,7 @@
             [qbits.alia :as alia]
             [qbits.hayt :as hayt]
             [clojure.java.io :as io]
-            [joplin.repl                :as jrepl :refer [migrate]]
+            [joplin.repl :as jrepl :refer [migrate]]
             [taoensso.timbre :as log]))
 
 (defprotocol Session
