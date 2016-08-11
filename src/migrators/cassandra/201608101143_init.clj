@@ -14,8 +14,8 @@
                                 :username    :text
                                 :id          :uuid
                                 :name        :text
-                                :created_at  :timestamp
-                                :primary-key [:password :username]})))))
+                                :created     :timestamp
+                                :primary-key [:username]})))))
 
 (defn down [db]
   (let [conn (get-connection (:hosts db) (:keyspace db))]

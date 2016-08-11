@@ -4,7 +4,8 @@
             [qbits.hayt :as hayt]
             [clojure.java.io :as io]
             [joplin.repl :as jrepl :refer [migrate]]
-            [taoensso.timbre :as log]))
+            [taoensso.timbre :as log]
+            [kixi.heimdall.util :as util]))
 
 (defprotocol Session
   (execute [this statement]))
@@ -33,25 +34,6 @@
       (alia/execute conn x)
       (catch Exception e (log/error "Failed to execute database command:" (str e))))
     (log/error "Unable to execute Cassandra comment - no connection")))
-
-(defn replacer
-  "Calls  replacement function on different types"
-  [rfn x]
-  (condp = (type x)
-    clojure.lang.Keyword (-> x name rfn keyword)
-    clojure.lang.MapEntry (update x 0 (partial replacer rfn))
-    clojure.lang.PersistentArrayMap (map (partial replacer rfn) x)
-    java.lang.String (rfn x)))
-
-(defn underscore->hyphen
-  "Converts underscores to hyphens"
-  [x]
-  (replacer #(clojure.string/replace % #"_" "-") x))
-
-(defn hyphen->underscore
-  "Convers hyphens to underscores"
-  [x]
-  (replacer #(clojure.string/replace % #"-" "_") x))
 
 (defn create-workspace!
   [host keyspace replication-factor]
@@ -87,16 +69,16 @@
       using (exec this (hayt/insert table (hayt/values row) (apply hayt/using using)))
       :else (exec this (hayt/insert table (hayt/values row)))))
   (insert! [this table row]
-    (insert! this table (map hyphen->underscore row) {}))
+    (insert! this table (map util/hyphen->underscore row) {}))
   (select* [this table where]
     (let [result (exec this (hayt/select table (hayt/where where)))
-          reformatted (map underscore->hyphen result)]
+          reformatted (map util/underscore->hyphen result)]
       (if (coll? result)
         (map (partial into {}) reformatted)
         reformatted)))
   (select [this table what where]
-    (let [result (exec this (hayt/select table (apply hayt/columns (map hyphen->underscore what)) (hayt/where where)))
-          reformatted (map underscore->hyphen result)]
+    (let [result (exec this (hayt/select table (apply hayt/columns (map util/hyphen->underscore what)) (hayt/where where)))
+          reformatted (map util/underscore->hyphen result)]
       (if (coll? result)
         (map (partial into {}) reformatted)
         reformatted)))
