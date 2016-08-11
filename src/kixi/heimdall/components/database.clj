@@ -27,7 +27,7 @@
 
 (defn exec
   [this x]
-  (if-let [conn (get this :connection)]
+  (if-let [conn (get this :session)]
     (try
       (log/debug "Executing" (hayt/->raw x))
       (alia/execute conn x)
