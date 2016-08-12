@@ -35,7 +35,7 @@
       (catch Exception e (log/error "Failed to execute database command:" (str e))))
     (log/error "Unable to execute Cassandra comment - no connection")))
 
-(defn create-workspace!
+(defn create-keyspace!
   [host keyspace replication-factor]
   (alia/execute
    (alia/connect (alia/cluster {:contact-points [host]}))
@@ -87,7 +87,7 @@
   (start [component]
     (log/info "Bootstrapping Cassandra...")
     (let [{:keys [host keyspace replication-factor]} opts]
-      (create-workspace! host keyspace replication-factor))
+      (create-keyspace! host keyspace replication-factor))
     (let [joplin-config (jrepl/load-config (io/resource "joplin.edn"))]
       (->> profile
            (migrate joplin-config)
