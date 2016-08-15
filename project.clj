@@ -16,7 +16,8 @@
                  [joplin.cassandra "0.3.7"]
                  ;; these are dependencies around running the server in the repl
                  [org.clojure/tools.namespace    "0.2.11"]
-                 [org.clojure/tools.nrepl        "0.2.12"]]
+                 [org.clojure/tools.nrepl        "0.2.12"]
+                 [environ "1.1.0"]]
   :plugins [[lein-ring "0.9.7"]]
   :repl-options {:init-ns user}
   :ring {:handler kixi.heimdall.handler/app}

@@ -11,12 +11,20 @@
             [clj-time.core :as t]
             [clojure.java.io :as io]
             [kixi.heimdall.user :as user]
-            [clojure.edn :as edn]))
+            [clojure.edn :as edn]
+            [environ.core :refer [env]]))
+
+(defn get-config
+  [f]
+  (edn/read-string (slurp f)))
 
 (def auth-config
   (let [f (io/file (System/getProperty "user.home")
-                   ".heimdall.auth-conf.edn")]
-    (edn/read-string (slurp f))))
+                   ".heimdall.auth-conf.edn")
+        env-file (io/resource (:auth-conf env))]
+    (try (get-config f)
+         (catch java.io.FileNotFoundException _
+           (get-config env-file)))))
 
 (defn- pkey [auth-conf]
   (ks/private-key
