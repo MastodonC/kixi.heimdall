@@ -10,7 +10,13 @@
             [buddy.core.keys :as ks]
             [clj-time.core :as t]
             [clojure.java.io :as io]
-            [kixi.heimdall.user :as user]))
+            [kixi.heimdall.user :as user]
+            [clojure.edn :as edn]))
+
+(def auth-config
+  (let [f (io/file (System/getProperty "user.home")
+                   ".heimdall.auth-conf.edn")]
+    (edn/read-string (slurp f))))
 
 (defn- pkey [auth-conf]
   (ks/private-key
@@ -42,8 +48,7 @@
 
 (defn wrap-config [handler]
   (fn [req]
-    (handler (assoc req :auth-conf {:privkey "auth_privkey.pem"
-                                    :passphrase "bigdata"}))))
+    (handler (assoc req :auth-conf auth-config))))
 
 (defroutes app-routes
   (GET "/" [] "Hello World")
