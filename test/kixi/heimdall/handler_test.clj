@@ -18,7 +18,20 @@
       (is (= (:status response) 404))))
 
   (testing "auth route"
-    (with-redefs [user/find-by-username (fn [session m] {:username "user" :password (hs/encrypt "foo")})]
-      (let [response (app (mock/request :post "/create-auth-token"
-                                        {:username "user" :password "foo"}))]
-        (is (= (:status response) 201))))))
+    (testing "authentication succeeds"
+      (with-redefs [user/find-by-username (fn [session m] {:username "user" :password (hs/encrypt "foo")})]
+        (let [response (app (mock/request :post "/create-auth-token"
+                                          {:username "user" :password "foo"}))]
+          (is (= (:status response) 201))
+          (is (:token (:body response))))))
+    (testing "authentication fails wrong user"
+      (with-redefs [user/find-by-username (fn [session m] nil)]
+        (let [response (app (mock/request :post "/create-auth-token"
+                                          {:username "user" :password "foo"}))]
+          (is (= (:status response) 401)))))
+    (testing "authentication fails wrong pass"
+      (with-redefs [user/find-by-username (fn [session m] {:username "user" :password (hs/encrypt "foobar")})]
+        (let [response (app (mock/request :post "/create-auth-token"
+                                          {:username "user" :password "foo"}))]
+          (is (= (:status response) 401))))))
+  )
