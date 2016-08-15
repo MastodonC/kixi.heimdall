@@ -26,22 +26,28 @@
                               {:alg :rs256 :exp exp})}]
       [false res])))
 
-(defn auth-token [session auth-conf params]
-  (let [[ok? res] (create-auth-token session
-                                     auth-conf
-                                     params)]
+(defn auth-token [req]
+  (println req)
+  (let [[ok? res] (create-auth-token (:cassandra-session req)
+                                     (:auth-conf req)
+                                     (:params req))]
     (if ok?
       {:status 201 :body res}
       {:status 401 :body res})))
 
+
+(defn wrap-datasource [handler]
+  (fn [req]
+    (handler (assoc req :cassandra-session (:cassandra-session app/system)))))
+
+(defn wrap-config [handler]
+  (fn [req]
+    (handler (assoc req :auth-conf {:privkey "auth_privkey.pem"
+                                    :passphrase "bigdata"}))))
+
 (defroutes app-routes
   (GET "/" [] "Hello World")
-  (GET "/database" [] (let [session (:cassandra-session app/system)]
-                        (db/select session "users" "username" {:password "boo" :username "user"})))
-  (POST "/create-auth-token" [& params] (let [session (:cassandra-session app/system)
-                                         auth-conf {:privkey "auth_privkey.pem"
-                                                    :passphrase "bigdata"}]
-                                     (auth-token session auth-conf params)))
+  (POST "/create-auth-token" [] auth-token)
   (route/not-found "Not Found"))
 
 (defn wrap-catch-exceptions [handler]
@@ -51,5 +57,7 @@
 
 (def app
   (-> app-routes
+      (wrap-datasource)
+      (wrap-config)
       (wrap-catch-exceptions)
       (wrap-defaults api-defaults)))
