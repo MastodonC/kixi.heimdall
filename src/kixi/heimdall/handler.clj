@@ -33,7 +33,6 @@
       [false res])))
 
 (defn auth-token [req]
-  (println req)
   (let [[ok? res] (create-auth-token (:cassandra-session req)
                                      (:auth-conf req)
                                      (:params req))]
