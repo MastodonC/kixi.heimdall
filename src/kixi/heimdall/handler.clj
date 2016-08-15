@@ -21,7 +21,7 @@
   (let [[ok? res] (user/auth session credentials)
         exp (-> (t/plus (t/now) (t/days 1)) (sign/to-timestamp))]
     (if ok?
-      [true {:token (jws/sign res
+      [true {:token (jws/sign (str res)
                               (pkey auth-conf)
                               {:alg :rs256 :exp exp})}]
       [false res])))
@@ -30,7 +30,6 @@
   (let [[ok? res] (create-auth-token session
                                      auth-conf
                                      params)]
-    (println params)
     (if ok?
       {:status 201 :body res}
       {:status 401 :body res})))
