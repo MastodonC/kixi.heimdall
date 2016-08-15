@@ -20,11 +20,12 @@
 
 (def auth-config
   (let [f (io/file (System/getProperty "user.home")
-                   ".heimdall.auth-conf.edn")
-        env-file (io/resource (:auth-conf env))]
+                   ".heimdall.auth-conf.edn")]
     (try (get-config f)
-         (catch java.io.FileNotFoundException _
-           (get-config env-file)))))
+         (catch java.io.FileNotFoundException e
+           (if-let [env-file (:auth-conf env)]
+             (get-config (io/resource env-file))
+             (throw e))))))
 
 (defn- pkey [auth-conf]
   (ks/private-key
@@ -51,7 +52,7 @@
 
 (defn wrap-datasource [handler]
   (fn [req]
-    (handler (assoc req :cassandra-session (:cassandra-session app/system)))))
+    (handler (assoc req :cassandra-session (:cassandra-session (db/session))))))
 
 (defn wrap-config [handler]
   (fn [req]
