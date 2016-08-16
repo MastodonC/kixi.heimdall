@@ -106,3 +106,9 @@
 
 (defn new-session [opts profile]
   (->CassandraSession opts profile))
+
+(defn session
+  []
+  (component/using
+   (map ->CassandraSession {})
+   [:cassandra-session]))
