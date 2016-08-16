@@ -5,7 +5,12 @@
             [kixi.heimdall.user :as user]
             [buddy.hashers :as hs]
             [clojure.java.io :as io]
-            [clojure.edn :as edn]))
+            [clojure.edn :as edn]
+            [clojure.data.json :as json]))
+
+(defn json-request
+  [request]
+  (mock/content-type request "application/json"))
 
 (deftest test-app
   (testing "main route"
@@ -20,18 +25,18 @@
   (testing "auth route"
     (testing "authentication succeeds"
       (with-redefs [user/find-by-username (fn [session m] {:username "user" :password (hs/encrypt "foo")})]
-        (let [response (app (mock/request :post "/create-auth-token"
-                                          {:username "user" :password "foo"}))]
+        (let [response (app (json-request (mock/request :post "/create-auth-token"
+                                                        (json/write-str {:username "user" :password "foo"}))))]
           (is (= (:status response) 201))
-          (is (:token (:body response))))))
+          (is (:token (json/read-str (:body response) :key-fn keyword))))))
     (testing "authentication fails wrong user"
       (with-redefs [user/find-by-username (fn [session m] nil)]
-        (let [response (app (mock/request :post "/create-auth-token"
-                                          {:username "user" :password "foo"}))]
+        (let [response (app (json-request (mock/request :post "/create-auth-token"
+                                                        (json/write-str {:username "user" :password "foo"}))))]
           (is (= (:status response) 401)))))
     (testing "authentication fails wrong pass"
       (with-redefs [user/find-by-username (fn [session m] {:username "user" :password (hs/encrypt "foobar")})]
-        (let [response (app (mock/request :post "/create-auth-token"
-                                          {:username "user" :password "foo"}))]
+        (let [response (app (json-request (mock/request :post "/create-auth-token"
+                                                        (json/write-str {:username "user" :password "foo"}))))]
           (is (= (:status response) 401))))))
   )
