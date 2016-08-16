@@ -1,7 +1,8 @@
 (ns kixi.heimdall.handler
   (:require [compojure.core :refer :all]
             [compojure.route :as route]
-            [ring.middleware.defaults :refer [wrap-defaults api-defaults]]
+            [ring.middleware.json :refer [wrap-json-response wrap-json-params]]
+            [ring.middleware.keyword-params :refer [wrap-keyword-params]]
             [kixi.heimdall.application :as app]
             [taoensso.timbre :as log]
             [kixi.heimdall.components.database :as db]
@@ -42,17 +43,12 @@
       [false res])))
 
 (defn auth-token [req]
-  (let [[ok? res] (create-auth-token (:cassandra-session req)
+  (let [[ok? res] (create-auth-token (:cassandra-session (:components req))
                                      (:auth-conf req)
                                      (:params req))]
     (if ok?
       {:status 201 :body res}
       {:status 401 :body res})))
-
-
-(defn wrap-datasource [handler]
-  (fn [req]
-    (handler (assoc req :cassandra-session (:cassandra-session (db/session))))))
 
 (defn wrap-config [handler]
   (fn [req]
@@ -70,7 +66,8 @@
 
 (def app
   (-> app-routes
-      (wrap-datasource)
       (wrap-config)
       (wrap-catch-exceptions)
-      (wrap-defaults api-defaults)))
+      wrap-keyword-params
+      wrap-json-params
+      wrap-json-response))
