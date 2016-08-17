@@ -6,7 +6,8 @@
             [clojure.tools.cli :refer [cli]]
             [taoensso.timbre :as log]
             [clojure.tools.nrepl.server :as nrepl-server]
-            [com.stuartsierra.component :as component]))
+            [com.stuartsierra.component :as component])
+  (:gen-class))
 
 
 (defrecord ReplServer [config]
@@ -29,7 +30,7 @@
         (cond-> (:repl opts)
           (assoc :repl-server (mk-repl-server {:port (:repl-port opts)}))))))
 
-(defn bootstrap [args]
+(defn -main [& args]
 
   (let [[opts args banner]
         (cli args
