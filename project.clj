@@ -1,9 +1,8 @@
 (defproject kixi.heimdall "0.1.0-SNAPSHOT"
-  :description "FIXME: write description"
+  :description "Authentication and authorization service"
   :url "http://example.com/FIXME"
   :min-lein-version "2.0.0"
   :dependencies [[org.clojure/clojure "1.8.0"]
-                 [org.clojure/data.json "0.2.6"]
                  [compojure "1.5.1"]
                  [ring/ring-defaults "0.2.1"]
                  [ring/ring-json "0.4.0"]
@@ -19,11 +18,17 @@
                  ;; these are dependencies around running the server in the repl
                  [org.clojure/tools.namespace    "0.2.11"]
                  [org.clojure/tools.nrepl        "0.2.12"]
+                 [org.clojure/tools.cli "0.3.5"]
                  [environ "1.1.0"]]
   :plugins [[lein-ring "0.9.7"]]
+  :java-source-paths ["java-src"]
+  :javac-options ["-target" "1.7" "-source" "1.7" "-Xlint:-options"]
   :repl-options {:init-ns user}
-  :ring {:handler kixi.heimdall.handler/app}
+  :uberjar-name "kixi.heimdall.jar"
+  :main ^:skip-aot kixi.heimdall.Bootstrap
   :profiles
   {:dev {:source-paths ["dev"]
          :dependencies [[javax.servlet/servlet-api "2.5"]
-                        [ring/ring-mock "0.3.0"]]}})
+                        [ring/ring-mock "0.3.0"]
+                        [org.clojure/data.json "0.2.6"]
+                        [cider/cider-nrepl "0.13.0"]]}})
