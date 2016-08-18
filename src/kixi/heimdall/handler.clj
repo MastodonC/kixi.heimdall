@@ -6,7 +6,7 @@
             [kixi.heimdall.application :as app]
             [taoensso.timbre :as log]
             [kixi.heimdall.components.database :as db]
-            [buddy.sign.jws :as jws]
+            [buddy.sign.jwt :as jwt]
             [buddy.sign.util :as sign]
             [buddy.core.keys :as ks]
             [clj-time.core :as t]
@@ -37,7 +37,7 @@
   (let [[ok? res] (user/auth session credentials)
         exp (-> (t/plus (t/now) (t/days 1)) (sign/to-timestamp))]
     (if ok?
-      [true {:token (jws/sign (str res)
+      [true {:token (jwt/sign res
                               (pkey auth-conf)
                               {:alg :rs256 :exp exp})}]
       [false res])))
