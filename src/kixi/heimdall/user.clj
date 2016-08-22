@@ -6,15 +6,22 @@
 
 (defn add!
   [session user]
-  (db/insert! session :users
-              (-> user
-                  (update-in [:password] #(hs/encrypt %))
-                  (assoc :created (util/db-now)
-                         :id (uuid/random)))))
+  (let [user-data (-> user
+                      (update-in [:password] #(hs/encrypt %))
+                      (assoc :created (util/db-now)
+                             :id (uuid/random)))]
+    (db/insert! session :users_by_username
+                user-data)
+    (db/insert! session :users
+                user-data)))
 
 (defn find-by-username
   [session {:keys [username]}]
-  (first (db/select* session :users {:username username})))
+  (first (db/select* session :users_by_username {:username username})))
+
+(defn find-by-id
+  [session {:keys [:id]}]
+  (first (db/select* session :users {:id id})))
 
 (defn auth
   [session {:keys [username password]}]

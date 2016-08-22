@@ -9,7 +9,7 @@
     (alia/execute
      conn
      (hayt/create-table
-      "users"
+      "users_by_username"
       (hayt/column-definitions {:password    :text
                                 :username    :text
                                 :id          :uuid
@@ -19,12 +19,33 @@
     (alia/execute
      conn
      (hayt/create-table
+      "users"
+      (hayt/column-definitions {:password    :text
+                                :username    :text
+                                :id          :uuid
+                                :name        :text
+                                :created     :timestamp
+                                :primary-key [:id]})))
+    (alia/execute
+     conn
+     (hayt/create-table
       "refresh_tokens"
       (hayt/column-definitions {:id             :uuid
                                 :user_id        :uuid
                                 :issued         :int
                                 :refresh_token  :text
-                                :primary-key [:user_id]})))))
+                                :valid          :boolean
+                                :primary-key [:id]})))
+    (alia/execute
+     conn
+     (hayt/create-table
+      "refresh_tokens_by_user_id_and_issued"
+      (hayt/column-definitions {:id             :uuid
+                                :user_id        :uuid
+                                :issued         :int
+                                :refresh_token  :text
+                                :valid          :boolean
+                                :primary-key [:user_id :issued]})))))
 
 (defn down [db]
   (let [conn (get-connection (:hosts db) (:keyspace db))]

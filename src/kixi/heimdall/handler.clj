@@ -40,6 +40,10 @@
               (pkey auth-conf)
               {:alg :rs256 :exp exp})))
 
+(defn unsign-token [auth-conf token]
+  (jwt/unsign token (ks/public-key (io/resource (:pubkey auth-conf)))
+              {:alg :rs256}))
+
 (defn- make-refresh-token [issued-at-time auth-conf user]
   (let [exp (-> (t/plus (t/now) (t/days 30)) (sign/to-timestamp))]
     (jwt/sign {:user-id (:id user)}
@@ -69,6 +73,27 @@
       {:status 201 :body res}
       {:status 401 :body res})))
 
+(defn refresh-auth-token [session auth-conf refresh-token]
+  (if-let [unsigned (unsign-token auth-conf refresh-token)]
+    (let [refresh-token-data (refresh-token/find-by-user-and-issued session (:user-id unsigned) (:iat unsigned))
+          _ (log/info "retrieved refresh token" refresh-token-data)
+          user (user/find-by-id session (:user_id refresh-token-data))]
+      (if (:valid refresh-token-data)
+        (do
+          (refresh-token/invalidate! session (:id refresh-token-data))
+          [true (make-token-pair! session auth-conf user)])
+        [false {:message "Refresh token revoked/deleted or new refresh token already created"}]))
+    [false {:message "Invalid or expired refresh token provided"}]))
+
+(defn new-refresh-auth-token [req]
+  (let [refresh-token (-> req :params :refresh-token)
+        [ok? res] (refresh-auth-token (:cassandra-session (:components req))
+                                      (:auth-conf req)
+                                      refresh-token)]
+    (if ok?
+      {:status 201 :body res}
+      {:status 401 :body res})))
+
 (defn wrap-config [handler]
   (fn [req]
     (handler (assoc req :auth-conf auth-config))))
@@ -76,6 +101,7 @@
 (defroutes app-routes
   (GET "/" [] "Hello World")
   (POST "/create-auth-token" [] auth-token)
+  (POST "/refresh-auth-token" [] new-refresh-auth-token)
   (route/not-found "Not Found"))
 
 (defn wrap-catch-exceptions [handler]

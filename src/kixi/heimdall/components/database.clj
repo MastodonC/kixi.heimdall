@@ -56,7 +56,10 @@
   (select*
     [this table where])
   (select
+    [this table what where])
+  (update!
     [this table what where]))
+
 
 (defrecord CassandraSession [opts profile]
   Database
@@ -82,6 +85,8 @@
       (if (coll? result)
         (map (partial into {}) reformatted)
         reformatted)))
+  (update! [this table what where]
+    (exec this (hayt/update table (apply hayt/set-columns (map util/hyphen->underscore what)) (hayt/where where))))
 
   component/Lifecycle
   (start [component]
