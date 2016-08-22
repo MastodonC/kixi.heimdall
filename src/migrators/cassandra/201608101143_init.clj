@@ -15,8 +15,18 @@
                                 :id          :uuid
                                 :name        :text
                                 :created     :timestamp
-                                :primary-key [:username]})))))
+                                :primary-key [:username]})))
+    (alia/execute
+     conn
+     (hayt/create-table
+      "refresh_tokens"
+      (hayt/column-definitions {:id             :uuid
+                                :user_id        :uuid
+                                :issued         :int
+                                :refresh_token  :text
+                                :primary-key [:user_id]})))))
 
 (defn down [db]
   (let [conn (get-connection (:hosts db) (:keyspace db))]
-    (alia/execute conn (hayt/drop-table "users"))))
+    (alia/execute conn (hayt/drop-table "users"))
+    (alia/execute conn (hayt/drop-table "refresh_tokens"))))

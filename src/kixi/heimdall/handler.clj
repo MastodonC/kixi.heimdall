@@ -13,7 +13,8 @@
             [clojure.java.io :as io]
             [kixi.heimdall.user :as user]
             [clojure.edn :as edn]
-            [environ.core :refer [env]]))
+            [environ.core :refer [env]]
+            [kixi.heimdall.refresh-token :as refresh-token]))
 
 (defn get-config
   [f]
@@ -33,13 +34,31 @@
    (io/resource (:privkey auth-conf))
    (:passphrase auth-conf)))
 
+(defn- make-auth-token [user auth-conf]
+  (let [exp (-> (t/plus (t/now) (t/minutes 30)) (sign/to-timestamp))]
+    (jwt/sign user
+              (pkey auth-conf)
+              {:alg :rs256 :exp exp})))
+
+(defn- make-refresh-token [issued-at-time auth-conf user]
+  (let [exp (-> (t/plus (t/now) (t/days 30)) (sign/to-timestamp))]
+    (jwt/sign {:user-id (:id user)}
+              (pkey auth-conf)
+              {:alg :rs256 :iat issued-at-time :exp exp})))
+
+(defn make-token-pair! [session auth-conf user]
+  (let [issued-at-time (sign/to-timestamp (t/now))
+        refresh-token (make-refresh-token issued-at-time auth-conf user)]
+    (refresh-token/add! session {:refresh-token refresh-token
+                                 :issued issued-at-time
+                                 :user-id (:id user)})
+    {:token-pair {:auth-token (make-auth-token user auth-conf)
+                  :refresh-token refresh-token}}))
+
 (defn create-auth-token [session auth-conf credentials]
-  (let [[ok? res] (user/auth session credentials)
-        exp (-> (t/plus (t/now) (t/days 1)) (sign/to-timestamp))]
+  (let [[ok? res] (user/auth session credentials)]
     (if ok?
-      [true {:token (jwt/sign res
-                              (pkey auth-conf)
-                              {:alg :rs256 :exp exp})}]
+      [true (make-token-pair! session auth-conf (:user res))]
       [false res])))
 
 (defn auth-token [req]

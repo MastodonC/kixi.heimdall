@@ -14,7 +14,7 @@
 
 (defn find-by-username
   [session {:keys [username]}]
-  (first (db/select session :users [:username :password :created] {:username username})))
+  (first (db/select* session :users {:username username})))
 
 (defn auth
   [session {:keys [username password]}]
