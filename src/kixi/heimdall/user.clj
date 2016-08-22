@@ -20,7 +20,7 @@
   (first (db/select* session :users_by_username {:username username})))
 
 (defn find-by-id
-  [session {:keys [:id]}]
+  [session id]
   (first (db/select* session :users {:id id})))
 
 (defn auth

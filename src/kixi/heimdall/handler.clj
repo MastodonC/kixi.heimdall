@@ -73,11 +73,14 @@
       {:status 201 :body res}
       {:status 401 :body res})))
 
+
 (defn refresh-auth-token [session auth-conf refresh-token]
   (if-let [unsigned (unsign-token auth-conf refresh-token)]
-    (let [refresh-token-data (refresh-token/find-by-user-and-issued session (:user-id unsigned) (:iat unsigned))
-          _ (log/info "retrieved refresh token" refresh-token-data)
-          user (user/find-by-id session (:user_id refresh-token-data))]
+    (let [user-uuid (java.util.UUID/fromString (:user-id unsigned))
+          refresh-token-data (refresh-token/find-by-user-and-issued session
+                                                                    user-uuid
+                                                                    (:iat unsigned))
+          user (user/find-by-id session user-uuid)]
       (if (:valid refresh-token-data)
         (do
           (refresh-token/invalidate! session (:id refresh-token-data))

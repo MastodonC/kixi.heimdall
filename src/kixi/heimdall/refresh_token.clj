@@ -4,16 +4,17 @@
 
 (defn add!
   [session {:keys [valid] :as refresh-token}]
-  (db/insert! session :refresh_tokens
-              (assoc refresh-token
-                     :id (uuid/random)
-                     :valid (or (nil? valid) valid))))
+  (let [token-data (assoc refresh-token
+                          :id (uuid/random)
+                          :valid (or (nil? valid) valid))]
+    (db/insert! session :refresh_tokens token-data)
+    (db/insert! session :refresh_tokens_by_user_id_and_issued token-data)))
 
 (defn find-by-user-and-issued
   [session user-id issued]
-  (db/select* session :refresh_tokens_by_user_id_and_issued
-              {:user-id user-id
-               :issued issued}))
+  (first (db/select* session :refresh_tokens_by_user_id_and_issued
+                     {:user_id user-id
+                      :issued issued})))
 
 (defn invalidate!
   [session id]
