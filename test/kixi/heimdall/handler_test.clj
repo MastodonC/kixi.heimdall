@@ -62,19 +62,21 @@
 (deftest test-invalidate-refresh-token
   (testing "invalidate existing refresh token"
     (let [refresh-token (valid-refresh-token)]
-      (with-redefs [rt/find-by-user-and-issued (fn [session user-id issued] (refresh-token-record refresh-token))]
+      (with-redefs [rt/find-by-user-and-issued (fn [session user-id issued] (refresh-token-record refresh-token))
+                    rt/invalidate! (fn [session id] '())]
         (let [response (app (json-request (mock/request :post "/invalidate-refresh-token"
                                                         (json/write-str {:refresh-token refresh-token}))))]
           (is (= (:status response) 201))
-          (is (= (:message (:body response)) "Invalidated successfully"))))))
+          (is (= (:message (json/read-str (:body response) :key-fn keyword)) "Invalidated successfully"))))))
 
   (testing "invalidate refresh token - token not valid signed"
     (let [response (app (json-request (mock/request :post "/invalidate-refresh-token"
-                                                    (:json/write-str {:refresh-token "abc"}))))]
+                                                    (json/write-str {:refresh-token "abc"}))))]
       (is (= (:status response) 401))
-      (is (= (:message (:body response)) "Invalid or expired refresh token provided")))    )
-  #_(testing "invalidate refresh token not found"
+      (is (= (:message (json/read-str (:body response) :key-fn keyword)) "Invalid or expired refresh token provided")))    )
+  (testing "invalidate refresh token not found"
+    (with-redefs [rt/find-by-user-and-issued (fn [session user-id issued] nil)]
       (let [response (app (json-request (mock/request :post "/invalidate-refresh-token"
                                                       (:json/write-str {:refresh-token valid-refresh-token}))))]
         (is (= (:status response) 401))
-        (is (= (:message (:body response)) "Invalid or expired refresh token provided")))    ))
+        (is (= (:message (json/read-str (:body response) :key-fn keyword)) "Invalid or expired refresh token provided"))))    ))

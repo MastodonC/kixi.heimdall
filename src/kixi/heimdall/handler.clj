@@ -41,12 +41,12 @@
               {:alg :rs256 :exp exp})))
 
 (defn unsign-token [auth-conf token]
-  (println auth-conf token)
-  (try (jwt/unsign token (ks/public-key (io/resource (:pubkey auth-conf)))
-                   {:alg :rs256})
-       (catch clojure.lang.ExceptionInfo e
-         (do (log/debug "Unsign refresh token failed")
-             nil))))
+  (and token
+       (try (jwt/unsign token (ks/public-key (io/resource (:pubkey auth-conf)))
+                        {:alg :rs256})
+            (catch clojure.lang.ExceptionInfo e
+              (do (log/debug "Unsign refresh token failed")
+                  nil)))))
 
 (defn make-refresh-token [issued-at-time auth-conf user]
   (let [exp (-> (t/plus (t/now) (t/days 30)) (sign/to-timestamp))]
@@ -116,12 +116,11 @@
 
 (defn invalidate-refresh-token-route [req]
   (let [refresh-token (-> req :params :refresh-token)
-        _ (println "refresh param" refresh-token)
         [ok? res] (invalidate-refresh-token (:cassandra-session (:components req))
                                             (:auth-conf req)
                                             refresh-token)]
     (if ok?
-      {:status 200 :body res}
+      {:status 201 :body res}
       {:status 401 :body res})))
 
 (defn wrap-config [handler]
