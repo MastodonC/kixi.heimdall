@@ -77,7 +77,26 @@
           (is (= (:status response) 201))
           (is (:token-pair body))
           (is (not= (:refresh-token (:token-pair body))
-                    refresh-token)))))))
+                    refresh-token))))))
+  (testing "Handles a refresh token not found"
+    (let [refresh-token (valid-refresh-token)]
+      (with-redefs [rt/find-by-user-and-issued (fn [session user-id issued] nil)
+                    user/find-by-id (fn [session user-id] nil)]
+        (let [response (app (json-request
+                             (mock/request :post "/refresh-auth-token"
+                                           (json/write-str {:refresh-token refresh-token}))))]
+          (is (= (:status response) 401))
+          (is (= (:message (json/read-str (:body response) :key-fn keyword))
+                 "Refresh token revoked/deleted or new refresh token already created"))))))
+  (testing "Handles case when token to refresh wasn't signed properly"
+    (with-redefs [rt/find-by-user-and-issued (fn [session user-id issued] nil)
+                  user/find-by-id (fn [session user-id] nil)]
+      (let [response (app (json-request
+                           (mock/request :post "/refresh-auth-token"
+                                         (json/write-str {:refresh-token "foo"}))))]
+        (is (= (:status response) 401))
+        (is (= (:message (json/read-str (:body response) :key-fn keyword))
+               "Invalid or expired refresh token provided"))))))
 
 (deftest test-invalidate-refresh-token
   (testing "invalidate existing refresh token"
@@ -93,10 +112,13 @@
     (let [response (app (json-request (mock/request :post "/invalidate-refresh-token"
                                                     (json/write-str {:refresh-token "abc"}))))]
       (is (= (:status response) 401))
-      (is (= (:message (json/read-str (:body response) :key-fn keyword)) "Invalid or expired refresh token provided")))    )
+      (is (= (:message (json/read-str (:body response) :key-fn keyword)) "Invalid or expired refresh token provided"))))
   (testing "invalidate refresh token not found"
-    (with-redefs [rt/find-by-user-and-issued (fn [session user-id issued] nil)]
-      (let [response (app (json-request (mock/request :post "/invalidate-refresh-token"
-                                                      (:json/write-str {:refresh-token valid-refresh-token}))))]
-        (is (= (:status response) 401))
-        (is (= (:message (json/read-str (:body response) :key-fn keyword)) "Invalid or expired refresh token provided"))))    ))
+    (let [refresh-token (valid-refresh-token)]
+      (with-redefs [rt/find-by-user-and-issued (fn [session user-id issued] nil)]
+        (let [response (app (json-request
+                             (mock/request :post "/invalidate-refresh-token"
+                                           (:json/write-str {:refresh-token refresh-token}))))]
+          (is (= (:status response) 401))
+          (is (= (:message (json/read-str (:body response) :key-fn keyword))
+                 "Invalid or expired refresh token provided")))))    ))
