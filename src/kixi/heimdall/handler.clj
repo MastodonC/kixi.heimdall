@@ -41,10 +41,14 @@
               {:alg :rs256 :exp exp})))
 
 (defn unsign-token [auth-conf token]
-  (jwt/unsign token (ks/public-key (io/resource (:pubkey auth-conf)))
-              {:alg :rs256}))
+  (println auth-conf token)
+  (try (jwt/unsign token (ks/public-key (io/resource (:pubkey auth-conf)))
+                   {:alg :rs256})
+       (catch clojure.lang.ExceptionInfo e
+         (do (log/debug "Unsign refresh token failed")
+             nil))))
 
-(defn- make-refresh-token [issued-at-time auth-conf user]
+(defn make-refresh-token [issued-at-time auth-conf user]
   (let [exp (-> (t/plus (t/now) (t/days 30)) (sign/to-timestamp))]
     (jwt/sign {:user-id (:id user)}
               (pkey auth-conf)
@@ -88,13 +92,36 @@
         [false {:message "Refresh token revoked/deleted or new refresh token already created"}]))
     [false {:message "Invalid or expired refresh token provided"}]))
 
-(defn new-refresh-auth-token [req]
+
+
+(defn refresh-auth-token-route [req]
   (let [refresh-token (-> req :params :refresh-token)
         [ok? res] (refresh-auth-token (:cassandra-session (:components req))
                                       (:auth-conf req)
                                       refresh-token)]
     (if ok?
       {:status 201 :body res}
+      {:status 401 :body res})))
+
+(defn invalidate-refresh-token [session auth-conf refresh-token]
+  (if-let [unsigned (unsign-token auth-conf refresh-token)]
+    (let [user-uuid (java.util.UUID/fromString (:user-id unsigned))
+          refresh-token-data (refresh-token/find-by-user-and-issued session
+                                                                    user-uuid
+                                                                    (:iat unsigned))]
+      (do
+        (refresh-token/invalidate! session (:id refresh-token-data))
+        [true {:message "Invalidated successfully"}]))
+    [false {:message "Invalid or expired refresh token provided"}]))
+
+(defn invalidate-refresh-token-route [req]
+  (let [refresh-token (-> req :params :refresh-token)
+        _ (println "refresh param" refresh-token)
+        [ok? res] (invalidate-refresh-token (:cassandra-session (:components req))
+                                            (:auth-conf req)
+                                            refresh-token)]
+    (if ok?
+      {:status 200 :body res}
       {:status 401 :body res})))
 
 (defn wrap-config [handler]
@@ -104,7 +131,8 @@
 (defroutes app-routes
   (GET "/" [] "Hello World")
   (POST "/create-auth-token" [] auth-token)
-  (POST "/refresh-auth-token" [] new-refresh-auth-token)
+  (POST "/refresh-auth-token" [] refresh-auth-token-route)
+  (POST "/invalidate-refresh-token" [] invalidate-refresh-token-route)
   (route/not-found "Not Found"))
 
 (defn wrap-catch-exceptions [handler]
