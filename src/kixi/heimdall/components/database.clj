@@ -87,9 +87,7 @@
         reformatted)))
   (update! [this table what where]
     (exec this (hayt/update table (hayt/set-columns
-                                   (reduce-kv #(assoc %1 (util/hyphen->underscore %2) %3)
-                                              {}
-                                              what))
+                                   (into {} (util/underscore->hyphen what)))
                             (hayt/where where))))
 
   component/Lifecycle
