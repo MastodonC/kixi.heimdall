@@ -47,9 +47,10 @@
                                                         (json/write-str {:username "user" :password "foo"}))))]
           (is (= (:status response) 401)))))))
 
-(defn valid-refresh-token
+(defn  valid-refresh-token
   []
-  (make-refresh-token (sign/to-timestamp (t/now)) auth-config {:username "foo" :id #uuid "b14bf8f1-d98b-4ca2-97e9-7c95ebffbcb1"}))
+  (make-refresh-token (sign/to-timestamp (t/minus (t/now) (t/hours 1)))
+                      auth-config {:username "foo" :id #uuid "b14bf8f1-d98b-4ca2-97e9-7c95ebffbcb1"}))
 
 (defn refresh-token-record
   [refresh-token]
@@ -58,6 +59,25 @@
    :id #uuid "803ad9b8-d482-43af-9409-a28bae2a95a0"
    :refresh-token refresh-token
    :valid true})
+
+(deftest test-refresh-auth-token
+  (testing "Creates a new valid token"
+    (let [refresh-token (valid-refresh-token)]
+      (with-redefs [rt/find-by-user-and-issued (fn [session user-id issued]
+                                                 (refresh-token-record refresh-token))
+                    user/find-by-id (fn [session user-id]
+                                      {:id #uuid "b14bf8f1-d98b-4ca2-97e9-7c95ebffbcb1"
+                                       :username "foo"})
+                    rt/invalidate! (fn [session id] '())
+                    rt/add! (fn [session token] '())]
+        (let [response (app (json-request
+                             (mock/request :post "/refresh-auth-token"
+                                           (json/write-str {:refresh-token refresh-token}))))
+              body (json/read-str (:body response) :key-fn keyword)]
+          (is (= (:status response) 201))
+          (is (:token-pair body))
+          (is (not= (:refresh-token (:token-pair body))
+                    refresh-token)))))))
 
 (deftest test-invalidate-refresh-token
   (testing "invalidate existing refresh token"
