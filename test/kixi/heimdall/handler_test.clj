@@ -49,7 +49,7 @@
 
 (defn  valid-refresh-token
   []
-  (make-refresh-token (sign/to-timestamp (t/minus (t/now) (t/hours 1)))
+  (make-refresh-token (sign/to-timestamp (t/now))
                       auth-config {:username "foo" :id #uuid "b14bf8f1-d98b-4ca2-97e9-7c95ebffbcb1"}))
 
 (defn refresh-token-record

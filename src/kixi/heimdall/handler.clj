@@ -10,6 +10,7 @@
             [buddy.sign.util :as sign]
             [buddy.core.keys :as ks]
             [clj-time.core :as t]
+            [clj-time.coerce :as c]
             [clojure.java.io :as io]
             [kixi.heimdall.user :as user]
             [clojure.edn :as edn]
@@ -35,7 +36,7 @@
    (:passphrase auth-conf)))
 
 (defn- make-auth-token [user auth-conf]
-  (let [exp (-> (t/plus (t/now) (t/minutes 30)) (sign/to-timestamp))]
+  (let [exp (-> (t/plus (t/now) (t/minutes 30)) (c/to-long))]
     (jwt/sign user
               (pkey auth-conf)
               {:alg :rs256 :exp exp})))
@@ -43,19 +44,19 @@
 (defn unsign-token [auth-conf token]
   (and token
        (try (jwt/unsign token (ks/public-key (io/resource (:pubkey auth-conf)))
-                        {:alg :rs256})
+                        {:alg :rs256 :now (c/to-long (t/now))})
             (catch clojure.lang.ExceptionInfo e
               (do (log/debug "Unsign refresh token failed")
                   nil)))))
 
 (defn make-refresh-token [issued-at-time auth-conf user]
-  (let [exp (-> (t/plus (t/now) (t/days 30)) (sign/to-timestamp))]
+  (let [exp (-> (t/plus (t/now) (t/days 30)) (c/to-long))]
     (jwt/sign {:user-id (:id user)}
               (pkey auth-conf)
               {:alg :rs256 :iat issued-at-time :exp exp})))
 
 (defn make-token-pair! [session auth-conf user]
-  (let [issued-at-time (sign/to-timestamp (t/now))
+  (let [issued-at-time (c/to-long (t/now))
         refresh-token (make-refresh-token issued-at-time auth-conf user)]
     (refresh-token/add! session {:refresh-token refresh-token
                                  :issued issued-at-time
