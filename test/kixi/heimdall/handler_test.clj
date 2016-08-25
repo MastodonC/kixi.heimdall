@@ -2,6 +2,7 @@
   (:require [clojure.test :refer :all]
             [ring.mock.request :as mock]
             [kixi.heimdall.handler :refer :all]
+            [kixi.heimdall.service :as service]
             [kixi.heimdall.user :as user]
             [kixi.heimdall.refresh-token :as rt]
             [buddy.hashers :as hs]
@@ -49,8 +50,8 @@
 
 (defn  valid-refresh-token
   []
-  (make-refresh-token (sign/to-timestamp (t/now))
-                      auth-config {:username "foo" :id #uuid "b14bf8f1-d98b-4ca2-97e9-7c95ebffbcb1"}))
+  (service/make-refresh-token (sign/to-timestamp (t/now))
+                              auth-config {:username "foo" :id #uuid "b14bf8f1-d98b-4ca2-97e9-7c95ebffbcb1"}))
 
 (defn refresh-token-record
   [refresh-token]
