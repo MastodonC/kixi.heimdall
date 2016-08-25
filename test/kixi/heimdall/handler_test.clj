@@ -105,7 +105,7 @@
                     rt/invalidate! (fn [session id] '())]
         (let [response (app (json-request (mock/request :post "/invalidate-refresh-token"
                                                         (json/write-str {:refresh-token refresh-token}))))]
-          (is (= (:status response) 201))
+          (is (= (:status response) 200))
           (is (= (:message (json/read-str (:body response) :key-fn keyword)) "Invalidated successfully"))))))
 
   (testing "invalidate refresh token - token not valid signed"

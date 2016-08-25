@@ -121,7 +121,7 @@
                                             (:auth-conf req)
                                             refresh-token)]
     (if ok?
-      {:status 201 :body res}
+      {:status 200 :body res}
       {:status 401 :body res})))
 
 (defn wrap-config [handler]
