@@ -1,7 +1,12 @@
 (ns kixi.heimdall.util
   (:require [clj-time.format :as tf]
             [clj-time.core :as t]
-            [clojure.java.io :as io]))
+            [clojure.java.io :as io]
+            [clojure.edn :as edn]))
+
+(defn get-config
+  [f]
+  (edn/read-string (slurp f)))
 
 (defn db-now
   "getting timestamp of now but in db format"

@@ -9,3 +9,5 @@ pom.xml.asc
 /.lein-*
 /.nrepl-port
 *.pem
+prod.auth-conf.edn
+*.json

@@ -2,23 +2,18 @@
   (:require [kixi.heimdall.handler :refer :all]
             [kixi.heimdall.components.database :refer :all]
             [kixi.heimdall.components.jettyserver :refer :all]
+            [kixi.heimdall.config :as config]
             [com.stuartsierra.component :as component]
-            [clojure.java.io :as io]
-            [clojure.edn :as edn]))
+            [clojure.java.io :as io]))
 
-(defn system []
-  (let [api-port 3000
-        cassandra-host "localhost"
-        cassandra-keyspace "heimdall"
-        cassandra-replication-factor 1
-        profile :development]
-    (component/system-using
-     (component/system-map
-      :cluster (new-cluster {})
-      :cassandra-session (new-session {:host cassandra-host
-                                       :keyspace cassandra-keyspace
-                                       :replication-factor cassandra-replication-factor} profile)
-      :jetty-server (component/using (new-http-server api-port) [:cassandra-session])
-      :repl-server  (Object.) ; dummy - replaced when invoked via uberjar.
-)
-     {:cassandra-session [:cluster]})))
+(defn system [profile]
+  (let [config (config/config profile)]
+    (println "System with" profile)
+    (-> (component/system-map
+         :cluster (new-cluster {:contact-points (-> config :cassandra-session :hosts)})
+         :cassandra-session (new-session (:cassandra-session config) profile)
+         :jetty-server (component/using (new-http-server (config/webserver-port config)) [:cassandra-session])
+         :repl-server  (Object.) ; dummy - replaced when invoked via uberjar.
+         )
+        (component/system-using
+         {:cassandra-session [:cluster]}))))

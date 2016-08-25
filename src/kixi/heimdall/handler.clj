@@ -18,8 +18,8 @@
   (edn/read-string (slurp f)))
 
 (def auth-config
-  (get-config (or (util/file-exists? (System/getProperty "user.home") ".heimdall.auth-conf.edn")
-                  (io/resource (:auth-conf env)))))
+  (util/get-config (or (util/file-exists? (System/getProperty "user.home") ".heimdall.auth-conf.edn")
+                       (io/resource (:auth-conf env)))))
 
 (defn auth-token [req]
   (let [[ok? res] (service/create-auth-token (:cassandra-session (:components req))

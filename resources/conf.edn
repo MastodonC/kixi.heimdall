@@ -1,0 +1,10 @@
+{:cassandra-session {:hosts #profile {:development ["localhost"]
+                                      :production ["node-0.cassandra.mesos"
+                                                   "node-1.cassandra.mesos"
+                                                   "node-2.cassandra.mesos"]}
+                     :keyspace "heimdall"
+                     :replication-strategy #profile {:development {:class "SimpleStrategy"
+                                                                   :replication_factor 1}
+                                                     :production {:class  "SimpleStrategy"
+                                                                  :replication_factor 2}}}
+ :jetty-server {:port 3000}}

@@ -1,0 +1,39 @@
+{
+  "container": {
+    "type": "DOCKER",
+    "docker": {
+      "image": "mastodonc/kixi.heimdall:@@TAG@@",
+      "parameters": [
+         {"key": "env", "value": "ENVIRONMENT=@@ENVIRONMENT@@"},
+         {"key": "log-driver", "value": "gelf"},
+         {"key": "log-opt", "value": "gelf-address=udp://logstash.@@VPC@@-vpc.kixi:12201"},
+         {"key": "label", "value": "cluster=@@ENVIRONMENT@@"},
+         {"key": "label", "value": "application=heimdall"}
+      ],
+      "network": "BRIDGE",
+      "portMappings": [
+          {
+              "containerPort": 3000,
+              "hostPort": 10010,
+              "protocol": "tcp"
+          },
+          {
+              "containerPort": 5001,
+              "hostPort": 10011,
+              "protocol": "tcp"
+          }
+      ]
+    }
+  },
+  "id": "heimdall",
+  "cpus": 1,
+  "mem": 1024,
+  "healthChecks": [{
+        "protocol": "TCP",
+        "gracePeriodSeconds": 600,
+        "intervalSeconds": 30,
+        "portIndex": 0,
+        "timeoutSeconds": 10,
+        "maxConsecutiveFailures": 3
+  }]
+}
