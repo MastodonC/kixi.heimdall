@@ -32,7 +32,7 @@
       "refresh_tokens"
       (hayt/column-definitions {:id             :uuid
                                 :user_id        :uuid
-                                :issued         :int
+                                :issued         :bigint
                                 :refresh_token  :text
                                 :valid          :boolean
                                 :primary-key [:id]})))
@@ -42,7 +42,7 @@
       "refresh_tokens_by_user_id_and_issued"
       (hayt/column-definitions {:id             :uuid
                                 :user_id        :uuid
-                                :issued         :int
+                                :issued         :bigint
                                 :refresh_token  :text
                                 :valid          :boolean
                                 :primary-key [:user_id :issued]})))))
