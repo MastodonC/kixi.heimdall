@@ -8,7 +8,8 @@
             [clojure.java.io :as io]
             [kixi.heimdall.components.database :as db]
             [kixi.heimdall.user :as user]
-            [kixi.heimdall.refresh-token :as refresh-token]))
+            [kixi.heimdall.refresh-token :as refresh-token]
+            [kixi.heimdall.util :as util]))
 
 (defn fail
   [message]
@@ -19,9 +20,11 @@
   [true result])
 
 (defn- pkey [auth-conf]
-  (ks/private-key
-   (io/resource (:privkey auth-conf))
-   (:passphrase auth-conf)))
+  (let [private-key-path (:privkey auth-conf)]
+    (-> (if (util/file-exists? private-key-path)
+          (io/file private-key-path)
+          (io/resource private-key-path))
+        (ks/private-key (:passphrase auth-conf)))))
 
 (defn- make-auth-token [user auth-conf]
   (let [exp (-> (t/plus (t/now) (t/minutes 30)) (c/to-long))]
