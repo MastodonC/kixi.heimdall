@@ -21,10 +21,8 @@
 
 (defn- absolute-or-resource-key
   [key-fn path]
-  (-> (if-let [key (util/file-exists? path)]
-        key
-        (io/resource path))
-      (key-fn)))
+  (key-fn (or (util/file-exists? path)
+              (io/resource path))))
 
 (defn- private-key [auth-conf]
   (absolute-or-resource-key #(ks/private-key % (:passphrase auth-conf)) (:privkey auth-conf)))
@@ -35,7 +33,7 @@
 (defn- make-auth-token [user auth-conf]
   (let [exp (-> (t/plus (t/now) (t/minutes 30)) (c/to-long))]
     (jwt/sign user
-              (pkey auth-conf)
+              (private-key auth-conf)
               {:alg :rs256 :exp exp})))
 
 (defn unsign-token [auth-conf token]
@@ -49,7 +47,7 @@
 (defn make-refresh-token [issued-at-time auth-conf user]
   (let [exp (-> (t/plus (t/now) (t/days 30)) (c/to-long))]
     (jwt/sign {:user-id (:id user)}
-              (pkey auth-conf)
+              (private-key auth-conf)
               {:alg :rs256 :iat issued-at-time :exp exp})))
 
 (defn make-token-pair! [session auth-conf user]
