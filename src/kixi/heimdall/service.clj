@@ -19,12 +19,18 @@
   [result]
   [true result])
 
+(defn- absolute-or-resource-key
+  [key-fn path]
+  (-> (if-let [key (util/file-exists? path)]
+        key
+        (io/resource path))
+      (key-fn)))
+
 (defn- private-key [auth-conf]
-  (let [private-key-path (:privkey auth-conf)]
-    (-> (if-let [private-key (util/file-exists? private-key-path)]
-          private-key
-          (io/resource private-key-path))
-        (ks/private-key (:passphrase auth-conf)))))
+  (absolute-or-resource-key #(ks/private-key % (:passphrase auth-conf)) (:privkey auth-conf)))
+
+(defn- public-key [auth-conf]
+  (absolute-or-resource-key ks/public-key (:pubkey auth-conf)))
 
 (defn- make-auth-token [user auth-conf]
   (let [exp (-> (t/plus (t/now) (t/minutes 30)) (c/to-long))]
@@ -34,7 +40,7 @@
 
 (defn unsign-token [auth-conf token]
   (and token
-       (try (jwt/unsign token (ks/public-key (io/resource (:pubkey auth-conf)))
+       (try (jwt/unsign token (public-key auth-conf)
                         {:alg :rs256 :now (c/to-long (t/now))})
             (catch clojure.lang.ExceptionInfo e
               (do (log/debug "Unsign refresh token failed")
