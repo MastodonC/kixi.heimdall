@@ -5,24 +5,19 @@
             [ring.middleware.keyword-params :refer [wrap-keyword-params]]
             [kixi.heimdall.application :as app]
             [kixi.heimdall.service :as service]
+            [kixi.heimdall.util :as util]
             [taoensso.timbre :as log]
             [clojure.java.io :as io]
             [clojure.edn :as edn]
-            [environ.core :refer [env]]
-            ))
+            [environ.core :refer [env]]))
 
 (defn get-config
   [f]
   (edn/read-string (slurp f)))
 
 (def auth-config
-  (let [f (io/file (System/getProperty "user.home")
-                   ".heimdall.auth-conf.edn")]
-    (try (get-config f)
-         (catch java.io.FileNotFoundException e
-           (if-let [env-file (:auth-conf env)]
-             (get-config (io/resource env-file))
-             (throw e))))))
+  (get-config (or (util/file-exists? (System/getProperty "user.home") ".heimdall.auth-conf.edn")
+                  (io/resource (:auth-conf env)))))
 
 (defn auth-token [req]
   (let [[ok? res] (service/create-auth-token (:cassandra-session (:components req))

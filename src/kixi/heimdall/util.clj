@@ -1,6 +1,7 @@
 (ns kixi.heimdall.util
   (:require [clj-time.format :as tf]
-            [clj-time.core :as t]))
+            [clj-time.core :as t]
+            [clojure.java.io :as io]))
 
 (defn db-now
   "getting timestamp of now but in db format"
@@ -25,3 +26,8 @@
   "Convers hyphens to underscores"
   [x]
   (replacer #(clojure.string/replace % #"-" "_") x))
+
+(defn file-exists?
+  [& path]
+  (when (.exists (apply io/file path))
+    (apply io/file path)))

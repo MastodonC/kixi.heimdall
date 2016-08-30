@@ -8,7 +8,8 @@
             [clojure.java.io :as io]
             [kixi.heimdall.components.database :as db]
             [kixi.heimdall.user :as user]
-            [kixi.heimdall.refresh-token :as refresh-token]))
+            [kixi.heimdall.refresh-token :as refresh-token]
+            [kixi.heimdall.util :as util]))
 
 (defn fail
   [message]
@@ -18,20 +19,26 @@
   [result]
   [true result])
 
-(defn- pkey [auth-conf]
-  (ks/private-key
-   (io/resource (:privkey auth-conf))
-   (:passphrase auth-conf)))
+(defn- absolute-or-resource-key
+  [key-fn path]
+  (key-fn (or (util/file-exists? path)
+              (io/resource path))))
+
+(defn- private-key [auth-conf]
+  (absolute-or-resource-key #(ks/private-key % (:passphrase auth-conf)) (:privkey auth-conf)))
+
+(defn- public-key [auth-conf]
+  (absolute-or-resource-key ks/public-key (:pubkey auth-conf)))
 
 (defn- make-auth-token [user auth-conf]
   (let [exp (-> (t/plus (t/now) (t/minutes 30)) (c/to-long))]
     (jwt/sign user
-              (pkey auth-conf)
+              (private-key auth-conf)
               {:alg :rs256 :exp exp})))
 
 (defn unsign-token [auth-conf token]
   (and token
-       (try (jwt/unsign token (ks/public-key (io/resource (:pubkey auth-conf)))
+       (try (jwt/unsign token (public-key auth-conf)
                         {:alg :rs256 :now (c/to-long (t/now))})
             (catch clojure.lang.ExceptionInfo e
               (do (log/debug "Unsign refresh token failed")
@@ -40,7 +47,7 @@
 (defn make-refresh-token [issued-at-time auth-conf user]
   (let [exp (-> (t/plus (t/now) (t/days 30)) (c/to-long))]
     (jwt/sign {:user-id (:id user)}
-              (pkey auth-conf)
+              (private-key auth-conf)
               {:alg :rs256 :iat issued-at-time :exp exp})))
 
 (defn make-token-pair! [session auth-conf user]
