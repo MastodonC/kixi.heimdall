@@ -17,9 +17,9 @@
 
 (def auth-config
   (-> (if (util/file-exists? (System/getProperty "user.home") ".heimdall.auth-conf.edn")
-        (io/file (System/getProperty "user.home" ".heimdall.auth-conf.edn"))
-        (io/resource env-file))
-      (get-config))
+        (io/file (System/getProperty "user.home") ".heimdall.auth-conf.edn")
+        (io/resource (:auth-conf env)))
+      (get-config)))
 
 (defn auth-token [req]
   (let [[ok? res] (service/create-auth-token (:cassandra-session (:components req))
