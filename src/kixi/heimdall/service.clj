@@ -19,10 +19,10 @@
   [result]
   [true result])
 
-(defn- pkey [auth-conf]
+(defn- private-key [auth-conf]
   (let [private-key-path (:privkey auth-conf)]
-    (-> (if (util/file-exists? private-key-path)
-          (io/file private-key-path)
+    (-> (if-let [private-key (util/file-exists? private-key-path)]
+          private-key
           (io/resource private-key-path))
         (ks/private-key (:passphrase auth-conf)))))
 

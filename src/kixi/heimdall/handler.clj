@@ -16,8 +16,8 @@
   (edn/read-string (slurp f)))
 
 (def auth-config
-  (-> (if (util/file-exists? (System/getProperty "user.home") ".heimdall.auth-conf.edn")
-        (io/file (System/getProperty "user.home") ".heimdall.auth-conf.edn")
+  (-> (if-let [config (util/file-exists? (System/getProperty "user.home") ".heimdall.auth-conf.edn")]
+        config
         (io/resource (:auth-conf env)))
       (get-config)))
 

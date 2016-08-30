@@ -29,5 +29,5 @@
 
 (defn file-exists?
   [& path]
-  (.exists (apply io/file path)))
-      
+  (when (.exists (apply io/file path))
+    (apply io/file path)))
