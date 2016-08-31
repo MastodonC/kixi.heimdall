@@ -31,27 +31,34 @@
 (deftest test-authentication
   (testing "auth route"
     (testing "authentication succeeds"
-      (with-redefs [user/find-by-username (fn [session m] {:username "user" :password (hs/encrypt "foo") :id (uuid/random)})
+      (with-redefs [user/find-by-username
+                    (fn [session m]
+                      {:username "user" :password (hs/encrypt "foo") :id (uuid/random)})
                     rt/add! (fn [session m] true)]
-        (let [response (app (json-request (mock/request :post "/create-auth-token"
-                                                        (json/write-str {:username "user" :password "foo"}))))]
+        (let [response (app (json-request
+                             (mock/request :post "/create-auth-token"
+                                           (json/write-str {:username "user" :password "foo"}))))]
           (is (= (:status response) 201))
           (is (:token-pair (json/read-str (:body response) :key-fn keyword))))))
     (testing "authentication fails wrong user"
       (with-redefs [user/find-by-username (fn [session m] nil)]
-        (let [response (app (json-request (mock/request :post "/create-auth-token"
-                                                        (json/write-str {:username "user" :password "foo"}))))]
+        (let [response (app (json-request
+                             (mock/request :post "/create-auth-token"
+                                           (json/write-str {:username "user" :password "foo"}))))]
           (is (= (:status response) 401)))))
     (testing "authentication fails wrong pass"
-      (with-redefs [user/find-by-username (fn [session m] {:username "user" :password (hs/encrypt "foobar")})]
-        (let [response (app (json-request (mock/request :post "/create-auth-token"
-                                                        (json/write-str {:username "user" :password "foo"}))))]
+      (with-redefs [user/find-by-username
+                    (fn [session m] {:username "user" :password (hs/encrypt "foobar")})]
+        (let [response (app (json-request
+                             (mock/request :post "/create-auth-token"
+                                           (json/write-str {:username "user" :password "foo"}))))]
           (is (= (:status response) 401)))))))
 
 (defn  valid-refresh-token
   []
   (service/make-refresh-token (sign/to-timestamp (t/now))
-                              auth-config {:username "foo" :id #uuid "b14bf8f1-d98b-4ca2-97e9-7c95ebffbcb1"}))
+                              auth-config
+                              {:username "foo" :id #uuid "b14bf8f1-d98b-4ca2-97e9-7c95ebffbcb1"}))
 
 (defn refresh-token-record
   [refresh-token]
