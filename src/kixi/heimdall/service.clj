@@ -32,23 +32,27 @@
 
 (defn- make-auth-token [user auth-conf]
   (let [exp (-> (t/plus (t/now) (t/minutes 30)) (c/to-long))]
-    (jwt/sign user
-              (private-key auth-conf)
-              {:alg :rs256 :exp exp})))
+    (try (jwt/sign user
+                   (private-key auth-conf)
+                   {:alg :rs256 :exp exp})
+         (catch Exception _ (do (log/debug "Sign auth token failed")
+                                nil)))))
 
 (defn unsign-token [auth-conf token]
   (and token
        (try (jwt/unsign token (public-key auth-conf)
                         {:alg :rs256 :now (c/to-long (t/now))})
-            (catch clojure.lang.ExceptionInfo e
+            (catch clojure.lang.ExceptionInfo _
               (do (log/debug "Unsign refresh token failed")
                   nil)))))
 
 (defn make-refresh-token [issued-at-time auth-conf user]
   (let [exp (-> (t/plus (t/now) (t/days 30)) (c/to-long))]
-    (jwt/sign {:user-id (:id user)}
-              (private-key auth-conf)
-              {:alg :rs256 :iat issued-at-time :exp exp})))
+    (try (jwt/sign {:user-id (:id user)}
+                   (private-key auth-conf)
+                   {:alg :rs256 :iat issued-at-time :exp exp})
+         (catch Exception _ (do (log/debug "Sign refresh token failed")
+                                nil)))))
 
 (defn make-token-pair! [session auth-conf user]
   (let [issued-at-time (c/to-long (t/now))
