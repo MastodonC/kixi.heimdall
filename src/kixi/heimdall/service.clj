@@ -32,10 +32,9 @@
 
 (defn- make-auth-token [user auth-conf]
   (let [exp (-> (t/plus (t/now) (t/minutes 30)) (c/to-long))]
-    (if user (jwt/sign user
-                       (private-key auth-conf)
-                       {:alg :rs256 :exp exp})
-        (log/debug "User credentials missing"))))
+    (jwt/sign user
+              (private-key auth-conf)
+              {:alg :rs256 :exp exp})))
 
 (defn unsign-token [auth-conf token]
   (and token
@@ -47,21 +46,21 @@
 
 (defn make-refresh-token [issued-at-time auth-conf user]
   (let [exp (-> (t/plus (t/now) (t/days 30)) (c/to-long))]
-    (if user (jwt/sign {:user-id (:id user)}
-                       (private-key auth-conf)
-                       {:alg :rs256 :iat issued-at-time :exp exp})
-        (log/debug "User credentials missing"))))
+    (jwt/sign {:user-id (:id user)}
+              (private-key auth-conf)
+              {:alg :rs256 :iat issued-at-time :exp exp})))
 
 (defn make-token-pair! [session auth-conf user]
-  (let [issued-at-time (c/to-long (t/now))
-        refresh-token (make-refresh-token issued-at-time auth-conf user)
-        auth-token (make-auth-token user auth-conf)]
-    (when (and refresh-token auth-conf)
-      (do (refresh-token/add! session {:refresh-token refresh-token
-                                       :issued issued-at-time
-                                       :user-id (:id user)})
-          {:token-pair {:auth-token auth-token
-                        :refresh-token refresh-token}}))))
+  (if user (let [issued-at-time (c/to-long (t/now))
+                 refresh-token (make-refresh-token issued-at-time auth-conf user)
+                 auth-token (make-auth-token user auth-conf)]
+             (when (and refresh-token auth-conf)
+               (do (refresh-token/add! session {:refresh-token refresh-token
+                                                :issued issued-at-time
+                                                :user-id (:id user)})
+                   {:token-pair {:auth-token auth-token
+                                 :refresh-token refresh-token}})))
+      (log/debug "User credentials missing")))
 
 (defn create-auth-token [session auth-conf credentials]
   (let [[ok? res] (user/auth session credentials)
