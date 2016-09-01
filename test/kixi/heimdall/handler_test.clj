@@ -27,7 +27,6 @@
     (let [response (app (mock/request :get "/invalid"))]
       (is (= (:status response) 404)))))
 
-
 (deftest test-authentication
   (testing "auth route"
     (testing "authentication succeeds"
@@ -129,4 +128,4 @@
                                            (:json/write-str {:refresh-token refresh-token}))))]
           (is (= (:status response) 401))
           (is (= (:message (json/read-str (:body response) :key-fn keyword))
-                 "Invalid or expired refresh token provided")))))    ))
+                 "Invalid or expired refresh token provided")))))))

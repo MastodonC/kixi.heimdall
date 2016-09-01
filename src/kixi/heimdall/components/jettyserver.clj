@@ -23,4 +23,4 @@
 
 (defn new-http-server
   [api-port]
-  (->JettyServer #'kixi.heimdall.handler/app api-port)  )
+  (->JettyServer #'kixi.heimdall.handler/app api-port))

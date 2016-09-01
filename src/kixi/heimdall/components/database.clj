@@ -60,7 +60,6 @@
   (update!
     [this table what where]))
 
-
 (defrecord CassandraSession [opts profile]
   Database
   (drop-table! [this table]

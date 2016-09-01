@@ -1,17 +1,9 @@
 (ns kixi.heimdall.application)
 
-
-
-
 ;; This is NOT the namespace you are looking for.
 
 ;; it's critical that no requires, or other code is added to this namespace.
 ;; see dev/user.clj
-
-
-
-
-
 
 
 ;; holder for a single instance of the application.

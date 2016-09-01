@@ -9,7 +9,6 @@
             [com.stuartsierra.component :as component])
   (:gen-class))
 
-
 (defrecord ReplServer [config]
   component/Lifecycle
   (start [this]
