@@ -31,7 +31,7 @@
   (absolute-or-resource-key ks/public-key (:pubkey auth-conf)))
 
 (defn- make-auth-token [user auth-conf]
-  (let [exp (-> (t/plus (t/now) (t/minutes 30)) (c/to-long))]
+  (let [exp (c/to-long (t/plus (t/now) (t/minutes 30)))]
     (jwt/sign user
               (private-key auth-conf)
               {:alg :rs256 :exp exp})))
@@ -45,7 +45,7 @@
                                  (.getMessage e)))))))
 
 (defn make-refresh-token [issued-at-time auth-conf user]
-  (let [exp (-> (t/plus (t/now) (t/days 30)) (c/to-long))]
+  (let [exp (c/to-long (t/plus (t/now) (t/days 30)))]
     (jwt/sign {:user-id (:id user)}
               (private-key auth-conf)
               {:alg :rs256 :iat issued-at-time :exp exp})))
@@ -55,11 +55,11 @@
                  refresh-token (make-refresh-token issued-at-time auth-conf user)
                  auth-token (make-auth-token user auth-conf)]
              (when (and refresh-token auth-conf)
-               (do (refresh-token/add! session {:refresh-token refresh-token
-                                                :issued issued-at-time
-                                                :user-id (:id user)})
-                   {:token-pair {:auth-token auth-token
-                                 :refresh-token refresh-token}})))
+               (refresh-token/add! session {:refresh-token refresh-token
+                                            :issued issued-at-time
+                                            :user-id (:id user)})
+               {:token-pair {:auth-token auth-token
+                             :refresh-token refresh-token}}))
       (log/debug "User credentials missing")))
 
 (defn create-auth-token [session auth-conf credentials]
@@ -90,7 +90,6 @@
           refresh-token-data (refresh-token/find-by-user-and-issued session
                                                                     user-uuid
                                                                     (:iat unsigned))]
-      (do
-        (refresh-token/invalidate! session (:id refresh-token-data))
-        (success {:message "Invalidated successfully"})))
+      (refresh-token/invalidate! session (:id refresh-token-data))
+      (success {:message "Invalidated successfully"}))
     (fail "Invalid or expired refresh token provided")))
