@@ -40,7 +40,7 @@
   (and token
        (try (jwt/unsign token (public-key auth-conf)
                         {:alg :rs256 :now (c/to-long (t/now))})
-            (catch clojure.lang.ExceptionInfo e
+            (catch Exception e
               (log/debug (format "Unsign refresh token failed due to %s"
                                  (.getMessage e)))))))
 
