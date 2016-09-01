@@ -9,7 +9,6 @@
             [com.stuartsierra.component :as component])
   (:gen-class))
 
-
 (defrecord ReplServer [config]
   component/Lifecycle
   (start [this]
@@ -26,9 +25,9 @@
 
 (defn build-application [opts]
   (let [system (kixi.heimdall.system/system)]
-    (-> system
-        (cond-> (:repl opts)
-          (assoc :repl-server (mk-repl-server {:port (:repl-port opts)}))))))
+    (cond-> system
+      (:repl opts)
+      (assoc :repl-server (mk-repl-server {:port (:repl-port opts)})))))
 
 (defn -main [& args]
 

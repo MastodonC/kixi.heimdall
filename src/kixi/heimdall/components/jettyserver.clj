@@ -13,8 +13,7 @@
   component/Lifecycle
   (start [this]
     (log/info "Starting JettyServer")
-    (assoc this ::server (jetty/run-jetty (-> handler
-                                              (wrap-components this))
+    (assoc this ::server (jetty/run-jetty (wrap-components handler this)
                                           {:port port
                                            :join? false})))
   (stop [this]
@@ -24,4 +23,4 @@
 
 (defn new-http-server
   [api-port]
-  (->JettyServer #'kixi.heimdall.handler/app api-port)  )
+  (->JettyServer #'kixi.heimdall.handler/app api-port))

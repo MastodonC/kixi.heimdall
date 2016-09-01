@@ -6,7 +6,6 @@
             [clojure.java.io :as io]
             [clojure.edn :as edn]))
 
-
 (defn system []
   (let [api-port 3000
         cassandra-host "localhost"
@@ -20,6 +19,6 @@
                                           :replication-factor cassandra-replication-factor} profile)
          :jetty-server (component/using (new-http-server api-port) [:cassandra-session])
          :repl-server  (Object.) ; dummy - replaced when invoked via uberjar.
-         )
+)
         (component/system-using
          {:cassandra-session [:cluster]}))))
