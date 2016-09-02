@@ -8,6 +8,7 @@
             [clojure.java.io :as io]
             [kixi.heimdall.components.database :as db]
             [kixi.heimdall.user :as user]
+            [kixi.heimdall.group :as group]
             [kixi.heimdall.refresh-token :as refresh-token]
             [kixi.heimdall.util :as util]))
 
@@ -93,3 +94,14 @@
       (refresh-token/invalidate! session (:id refresh-token-data))
       (success {:message "Invalidated successfully"}))
     (fail "Invalid or expired refresh token provided")))
+
+(defn create-group
+  [session auth-conf auth-token group-info]
+  (when auth-token
+    (try (unsign-token auth-conf auth-token)
+         (catch Exception e (log/debug (format "Unsign of the token failed due to %s"
+                                               (.getMessage e)))))
+    (let [{:keys [group-name user-id]} group-info
+          group-id (:group-id
+                    (group/create! session {:name group-name :owner_id user-id}))]
+      (user/add-group-id session user-id group-id))))

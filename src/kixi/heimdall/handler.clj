@@ -45,6 +45,21 @@
       {:status 200 :body res}
       {:status 401 :body res})))
 
+(defn- parse-header
+  [request token-name]
+  (some->> (get (:headers request) "authorization")
+           (re-find (re-pattern (str "^" token-name " (.+)$")))
+           (second)))
+
+(defn create-group [req]
+  (let [[ok? res] (service/create-group (:cassandra-session (:components req))
+                                        (:auth-conf req)
+                                        (parse-header req "Token")
+                                        (:params req))]
+    (if ok?
+      {:status 200 :body res}
+      {:status 401 :body res})))
+
 (defn wrap-config [handler]
   (fn [req]
     (handler (assoc req :auth-conf auth-config))))
@@ -54,6 +69,7 @@
   (POST "/create-auth-token" [] auth-token)
   (POST "/refresh-auth-token" [] refresh-auth-token)
   (POST "/invalidate-refresh-token" [] invalidate-refresh-token)
+  (POST "/create-group" [] create-group)
   (route/not-found "Not Found"))
 
 (defn wrap-catch-exceptions [handler]
