@@ -9,6 +9,7 @@
             [kixi.heimdall.components.database :as db]
             [kixi.heimdall.user :as user]
             [kixi.heimdall.group :as group]
+            [kixi.heimdall.member :as member]
             [kixi.heimdall.refresh-token :as refresh-token]
             [kixi.heimdall.util :as util]))
 
@@ -28,7 +29,7 @@
 (defn- private-key [auth-conf]
   (absolute-or-resource-key #(ks/private-key % (:passphrase auth-conf)) (:privkey auth-conf)))
 
-(defn- public-key [auth-conf]
+(defn public-key [auth-conf]
   (absolute-or-resource-key ks/public-key (:pubkey auth-conf)))
 
 (defn- make-auth-token [user auth-conf]
@@ -96,12 +97,8 @@
     (fail "Invalid or expired refresh token provided")))
 
 (defn create-group
-  [session auth-conf auth-token group-info]
-  (when auth-token
-    (try (unsign-token auth-conf auth-token)
-         (catch Exception e (log/debug (format "Unsign of the token failed due to %s"
-                                               (.getMessage e)))))
-    (let [{:keys [group-name user-id]} group-info
-          group-id (:group-id
-                    (group/create! session {:name group-name :owner_id user-id}))]
-      (user/add-group-id session user-id group-id))))
+  [session auth-conf {:keys [id] :as user} {:keys [group-name]}]
+  (when user
+    (let [group-id (:group-id (group/create! session {:name group-name}))]
+      (member/add-user-to-group session (java.util.UUID/fromString id) group-id "owner")
+      [true "Group successfully created"])))

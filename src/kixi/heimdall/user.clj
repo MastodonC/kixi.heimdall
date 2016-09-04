@@ -32,19 +32,3 @@
         [true {:user (dissoc user :password)}]
         unauthed)
       unauthed)))
-
-(defn retrieve-groups-ids
-  [session id]
-  (db/select session :users :groups_ids {:id id}))
-
-(defn add-group-id
-  [session user-id group-id]
-  (let [user (find-by-id session user-id)
-        user-groups (conj (:groups-ids user) group-id)
-        username (:username user)]
-    (db/update! session :users
-                {:groups_ids user-groups}
-                {:id user-id})
-    (db/update! session :users_by_username
-                {:groups_ids user-groups}
-                {:username username})))

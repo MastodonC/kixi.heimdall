@@ -71,7 +71,7 @@
       using (exec this (hayt/insert table (hayt/values row) (apply hayt/using using)))
       :else (exec this (hayt/insert table (hayt/values row)))))
   (insert! [this table row]
-    (insert! this table (map util/hyphen->underscore row) {}))
+    (insert! this table (into {} (map util/hyphen->underscore row)) {}))
   (select* [this table where]
     (let [result (exec this (hayt/select table (hayt/where where)))
           reformatted (map util/underscore->hyphen result)]
@@ -86,7 +86,7 @@
         reformatted)))
   (update! [this table what where]
     (exec this (hayt/update table (hayt/set-columns
-                                   (into {} what))
+                                   (into {} (util/underscore->hyphen what)))
                             (hayt/where where))))
 
   component/Lifecycle

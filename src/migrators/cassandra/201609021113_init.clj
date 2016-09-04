@@ -14,7 +14,6 @@
                                 :username    :text
                                 :id          :uuid
                                 :name        :text
-                                :groups_ids  (hayt/set-type :uuid)
                                 :created     :timestamp
                                 :primary-key [:username]})))
     (alia/execute
@@ -25,7 +24,6 @@
                                 :username    :text
                                 :id          :uuid
                                 :name        :text
-                                :groups_ids  (hayt/set-type :uuid)
                                 :created     :timestamp
                                 :primary-key [:id]})))
     (alia/execute
@@ -55,11 +53,29 @@
       "groups"
       (hayt/column-definitions {:id           :uuid
                                 :name         :text
-                                :users_ids    (hayt/set-type :uuid)
                                 :created      :timestamp
-                                :owner_id     :uuid
-                                :admins_ids   (hayt/set-type :uuid)
-                                :primary-key  [:id]})))))
+                                :primary-key  [:id]})))
+
+    ;; to get all groups a user belongs to, and their roles in it
+    (alia/execute
+     conn
+     (hayt/create-table
+      "members_by_group"
+      (hayt/column-definitions {:id :uuid
+                                :user_id :uuid
+                                :group_id :uuid
+                                :role :text
+                                :primary-key [:group_id :user_id]})))
+    (alia/execute
+     conn
+     (hayt/create-table
+      "members_by_user"
+      (hayt/column-definitions {:id :uuid
+                                :user_id :uuid
+                                :group_id :uuid
+                                :role :text
+                                :primary-key [:user_id]})))))
+
 
 (defn down [db]
   (let [conn (get-connection (:hosts db) (:keyspace db))]
