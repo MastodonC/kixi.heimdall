@@ -32,7 +32,7 @@
 (defn public-key [auth-conf]
   (absolute-or-resource-key ks/public-key (:pubkey auth-conf)))
 
-(defn- make-auth-token [user auth-conf]
+(defn make-auth-token [user auth-conf]
   (let [exp (c/to-long (t/plus (t/now) (t/minutes 30)))]
     (jwt/sign user
               (private-key auth-conf)
