@@ -93,8 +93,9 @@
 
 (defroutes app-routes
   public-routes
-  (-> secured-routes
-      wrap-authentication))
+  (wrap-routes secured-routes
+               wrap-authentication)
+  (route/not-found "Not Found")  )
 
 (defn wrap-catch-exceptions [handler]
   (fn [request]
