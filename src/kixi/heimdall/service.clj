@@ -8,6 +8,8 @@
             [clojure.java.io :as io]
             [kixi.heimdall.components.database :as db]
             [kixi.heimdall.user :as user]
+            [kixi.heimdall.group :as group]
+            [kixi.heimdall.member :as member]
             [kixi.heimdall.refresh-token :as refresh-token]
             [kixi.heimdall.util :as util]))
 
@@ -27,10 +29,10 @@
 (defn- private-key [auth-conf]
   (absolute-or-resource-key #(ks/private-key % (:passphrase auth-conf)) (:privkey auth-conf)))
 
-(defn- public-key [auth-conf]
+(defn public-key [auth-conf]
   (absolute-or-resource-key ks/public-key (:pubkey auth-conf)))
 
-(defn- make-auth-token [user auth-conf]
+(defn make-auth-token [user auth-conf]
   (let [exp (c/to-long (t/plus (t/now) (t/minutes 30)))]
     (jwt/sign user
               (private-key auth-conf)
@@ -93,3 +95,10 @@
       (refresh-token/invalidate! session (:id refresh-token-data))
       (success {:message "Invalidated successfully"}))
     (fail "Invalid or expired refresh token provided")))
+
+(defn create-group
+  [session auth-conf {:keys [id] :as user} {:keys [group-name]}]
+  (when user
+    (let [group-id (:group-id (group/create! session {:name group-name}))]
+      (member/add-user-to-group session (java.util.UUID/fromString id) group-id "owner")
+      [true "Group successfully created"])))

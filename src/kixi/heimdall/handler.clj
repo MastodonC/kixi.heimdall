@@ -9,7 +9,9 @@
             [taoensso.timbre :as log]
             [clojure.java.io :as io]
             [clojure.edn :as edn]
-            [environ.core :refer [env]]))
+            [environ.core :refer [env]]
+            [buddy.sign.jwt :as jwt]
+            [buddy.core.keys :as ks]))
 
 (defn get-config
   [f]
@@ -45,15 +47,54 @@
       {:status 200 :body res}
       {:status 401 :body res})))
 
+(defn- parse-header
+  [request token-name]
+  (some->> (get (:headers request) "authorization")
+           (re-find (re-pattern (str "^" token-name " (.+)$")))
+           (second)))
+
+(defn create-group [req]
+  (let [[ok? res] (service/create-group (:cassandra-session (:components req))
+                                        (:auth-conf req)
+                                        (:user req)
+                                        (:params req))]
+    (if ok?
+      {:status 201 :body res}
+      {:status 401 :body res})))
+
 (defn wrap-config [handler]
   (fn [req]
     (handler (assoc req :auth-conf auth-config))))
 
-(defroutes app-routes
+(defn- parse-header
+  [request token-name]
+  (some->> (get (:headers request) "authorization")
+           (re-find (re-pattern (str "^" token-name " (.+)$")))
+           (second)))
+
+(defn wrap-authentication
+  [handler]
+  (fn [request]
+    (let [token (parse-header request "Token")
+          _ (println token)
+          unsigned (when token (service/unsign-token auth-config token))]
+      (if (and token unsigned)
+        (handler (assoc request :user unsigned))
+        (do (log/warn "Unauthenticated") {:status 401 :body "Unauthenticated"})))))
+
+(defroutes public-routes
   (GET "/" [] "Hello World")
   (POST "/create-auth-token" [] auth-token)
   (POST "/refresh-auth-token" [] refresh-auth-token)
-  (POST "/invalidate-refresh-token" [] invalidate-refresh-token)
+  (POST "/invalidate-refresh-token" [] invalidate-refresh-token))
+
+(defroutes secured-routes
+  (POST "/create-group" [] create-group))
+
+(defroutes app-routes
+  public-routes
+  (wrap-routes secured-routes
+               wrap-authentication)
   (route/not-found "Not Found"))
 
 (defn wrap-catch-exceptions [handler]

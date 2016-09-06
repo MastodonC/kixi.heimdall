@@ -5,6 +5,8 @@
             [kixi.heimdall.service :as service]
             [kixi.heimdall.user :as user]
             [kixi.heimdall.refresh-token :as rt]
+            [kixi.heimdall.group :as group]
+            [kixi.heimdall.member :as member]
             [buddy.hashers :as hs]
             [clojure.java.io :as io]
             [clojure.edn :as edn]
@@ -108,18 +110,22 @@
 (deftest test-invalidate-refresh-token
   (testing "invalidate existing refresh token"
     (let [refresh-token (valid-refresh-token)]
-      (with-redefs [rt/find-by-user-and-issued (fn [session user-id issued] (refresh-token-record refresh-token))
+      (with-redefs [rt/find-by-user-and-issued (fn [session user-id issued]
+                                                 (refresh-token-record refresh-token))
                     rt/invalidate! (fn [session id] '())]
         (let [response (app (json-request (mock/request :post "/invalidate-refresh-token"
-                                                        (json/write-str {:refresh-token refresh-token}))))]
+                                                        (json/write-str
+                                                         {:refresh-token refresh-token}))))]
           (is (= (:status response) 200))
-          (is (= (:message (json/read-str (:body response) :key-fn keyword)) "Invalidated successfully"))))))
+          (is (= (:message (json/read-str (:body response) :key-fn keyword))
+                 "Invalidated successfully"))))))
 
   (testing "invalidate refresh token - token not valid signed"
     (let [response (app (json-request (mock/request :post "/invalidate-refresh-token"
                                                     (json/write-str {:refresh-token "abc"}))))]
       (is (= (:status response) 401))
-      (is (= (:message (json/read-str (:body response) :key-fn keyword)) "Invalid or expired refresh token provided"))))
+      (is (= (:message (json/read-str (:body response) :key-fn keyword))
+             "Invalid or expired refresh token provided"))))
   (testing "invalidate refresh token not found"
     (let [refresh-token (valid-refresh-token)]
       (with-redefs [rt/find-by-user-and-issued (fn [session user-id issued] nil)]
@@ -129,3 +135,34 @@
           (is (= (:status response) 401))
           (is (= (:message (json/read-str (:body response) :key-fn keyword))
                  "Invalid or expired refresh token provided")))))))
+
+(defn valid-auth-token
+  []
+  (service/make-auth-token {:username "test-user"
+                            :id "29404f79-8825-4097-900b-bd7626a7cbc1"}
+                           auth-config))
+
+(deftest test-create-group
+  (testing "the /create-route route works"
+    (with-redefs [group/create! (fn [session group-name]
+                                  {:group-id #uuid "bfa00b8a-f57e-43ff-829b-d7469e797000"})
+                  member/add-user-to-group (fn [session user-id grp-id role]
+                                             '())]
+      (let [response (app (json-request
+                           (mock/header (mock/request :post "/create-group"
+                                                      (json/write-str {:group-name "test-grp"}))
+                                        "authorization" (format "Token %s" (valid-auth-token)))))]
+        (is (= (:status response) 201))
+        (is (= (:body response) "Group successfully created")))))
+  (testing "without a token /create-group fails"
+    (let [response (app (json-request (mock/request :post "/create-group"
+                                                    (json/write-str {:group-name "test-grp"}))))]
+      (is (= (:status response) 401))
+      (is (= (:body response) "Unauthenticated"))))
+  (testing "without a valid token /create-group fails"
+    (let [response (app (json-request
+                         (mock/header (mock/request :post "/create-group"
+                                                    (json/write-str {:group-name "test-grp"}))
+                                      "authorization" (format "Token 384905-6"))))]
+      (is (= (:status response) 401))
+      (is (= (:body response) "Unauthenticated")))))
