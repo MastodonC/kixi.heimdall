@@ -4,7 +4,7 @@
 
 (defn retrieve-groups-ids
   [session id]
-  (db/select session :members_by_user :group-id {:user-id id}))
+  (db/select session :members_by_user [:group-id] {:user_id id}))
 
 (defn add-user-to-group
   [session user-id group-id role]

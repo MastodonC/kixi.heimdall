@@ -64,10 +64,16 @@
                              :refresh-token refresh-token}}))
       (log/debug "User credentials missing")))
 
+(defn get-groups-for-user [session user-id]
+  (let [groups-colls (member/retrieve-groups-ids session user-id)
+        groups-ids (map :group-id groups-colls)]
+    {:groups groups-ids}))
+
 (defn create-auth-token [session auth-conf credentials]
   (let [[ok? res] (user/auth session credentials)
-        token-pair (make-token-pair! session auth-conf (:user res))
-        groups {:groups (member/retrieve-groups-ids session (:id res))}]
+        user (:user res)
+        token-pair (make-token-pair! session auth-conf user)
+        groups (get-groups-for-user session (:id user))]
     (if (and ok? token-pair)
       (success (merge token-pair groups))
       (fail "Invalid username or password"))))
