@@ -45,16 +45,15 @@
                                            (json/write-str {:username "user" :password "foo"}))))]
           (is (= (:status response) 201))
           (let [body-resp (json/read-str (:body response) :key-fn keyword)]
-            (is (:token-pair body-resp))
-            (is (:groups body-resp))))))
+            (is (:token-pair body-resp))))))
     (testing "authentication fails wrong user"
       (with-redefs [user/find-by-username (fn [session m] nil)
                     member/retrieve-groups-ids (fn [session user-id]
-                                                 '({:group-id "group-id-1"}
-                                                   {:group-id "group-id-2"}))]
+                                                 '())]
         (let [response (app (json-request
                              (mock/request :post "/create-auth-token"
                                            (json/write-str {:username "user" :password "foo"}))))]
+          (println "Response" response)
           (is (= (:status response) 401)))))
     (testing "authentication fails wrong pass"
       (with-redefs [user/find-by-username
