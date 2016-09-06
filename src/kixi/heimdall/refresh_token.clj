@@ -25,10 +25,10 @@
   (let [refresh-token (find-by-id session id)
         user-id (:user_id refresh-token)
         issued (:issued refresh-token)]
-      (db/update! session :refresh_tokens
-                  {:valid false}
-                  {:id id})
-      (db/update! session :refresh_tokens_by_user_id_and_issued
-                  {:valid false}
-                  {:user_id user-id
-                   :issued issued})))
+    (db/update! session :refresh_tokens
+                {:valid false}
+                {:id id})
+    (db/update! session :refresh_tokens_by_user_id_and_issued
+                {:valid false}
+                {:user_id user-id
+                 :issued issued})))

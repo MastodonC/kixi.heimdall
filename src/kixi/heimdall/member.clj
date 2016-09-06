@@ -1,7 +1,6 @@
 (ns kixi.heimdall.member
   (:require [kixi.heimdall.components.database :as db]
-            [qbits.alia.uuid :as uuid])
-  )
+            [qbits.alia.uuid :as uuid]))
 
 (defn retrieve-groups-ids
   [session id]
@@ -19,4 +18,4 @@
               {:id (uuid/random)
                :user-id user-id
                :group-id group-id
-               :role role})  )
+               :role role}))

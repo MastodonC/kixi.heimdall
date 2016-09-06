@@ -95,7 +95,7 @@
   public-routes
   (wrap-routes secured-routes
                wrap-authentication)
-  (route/not-found "Not Found")  )
+  (route/not-found "Not Found"))
 
 (defn wrap-catch-exceptions [handler]
   (fn [request]

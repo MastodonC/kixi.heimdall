@@ -76,7 +76,6 @@
                                 :role :text
                                 :primary-key [:user_id]})))))
 
-
 (defn down [db]
   (let [conn (get-connection (:hosts db) (:keyspace db))]
     (alia/execute conn (hayt/drop-table "users"))
