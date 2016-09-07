@@ -74,7 +74,7 @@
                                 :user_id :uuid
                                 :group_id :uuid
                                 :role :text
-                                :primary-key [:user_id]})))))
+                                :primary-key [:user_id :group_id]})))))
 
 (defn down [db]
   (let [conn (get-connection (:hosts db) (:keyspace db))]

@@ -79,7 +79,9 @@
         (map (partial into {}) reformatted)
         reformatted)))
   (select [this table what where]
-    (let [result (exec this (hayt/select table (apply hayt/columns (map util/hyphen->underscore what)) (hayt/where where)))
+    (let [result (exec this (hayt/select table (apply hayt/columns
+                                                      (map util/hyphen->underscore what))
+                                         (hayt/where (into {} (util/hyphen->underscore where)))))
           reformatted (map util/underscore->hyphen result)]
       (if (coll? result)
         (map (partial into {}) reformatted)
