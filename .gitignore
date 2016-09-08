@@ -9,5 +9,5 @@ pom.xml.asc
 /.lein-*
 /.nrepl-port
 *.pem
-heirmdall.json
+heimdall.json
 resources/secrets.edn
