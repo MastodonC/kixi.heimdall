@@ -1,3 +1,0 @@
-{:privkey "test_privkey.pem"
- :pubkey "test_pubkey.pem"
- :passphrase "test"}

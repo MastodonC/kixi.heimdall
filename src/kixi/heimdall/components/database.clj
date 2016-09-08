@@ -3,9 +3,10 @@
             [qbits.alia :as alia]
             [qbits.hayt :as hayt]
             [clojure.java.io :as io]
-            [joplin.repl :as jrepl :refer [migrate]]
+            [joplin.repl :as jrepl :refer [migrate load-config]]
             [taoensso.timbre :as log]
-            [kixi.heimdall.util :as util]))
+            [kixi.heimdall.util :as util]
+            [kixi.heimdall.config :as config]))
 
 (defprotocol Session
   (execute [this statement]))
@@ -36,14 +37,13 @@
     (log/error "Unable to execute Cassandra comment - no connection")))
 
 (defn create-keyspace!
-  [host keyspace replication-factor]
+  [hosts keyspace replication-strategy]
   (alia/execute
-   (alia/connect (alia/cluster {:contact-points [host]}))
+   (alia/connect (alia/cluster {:contact-points hosts}))
    (hayt/create-keyspace keyspace
                          (hayt/if-exists false)
                          (hayt/with {:replication
-                                     {:class "SimpleStrategy"
-                                      :replication_factor replication-factor}}))))
+                                     replication-strategy}))))
 
 (defprotocol Database
   (drop-table!
@@ -94,14 +94,18 @@
   component/Lifecycle
   (start [component]
     (log/info "Bootstrapping Cassandra...")
-    (let [{:keys [host keyspace replication-factor]} opts]
-      (create-keyspace! host keyspace replication-factor))
+    (let [{:keys [hosts keyspace replication-strategy]} opts]
+      (log/info "Keyspace:" hosts keyspace replication-strategy)
+      (create-keyspace! hosts keyspace replication-strategy)
+      (log/info "Keyspace created"))
     (let [joplin-config (jrepl/load-config (io/resource "joplin.edn"))]
+      (log/info "About to migrate")
       (->> profile
            (migrate joplin-config)
            (with-out-str)
            (clojure.string/split-lines)
            (run! #(log/info "> JOPLIN:" %))))
+    (log/info "Migrated")
     (log/info ";; Starting session")
     (assoc component :session
            (alia/connect (get-in component [:cluster :instance])

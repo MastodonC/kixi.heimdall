@@ -20,7 +20,7 @@
 
   (let [new-system (resolve 'kixi.heimdall.system/system)]
     (alter-var-root #'kixi.heimdall.application/system
-                    (constantly (new-system)))))
+                    (constantly (new-system :development)))))
 
 (defn start
   "Starts the current development system."

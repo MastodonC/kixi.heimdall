@@ -24,21 +24,22 @@
   (ReplServer. config))
 
 (defn build-application [opts]
-  (let [system (kixi.heimdall.system/system)]
+  (let [system (kixi.heimdall.system/system (:profile opts))]
     (cond-> system
       (:repl opts)
       (assoc :repl-server (mk-repl-server {:port (:repl-port opts)})))))
+
 
 (defn -main [& args]
 
   (let [[opts args banner]
         (cli args
-             ["-h" "--help" "Show help"
-              :flag true :default false]
              ["-R" "--repl" "Start a REPL"
               :flag true :default true]
              ["-r" "--repl-port" "REPL server listen port"
-              :default 5001 :parse-fn #(Integer/valueOf %)])]
+              :default 5001 :parse-fn #(Integer/valueOf %)]
+             ["-p" "--profile" "config environment/profile"
+              :default :dev :parse-fn keyword])]
 
     (when (:help opts)
       (println banner)
@@ -48,6 +49,8 @@
     (Thread/setDefaultUncaughtExceptionHandler
      (reify Thread$UncaughtExceptionHandler
        (uncaughtException [_ thread ex]
-         (log/error ex "Uncaught exception on" (.getName thread)))))
+         (log/error  ex "Uncaught exception on" (.getName thread)))))
 
-    (alter-var-root #'kixi.heimdall.application/system (fn [_] (component/start (build-application opts))))))
+    (try
+      (component/start (build-application opts))
+      (catch Throwable t (log/error t)))))

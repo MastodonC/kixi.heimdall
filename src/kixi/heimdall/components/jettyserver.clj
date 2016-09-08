@@ -9,11 +9,17 @@
   (fn [req]
     (handler (assoc req :components components))))
 
-(defrecord JettyServer [handler port]
+(defn wrap-config
+  "Assoc keys and passphrase configurations to request"
+  [handler auth-conf]
+  (fn [req]
+    (handler (assoc req :auth-conf auth-conf))))
+
+(defrecord JettyServer [handler port auth-conf]
   component/Lifecycle
   (start [this]
     (log/info "Starting JettyServer")
-    (assoc this ::server (jetty/run-jetty (wrap-components handler this)
+    (assoc this ::server (jetty/run-jetty (-> handler (wrap-components this) (wrap-config auth-conf))
                                           {:port port
                                            :join? false})))
   (stop [this]
@@ -22,5 +28,5 @@
     (dissoc this ::server)))
 
 (defn new-http-server
-  [api-port]
-  (->JettyServer #'kixi.heimdall.handler/app api-port))
+  [api-port auth-conf]
+  (->JettyServer #'kixi.heimdall.handler/app api-port auth-conf))

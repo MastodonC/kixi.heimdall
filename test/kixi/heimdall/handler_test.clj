@@ -1,6 +1,7 @@
 (ns kixi.heimdall.handler-test
   (:require [clojure.test :refer :all]
             [ring.mock.request :as mock]
+            [kixi.heimdall.config :as config]
             [kixi.heimdall.handler :refer :all]
             [kixi.heimdall.service :as service]
             [kixi.heimdall.user :as user]
@@ -13,11 +14,23 @@
             [clojure.data.json :as json]
             [qbits.alia.uuid :as uuid]
             [buddy.sign.util :as sign]
-            [clj-time.core :as t]))
+            [clj-time.core :as t]
+            [kixi.heimdall.config :as config]))
 
 (defn json-request
   [request]
   (mock/content-type request "application/json"))
+
+(def auth-config
+  (config/auth-conf (config/config :test)))
+
+(defn auth-config-added
+  [request]
+  (assoc request :auth-conf auth-config))
+
+(defn heimdall-request
+  [request]
+  (auth-config-added (json-request request)))
 
 (deftest test-app
   (testing "main route"
@@ -28,6 +41,8 @@
   (testing "not-found route"
     (let [response (app (mock/request :get "/invalid"))]
       (is (= (:status response) 404)))))
+
+
 
 (deftest test-authentication
   (testing "auth route"
@@ -40,7 +55,7 @@
                     member/retrieve-groups-ids (fn [session user-id]
                                                  '({:group-id "group-id-1"}
                                                    {:group-id "group-id-2"}))]
-        (let [response (app (json-request
+        (let [response (app (heimdall-request
                              (mock/request :post "/create-auth-token"
                                            (json/write-str {:username "user" :password "foo"}))))]
           (is (= (:status response) 201))
@@ -50,7 +65,7 @@
       (with-redefs [user/find-by-username (fn [session m] nil)
                     member/retrieve-groups-ids (fn [session user-id]
                                                  '())]
-        (let [response (app (json-request
+        (let [response (app (heimdall-request
                              (mock/request :post "/create-auth-token"
                                            (json/write-str {:username "user" :password "foo"}))))]
           (println "Response" response)
@@ -61,10 +76,11 @@
                     member/retrieve-groups-ids (fn [session user-id]
                                                  '({:group-id "group-id-1"}
                                                    {:group-id "group-id-2"}))]
-        (let [response (app (json-request
+        (let [response (app (heimdall-request
                              (mock/request :post "/create-auth-token"
                                            (json/write-str {:username "user" :password "foo"}))))]
           (is (= (:status response) 401)))))))
+
 
 (defn  valid-refresh-token
   []
@@ -90,7 +106,7 @@
                                        :username "foo"})
                     rt/invalidate! (fn [session id] '())
                     rt/add! (fn [session token] '())]
-        (let [response (app (json-request
+        (let [response (app (heimdall-request
                              (mock/request :post "/refresh-auth-token"
                                            (json/write-str {:refresh-token refresh-token}))))
               body (json/read-str (:body response) :key-fn keyword)]
@@ -102,7 +118,7 @@
     (let [refresh-token (valid-refresh-token)]
       (with-redefs [rt/find-by-user-and-issued (fn [session user-id issued] nil)
                     user/find-by-id (fn [session user-id] nil)]
-        (let [response (app (json-request
+        (let [response (app (heimdall-request
                              (mock/request :post "/refresh-auth-token"
                                            (json/write-str {:refresh-token refresh-token}))))]
           (is (= (:status response) 401))
@@ -111,7 +127,7 @@
   (testing "Handles case when token to refresh wasn't signed properly"
     (with-redefs [rt/find-by-user-and-issued (fn [session user-id issued] nil)
                   user/find-by-id (fn [session user-id] nil)]
-      (let [response (app (json-request
+      (let [response (app (heimdall-request
                            (mock/request :post "/refresh-auth-token"
                                          (json/write-str {:refresh-token "foo"}))))]
         (is (= (:status response) 401))
@@ -124,23 +140,23 @@
       (with-redefs [rt/find-by-user-and-issued (fn [session user-id issued]
                                                  (refresh-token-record refresh-token))
                     rt/invalidate! (fn [session id] '())]
-        (let [response (app (json-request (mock/request :post "/invalidate-refresh-token"
-                                                        (json/write-str
-                                                         {:refresh-token refresh-token}))))]
+        (let [response (app (heimdall-request (mock/request :post "/invalidate-refresh-token"
+                                                            (json/write-str
+                                                             {:refresh-token refresh-token}))))]
           (is (= (:status response) 200))
           (is (= (:message (json/read-str (:body response) :key-fn keyword))
                  "Invalidated successfully"))))))
 
   (testing "invalidate refresh token - token not valid signed"
-    (let [response (app (json-request (mock/request :post "/invalidate-refresh-token"
-                                                    (json/write-str {:refresh-token "abc"}))))]
+    (let [response (app (heimdall-request (mock/request :post "/invalidate-refresh-token"
+                                                        (json/write-str {:refresh-token "abc"}))))]
       (is (= (:status response) 401))
       (is (= (:message (json/read-str (:body response) :key-fn keyword))
              "Invalid or expired refresh token provided"))))
   (testing "invalidate refresh token not found"
     (let [refresh-token (valid-refresh-token)]
       (with-redefs [rt/find-by-user-and-issued (fn [session user-id issued] nil)]
-        (let [response (app (json-request
+        (let [response (app (heimdall-request
                              (mock/request :post "/invalidate-refresh-token"
                                            (:json/write-str {:refresh-token refresh-token}))))]
           (is (= (:status response) 401))
@@ -159,19 +175,19 @@
                                   {:group-id #uuid "bfa00b8a-f57e-43ff-829b-d7469e797000"})
                   member/add-user-to-group (fn [session user-id grp-id role]
                                              '())]
-      (let [response (app (json-request
+      (let [response (app (heimdall-request
                            (mock/header (mock/request :post "/create-group"
                                                       (json/write-str {:group-name "test-grp"}))
                                         "authorization" (format "Token %s" (valid-auth-token)))))]
         (is (= (:status response) 201))
         (is (= (:body response) "Group successfully created")))))
   (testing "without a token /create-group fails"
-    (let [response (app (json-request (mock/request :post "/create-group"
-                                                    (json/write-str {:group-name "test-grp"}))))]
+    (let [response (app (heimdall-request (mock/request :post "/create-group"
+                                                        (json/write-str {:group-name "test-grp"}))))]
       (is (= (:status response) 401))
       (is (= (:body response) "Unauthenticated"))))
   (testing "without a valid token /create-group fails"
-    (let [response (app (json-request
+    (let [response (app (heimdall-request
                          (mock/header (mock/request :post "/create-group"
                                                     (json/write-str {:group-name "test-grp"}))
                                       "authorization" (format "Token 384905-6"))))]
