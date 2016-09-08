@@ -27,7 +27,7 @@
   },
   "id": "heimdall",
   "cpus": 0.2,
-  "mem": 512,
+  "mem": 1024,
   "healthChecks": [{
         "protocol": "TCP",
         "gracePeriodSeconds": 600,
