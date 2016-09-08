@@ -5,8 +5,7 @@
 
 (defn resource-or-dummy-resolver
   [_ include]
-  (println "in dummy resolver" include)
-  (or (util/file-exists? (io/resource include))
+  (or (io/resource include)
       (io/resource (str include ".dummy"))))
 
 (defn config [profile]
