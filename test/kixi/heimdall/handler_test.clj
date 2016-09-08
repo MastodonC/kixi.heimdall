@@ -22,7 +22,7 @@
   (mock/content-type request "application/json"))
 
 (def auth-config
-  (config/auth-conf (config/config :development)))
+  (config/auth-conf (config/config :test)))
 
 (defn auth-config-added
   [request]

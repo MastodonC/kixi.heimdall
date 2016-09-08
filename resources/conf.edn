@@ -9,9 +9,12 @@
                                                                   :replication_factor 2}}}
  :jetty-server {:port 3000}
  :auth-conf {:privkey #profile {:development "auth_privkey.pem"
+                                :test "test_privkey.pem"
                                 :production "/root/prod_privkey.pem"}
              :pubkey #profile {:development "auth_pubkey.pem"
+                               :test "test_pubkey.pem"
                                :production "/root/prod_pubkey.pem"}
              :secrets #include "secrets.edn"
              :passphrase #profile {:development ^:ref [:auth-conf :secrets :dev-passphrase]
+                                   :test "test"
                                    :production ^:ref [:auth-conf :secrets :prod-passphrase]}}}
