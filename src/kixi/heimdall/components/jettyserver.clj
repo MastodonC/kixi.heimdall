@@ -28,5 +28,5 @@
     (dissoc this ::server)))
 
 (defn new-http-server
-  [api-port]
+  [api-port auth-conf]
   (->JettyServer #'kixi.heimdall.handler/app api-port auth-conf))

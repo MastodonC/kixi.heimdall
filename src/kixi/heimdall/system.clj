@@ -9,6 +9,7 @@
 (defn system [profile]
   (let [config (config/config profile)]
     (println "System with" profile)
+    (println "Loading config" config)
     (-> (component/system-map
          :cluster (new-cluster {:contact-points (-> config :cassandra-session :hosts)})
          :cassandra-session (new-session (:cassandra-session config) profile)

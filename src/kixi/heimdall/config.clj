@@ -4,7 +4,7 @@
             [clojure.java.io :as io]))
 
 (defn config [profile]
-  (aero/read-config (io/resource "conf.edn") {:profile profile}))
+  (aero/read-config (io/resource "conf.edn") {:resolver aero/resource-resolver :profile profile}))
 
 (defn webserver-port [config]
   (get-in config [:jetty-server :port]))

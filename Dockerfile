@@ -17,7 +17,6 @@ ADD target/kixi.heimdall.jar /srv/kixi.heimdall.jar
 
 ADD scripts/run.sh /etc/service/auth/run
 
-ADD ~/.secrets.edn /root/.secrets.edn
 ADD resources/prod_privkey.pem /root/prod_privkey.pem
 ADD resources/prod_pubkey.pem /root/prod_pubkey.pem
 
