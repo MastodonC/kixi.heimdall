@@ -13,14 +13,6 @@
             [buddy.sign.jwt :as jwt]
             [buddy.core.keys :as ks]))
 
-(defn get-config
-  [f]
-  (edn/read-string (slurp f)))
-
-(def auth-config
-  (util/get-config (or (util/file-exists? (System/getProperty "user.home") ".heimdall.auth-conf.edn")
-                       (io/resource (:auth-conf env)))))
-
 (defn auth-token [req]
   (let [[ok? res] (service/create-auth-token (:cassandra-session (:components req))
                                              (:auth-conf req)
@@ -62,10 +54,6 @@
       {:status 201 :body res}
       {:status 401 :body res})))
 
-(defn wrap-config [handler]
-  (fn [req]
-    (handler (assoc req :auth-conf auth-config))))
-
 (defn- parse-header
   [request token-name]
   (some->> (get (:headers request) "authorization")
@@ -76,8 +64,7 @@
   [handler]
   (fn [request]
     (let [token (parse-header request "Token")
-          _ (println token)
-          unsigned (when token (service/unsign-token auth-config token))]
+          unsigned (when token (service/unsign-token (:auth-conf request) token))]
       (if (and token unsigned)
         (handler (assoc request :user unsigned))
         (do (log/warn "Unauthenticated") {:status 401 :body "Unauthenticated"})))))
@@ -104,7 +91,6 @@
 
 (def app
   (-> app-routes
-      (wrap-config)
       (wrap-catch-exceptions)
       wrap-keyword-params
       wrap-json-params

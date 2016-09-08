@@ -12,7 +12,7 @@
     (-> (component/system-map
          :cluster (new-cluster {:contact-points (-> config :cassandra-session :hosts)})
          :cassandra-session (new-session (:cassandra-session config) profile)
-         :jetty-server (component/using (new-http-server (config/webserver-port config)) [:cassandra-session])
+         :jetty-server (component/using (new-http-server (config/webserver-port config) (config/auth-conf config)) [:cassandra-session])
          :repl-server  (Object.) ; dummy - replaced when invoked via uberjar.
          )
         (component/system-using

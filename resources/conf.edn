@@ -7,4 +7,11 @@
                                                                    :replication_factor 1}
                                                      :production {:class  "SimpleStrategy"
                                                                   :replication_factor 2}}}
- :jetty-server {:port 3000}}
+ :jetty-server {:port 3000}
+ :auth-conf {:privkey #profile {:development "auth_privkey.pem"
+                                :production "/root/prod_privkey.pem"}
+             :pubkey #profile {:development "auth_pubkey.pem"
+                               :production "/root/prod_pubkey.pem"}
+             :secrets #include #join [#env HOME "/.secrets.edn"]
+             :passphrase #profile {:development ^:ref [:auth-conf :secrets :dev-passphrase]
+                                   :production ^:ref [:auth-conf :secrets :prod-passphrase]}}}
