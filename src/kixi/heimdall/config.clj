@@ -3,13 +3,13 @@
             [kixi.heimdall.util :as util]
             [clojure.java.io :as io]))
 
-(defn resource-or-dummy-resolver
-  [_ include]
-  (or (io/resource include)
-      (io/resource (str include ".dummy"))))
+(defn relative-or-dummy-resolver
+  [source include]
+  (or (aero/relative-resolver source include)
+      (io/resource (str include ".dummy")))) ;; for circle ci
 
 (defn config [profile]
-  (aero/read-config (io/resource "conf.edn") {:resolver resource-or-dummy-resolver :profile profile}))
+  (aero/read-config (io/resource "conf.edn") {:resolver relative-or-dummy-resolver :profile profile}))
 
 (defn webserver-port [config]
   (get-in config [:jetty-server :port]))
