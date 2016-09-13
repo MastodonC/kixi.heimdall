@@ -1,4 +1,7 @@
 #!/usr/bin/env bash
+
+/root/download-secrets.sh
+
 set -o errexit
 set -o nounset
 set -o xtrace

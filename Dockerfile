@@ -11,14 +11,19 @@ RUN add-apt-repository -y ppa:webupd8team/java \
 software-properties-common \
 oracle-java8-installer
 
+
+RUN apt-get install -y python2.7 \
+unzip
+
+RUN ln -s /usr/bin/python2.7 /usr/bin/python
+
+ADD scripts/download-secrets.sh /root/download-secrets.sh
+
 RUN mkdir /etc/service/auth
 
 ADD target/kixi.heimdall.jar /srv/kixi.heimdall.jar
 
 ADD scripts/run.sh /etc/service/auth/run
-
-ADD resources/prod_privkey.pem /root/prod_privkey.pem
-ADD resources/prod_pubkey.pem /root/prod_pubkey.pem
 
 EXPOSE 3000
 EXPOSE 5001
