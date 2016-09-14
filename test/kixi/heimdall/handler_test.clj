@@ -193,3 +193,21 @@
                                       "authorization" (format "Token 384905-6"))))]
       (is (= (:status response) 401))
       (is (= (:body response) "Unauthenticated")))))
+
+(deftest new-user-test
+  (testing "new user can be added if password passes the validation"
+    (with-redefs [user/add! (fn [_ _] '())]
+      (let [response (app (json-request
+                           (mock/request :post "/validate-new-user"
+                                         (json/write-str {:username "user"
+                                                          :password "secret-password"}))))]
+        (println response)
+        (is (= (:status response) 201)))))
+  (testing "new user can be added if password fails the validation"
+    (with-redefs [user/add! (fn [_ _] '())]
+      (let [response (app (json-request
+                           (mock/request :post "/validate-new-user"
+                                         (json/write-str {:username "user"
+                                                          :password "foo"}))))]
+        (println response)
+        (is (= (:status response) 401))))))

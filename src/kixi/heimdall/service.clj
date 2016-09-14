@@ -110,3 +110,17 @@
     (let [group-id (:group-id (group/create! session {:name group-name}))]
       (member/add-user-to-group session (java.util.UUID/fromString id) group-id "owner")
       [true "Group successfully created"])))
+
+(defn check-credentials
+  [{:keys [_ password]}]
+  (when (>= (count password) 8)
+    password))
+
+(defn validate-new-user
+  [session auth-conf credentials]
+  (let [user-creds (select-keys credentials [:username :password])
+        cred-checked (check-credentials user-creds)]
+    (if cred-checked
+      (do (user/add! session cred-checked)
+          (success {:message "User successfully created!"}))
+      (fail "Invalid password"))))
