@@ -195,14 +195,16 @@
 
 (deftest new-user-test
   (testing "new user can be added if password passes the validation"
-    (with-redefs [user/add! (fn [_ _] '())]
+    (with-redefs [user/add! (fn [_ _] '())
+                  user/find-by-username (fn [_ _] nil)]
       (let [response (app (json-request
                            (mock/request :post "/user"
                                          (json/write-str {:username "user@boo.com"
                                                           :password "secret1Pass"}))))]
         (is (= (:status response) 201)))))
   (testing "new user can be added if password fails the validation"
-    (with-redefs [user/add! (fn [_ _] '())]
+    (with-redefs [user/add! (fn [_ _] '())
+                  user/find-by-username (fn [_ _] nil)                  ]
       (let [response (app (json-request
                            (mock/request :post "/user"
                                          (json/write-str {:username "user@boo.com"
