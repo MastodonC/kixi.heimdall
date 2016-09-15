@@ -2,7 +2,33 @@
   (:require [kixi.heimdall.components.database :as db]
             [kixi.heimdall.util :as util]
             [buddy.hashers :as hs]
-            [qbits.alia.uuid :as uuid]))
+            [qbits.alia.uuid :as uuid]
+            [schema.core :as s]
+            [taoensso.timbre :as log]))
+
+
+;; schema
+
+;; regex from here http://www.lispcast.com/clojure.spec-vs-schema
+(def email-regex #"^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,63}")
+(def password-regex  #"(?=.*\d.*)(?=.*[a-z].*)(?=.*[A-Z].*).{8,}")
+
+(def Login
+  {:username email-regex
+   :password password-regex})
+
+(defn validate
+  [user]
+  (let [validation (s/check Login user)]
+    (if validation
+      [false (clojure.string/join ", " (mapv (fn [[k v]]
+                                               (cond
+                                                 (= k :email) "username should have an email format"
+                                                 (= k :password) "password should have at least 8 letters, one uppercase and one lowercase letter, and one number")) validation))]
+      [true nil])))
+
+
+;; data functions
 
 (defn add!
   [session user]

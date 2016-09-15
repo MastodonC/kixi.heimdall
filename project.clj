@@ -21,7 +21,8 @@
                  [org.clojure/tools.nrepl        "0.2.12"]
                  [org.clojure/tools.cli "0.3.5"]
                  [environ "1.1.0"]
-                 [aero "1.0.0"]]
+                 [aero "1.0.0"]
+                 [prismatic/schema "1.1.3"]]
   :plugins [[lein-ring "0.9.7"]]
   :repl-options {:init-ns user}
   :profiles

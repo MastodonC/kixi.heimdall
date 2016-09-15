@@ -22,9 +22,8 @@
       {:status 401 :body res})))
 
 (defn new-user [req]
-  (let [[ok? res] (service/validate-new-user (:cassandra-session (:components req))
-                                             (:auth-conf req)
-                                             (:params req))]
+  (let [[ok? res] (service/new-user (:cassandra-session (:components req))
+                                    (:params req))]
     (if ok?
       {:status 201 :body res}
       {:status 401 :body res})))
@@ -79,7 +78,7 @@
 
 (defroutes public-routes
   (GET "/" [] "Hello World")
-  (POST "/validate-new-user" [] new-user)
+  (POST "/user" [] new-user)
   (POST "/create-auth-token" [] auth-token)
   (POST "/refresh-auth-token" [] refresh-auth-token)
   (POST "/invalidate-refresh-token" [] invalidate-refresh-token))
