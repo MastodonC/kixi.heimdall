@@ -13,6 +13,7 @@
             [kixi.heimdall.refresh-token :as refresh-token]
             [kixi.heimdall.util :as util]))
 
+
 (defn fail
   [message]
   [false {:message message}])
@@ -116,6 +117,9 @@
   (let [credentials (select-keys params [:username :password])
         [ok? res] (user/validate credentials)]
     (if ok?
-      (do  (user/add! session credentials)
-           (success {:message "User successfully created!"}))
+      (if (user/find-by-username session {:username (:username credentials)})
+        (fail "There is already a user with this username.")
+        (do
+          (user/add! session credentials)
+          (success {:message "User successfully created!"})))
       (fail (str "Please match the required format: " res)))))
