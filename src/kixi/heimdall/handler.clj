@@ -61,6 +61,22 @@
       {:status 201 :body res}
       {:status 401 :body res})))
 
+(defn escape-html
+  "Change special characters into HTML character entities."
+  [text]
+  (.. #^String (str text)
+      (replace "&" "&amp;")
+      (replace "<" "&lt;")
+      (replace ">" "&gt;")
+      (replace "\"" "&quot;")))
+
+(defn wrap-escape-html
+  [handler]
+  (fn [request]
+    (handler (update-in request [:params] #(clojure.walk/prewalk (fn [v] (if (string? v)
+                                                                           (escape-html v)
+                                                                           v)) %)))))
+
 (defn- parse-header
   [request token-name]
   (some->> (get (:headers request) "authorization")
@@ -75,6 +91,7 @@
       (if (and token unsigned)
         (handler (assoc request :user unsigned))
         (do (log/warn "Unauthenticated") {:status 401 :body "Unauthenticated"})))))
+
 
 (defroutes public-routes
   (GET "/" [] "Hello World")
@@ -100,6 +117,7 @@
 (def app
   (-> app-routes
       (wrap-catch-exceptions)
+      wrap-escape-html
       wrap-keyword-params
       wrap-json-params
       wrap-json-response))

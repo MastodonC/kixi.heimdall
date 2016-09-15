@@ -23,7 +23,7 @@
     (if validation
       [false (clojure.string/join ", " (mapv (fn [[k v]]
                                                (cond
-                                                 (= k :email) "username should have an email format"
+                                                 (= k :username) "username should have an email format"
                                                  (= k :password) "password should have at least 8 letters, one uppercase and one lowercase letter, and one number")) validation))]
       [true nil])))
 
