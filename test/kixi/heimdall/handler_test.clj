@@ -48,8 +48,8 @@
   (testing "auth route"
     (testing "authentication succeeds"
       (with-redefs [user/find-by-username (fn [session m]
-                                            {:username "user"
-                                             :password (hs/encrypt "foo")
+                                            {:username "user@boo.com"
+                                             :password (hs/encrypt "foo12CCbb")
                                              :id (uuid/random)})
                     rt/add! (fn [session m] true)
                     member/retrieve-groups-ids (fn [session user-id]
@@ -57,7 +57,7 @@
                                                    {:group-id "group-id-2"}))]
         (let [response (app (heimdall-request
                              (mock/request :post "/create-auth-token"
-                                           (json/write-str {:username "user" :password "foo"}))))]
+                                           (json/write-str {:username "user@boo.com" :password "foo12CCbb"}))))]
           (is (= (:status response) 201))
           (let [body-resp (json/read-str (:body response) :key-fn keyword)]
             (is (:token-pair body-resp))))))
@@ -67,8 +67,7 @@
                                                  '())]
         (let [response (app (heimdall-request
                              (mock/request :post "/create-auth-token"
-                                           (json/write-str {:username "user" :password "foo"}))))]
-          (println "Response" response)
+                                           (json/write-str {:username "user@boo.com" :password "foo12CCbb"}))))]
           (is (= (:status response) 401)))))
     (testing "authentication fails wrong pass"
       (with-redefs [user/find-by-username
@@ -193,3 +192,23 @@
                                       "authorization" (format "Token 384905-6"))))]
       (is (= (:status response) 401))
       (is (= (:body response) "Unauthenticated")))))
+
+(deftest new-user-test
+  (testing "new user can be added if password passes the validation"
+    (with-redefs [user/add! (fn [_ _] '())
+                  user/find-by-username (fn [_ _] nil)]
+      (let [response (app (json-request
+                           (mock/request :post "/user"
+                                         (json/write-str {:username "user@boo.com"
+                                                          :password "secret1Pass"}))))]
+        (is (= (:status response) 201)))))
+  (testing "new user can be added if password fails the validation"
+    (with-redefs [user/add! (fn [_ _] '())
+                  user/find-by-username (fn [_ _] nil)                  ]
+      (let [response (app (json-request
+                           (mock/request :post "/user"
+                                         (json/write-str {:username "user@boo.com"
+                                                          :password "foo"}))))]
+        (is (= (:status response) 401))
+        (is (= (:message (json/read-str (:body response) :key-fn keyword))
+               "Please match the required format: password should have at least 8 letters, one uppercase and one lowercase letter, and one number"))))))

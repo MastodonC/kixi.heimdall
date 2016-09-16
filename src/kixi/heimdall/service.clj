@@ -13,6 +13,7 @@
             [kixi.heimdall.refresh-token :as refresh-token]
             [kixi.heimdall.util :as util]))
 
+
 (defn fail
   [message]
   [false {:message message}])
@@ -110,3 +111,15 @@
     (let [group-id (:group-id (group/create! session {:name group-name}))]
       (member/add-user-to-group session (java.util.UUID/fromString id) group-id "owner")
       [true "Group successfully created"])))
+
+(defn new-user
+  [session params]
+  (let [credentials (select-keys params [:username :password])
+        [ok? res] (user/validate credentials)]
+    (if ok?
+      (if (user/find-by-username session {:username (:username credentials)})
+        (fail "There is already a user with this username.")
+        (do
+          (user/add! session credentials)
+          (success {:message "User successfully created!"})))
+      (fail (str "Please match the required format: " res)))))
