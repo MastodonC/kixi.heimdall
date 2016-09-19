@@ -3,6 +3,10 @@
             [kixi.heimdall.util :as util]
             [clojure.java.io :as io]))
 
+(defmethod aero/reader 'rand-uuid
+  [{:keys [profile] :as opts} tag value]
+  (str (java.util.UUID/randomUUID)))
+
 (defn relative-or-dummy-resolver
   [source include]
   (or (aero/relative-resolver source include)

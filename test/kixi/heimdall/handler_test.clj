@@ -28,20 +28,26 @@
   [request]
   (assoc request :auth-conf auth-config))
 
+(defn metrics-added
+  [request]
+  (assoc request :components {:metrics {:insert-time-in-ctx identity
+                                        :record-ctx-metrics (fn [a _] a)}}))
 (defn heimdall-request
   [request]
-  (auth-config-added (json-request request)))
+  (-> request
+      json-request
+      auth-config-added
+      metrics-added))
 
 (deftest test-app
   (testing "main route"
-    (let [response (app (mock/request :get "/"))]
+    (let [response (app (heimdall-request (mock/request :get "/")))]
       (is (= (:status response) 200))
       (is (= (:body response) "Hello World"))))
 
   (testing "not-found route"
-    (let [response (app (mock/request :get "/invalid"))]
+    (let [response (app (heimdall-request (mock/request :get "/invalid")))]
       (is (= (:status response) 404)))))
-
 
 
 (deftest test-authentication
@@ -197,7 +203,7 @@
   (testing "new user can be added if password passes the validation"
     (with-redefs [user/add! (fn [_ _] '())
                   user/find-by-username (fn [_ _] nil)]
-      (let [response (app (json-request
+      (let [response (app (heimdall-request
                            (mock/request :post "/user"
                                          (json/write-str {:username "user@boo.com"
                                                           :password "secret1Pass"}))))]
@@ -205,7 +211,7 @@
   (testing "new user can be added if password fails the validation"
     (with-redefs [user/add! (fn [_ _] '())
                   user/find-by-username (fn [_ _] nil)                  ]
-      (let [response (app (json-request
+      (let [response (app (heimdall-request
                            (mock/request :post "/user"
                                          (json/write-str {:username "user@boo.com"
                                                           :password "foo"}))))]
