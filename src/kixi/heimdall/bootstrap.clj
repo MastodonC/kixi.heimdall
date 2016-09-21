@@ -45,12 +45,6 @@
       (println banner)
       (System/exit 0))
 
-    ;; See http://stuartsierra.com/2015/05/27/clojure-uncaught-exceptions
-    (Thread/setDefaultUncaughtExceptionHandler
-     (reify Thread$UncaughtExceptionHandler
-       (uncaughtException [_ thread ex]
-         (log/error  ex "Uncaught exception on" (.getName thread)))))
-
     (try
       (component/start (build-application opts))
-      (catch Throwable t (log/error t)))))
+      (catch Throwable t (log/error t))))) ;; just to really be sure, should be caught elsewhere

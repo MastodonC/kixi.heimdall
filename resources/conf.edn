@@ -1,4 +1,5 @@
-{:cassandra-session {:hosts #profile {:development ["localhost"]
+{:service-name "kixi.heimdall"
+ :cassandra-session {:hosts #profile {:development ["localhost"]
                                       :production ["node-0.cassandra.mesos"
                                                    "node-1.cassandra.mesos"
                                                    "node-2.cassandra.mesos"]}
@@ -17,4 +18,32 @@
              :secrets #include #join [#env HOME "/.secrets.edn"]
              :passphrase #profile {:development ^:ref [:auth-conf :secrets :dev-passphrase]
                                    :test "test"
-                                   :production ^:ref [:auth-conf :secrets :prod-passphrase]}}}
+                                   :production ^:ref [:auth-conf :secrets :prod-passphrase]}}
+
+ :metrics {:influx-reporter {:host #profile {:staging "172.20.0.48"
+                                             :development "localhost"}
+                             :port 8086
+                                        ;                             :auth
+                             :connect-timeout 1500
+                             :read-timeout 1500
+                             :group-gauges true
+                                        ;                             :duration-unit
+                             :measurement-mappings {"jvm_threads" "jvm\\.thread.*"
+                                                    "jvm_gc" "jvm\\.gc\\..*"
+                                                    "jvm_memory" "jvm\\.memory\\..*"
+                                                    "resources" "resources\\..*"
+                                                    "log" "log\\..*"}
+                                        ;                             :excludes
+                             :prefix ^:ref [:service-name]
+                             :db-name "metrics"
+                             :fields {"meters" #{"m1_rate" "m5_rate" "m15_rate"}}
+                             :tags {"env" #or [#env ENVIRONMENT "development"]
+                                    "service" ^:ref [:service-name]
+                                    "taskid" #or [#env MESOS_TASK_ID #rand-uuid "rand"]}
+                             :seconds #profile {:staging 60
+                                                :development 1}}}
+ :logging {:level :info ; e/o #{:trace :debug :info :warn :error :fatal :report}
+           ;; Control log filtering by namespaces/patterns. Useful for turning off
+           ;; logging in noisy libraries, etc.:
+           ;;:ns-whitelist  ["whiner.*"] #_["my-app.foo-ns"]
+           :ns-blacklist ["org.eclipse.jetty"]}}

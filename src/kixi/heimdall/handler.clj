@@ -93,6 +93,20 @@
         (do (log/warn "Unauthenticated") {:status 401 :body "Unauthenticated"})))))
 
 
+(defn wrap-record-metric
+  [handler]
+  (fn [request]
+    (let [metrics (:metrics (:components request))
+          start-fn (:insert-time-in-ctx metrics)
+          record-fn (:record-ctx-metrics metrics)]
+      (let [metric-started-request (start-fn request)
+            response (try (handler metric-started-request)
+                          (catch Throwable t
+                            (do (record-fn request 500)
+                                (throw t))))]
+        (record-fn metric-started-request (:status request))
+        response))))
+
 (defroutes public-routes
   (GET "/" [] "Hello World")
   (POST "/user" [] new-user)
@@ -112,12 +126,15 @@
 (defn wrap-catch-exceptions [handler]
   (fn [request]
     (try (handler request)
-         (catch Throwable t (log/error t)))))
+         (catch Throwable t
+           (do (log/error t)
+               {:status 500 :body {:message "Something went wrong ..."}})))))
 
 (def app
   (-> app-routes
-      (wrap-catch-exceptions)
       wrap-escape-html
+      wrap-record-metric
+      wrap-catch-exceptions
       wrap-keyword-params
       wrap-json-params
       wrap-json-response))
