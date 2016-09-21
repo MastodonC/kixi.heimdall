@@ -102,8 +102,8 @@
       (let [metric-started-request (start-fn request)
             response (try (handler metric-started-request)
                           (catch Throwable t
-                            (do (record-fn request 500))
-                            (throw t)))]
+                            (do (record-fn request 500)
+                                (throw t))))]
         (record-fn metric-started-request (:status request))
         response))))
 
