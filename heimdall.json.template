@@ -2,7 +2,7 @@
   "container": {
     "type": "DOCKER",
     "docker": {
-      "image": "mastodonc/kixi.heimdall:@@TAG@@",
+      "image": "@@IMAGE@@:@@TAG@@",
       "parameters": [
          {"key": "env", "value": "ENVIRONMENT=@@ENVIRONMENT@@"},
          {"key": "log-driver", "value": "gelf"},

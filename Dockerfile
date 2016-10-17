@@ -1,6 +1,10 @@
 FROM phusion/baseimage:0.9.19
 MAINTAINER Elise Huard <elise@mastodonc.com>
 
+ARG SECRETS_BUCKET
+
+ENV SECRETS_BUCKET=$SECRETS_BUCKET
+
 CMD ["/sbin/my_init"]
 
 RUN apt-get install software-properties-common
