@@ -8,7 +8,8 @@
                                                                    :replication_factor 1}
                                                      :production {:class  "SimpleStrategy"
                                                                   :replication_factor 2}}}
- :jetty-server {:port 3000}
+ :jetty-server {:port #profile {:development 3002
+                                :production 3000}}
  :auth-conf {:privkey #profile {:development "auth_privkey.pem"
                                 :test "test_privkey.pem"
                                 :production "/root/prod_privkey.pem"}
@@ -20,7 +21,7 @@
                                    :test "test"
                                    :production ^:ref [:auth-conf :secrets :prod-passphrase]}}
 
- :metrics {:influx-reporter {:host #profile {:staging "172.20.0.48"
+ :metrics {:influx-reporter {:host #profile {:production "influxdb.sandpit-vpc.kixi"
                                              :development "localhost"}
                              :port 8086
                                         ;                             :auth
@@ -40,7 +41,7 @@
                              :tags {"env" #or [#env ENVIRONMENT "development"]
                                     "service" ^:ref [:service-name]
                                     "taskid" #or [#env MESOS_TASK_ID #rand-uuid "rand"]}
-                             :seconds #profile {:staging 60
+                             :seconds #profile {:production 60
                                                 :development 1}}}
  :logging {:level :info ; e/o #{:trace :debug :info :warn :error :fatal :report}
            ;; Control log filtering by namespaces/patterns. Useful for turning off
