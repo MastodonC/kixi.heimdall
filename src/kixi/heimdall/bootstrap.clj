@@ -39,7 +39,7 @@
              ["-r" "--repl-port" "REPL server listen port"
               :default 5001 :parse-fn #(Integer/valueOf %)]
              ["-p" "--profile" "config environment/profile"
-              :default :dev :parse-fn keyword])]
+              :default :development :parse-fn keyword])]
 
     (when (:help opts)
       (println banner)
