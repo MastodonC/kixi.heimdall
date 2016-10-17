@@ -6,7 +6,8 @@
             [clojure.tools.cli :refer [cli]]
             [taoensso.timbre :as log]
             [clojure.tools.nrepl.server :as nrepl-server]
-            [com.stuartsierra.component :as component])
+            [com.stuartsierra.component :as component]
+            [kixi.heimdall])
   (:gen-class))
 
 (defrecord ReplServer [config]
@@ -46,5 +47,5 @@
       (System/exit 0))
 
     (try
-      (component/start (build-application opts))
+      (alter-var-root #'kixi.heimdall/system (fn [_] (component/start (build-application opts))))
       (catch Throwable t (log/error t))))) ;; just to really be sure, should be caught elsewhere
