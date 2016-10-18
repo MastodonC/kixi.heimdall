@@ -30,6 +30,22 @@ There should be a configuration file in the home directory called *.heimdall.aut
 
 The app has one significant URL: '/create-auth-token' which takes a username and password parameter in json format.
 
+## Deployment on mesos
+
+Assuming that mesos is running on AWS architecture.
+docker build an image with an extra argument to specify the S3 bucket the secrets are stored in.
+
+```
+docker build --build-arg SECRETS_BUCKET=<bucket> -t mastodonc/kixi.heimdall .
+```
+
+The deployment file to post to marathon can be built using the deploy.sh script
+
+
+```
+./scripts/deploy.sh <mesos-admin-lb> staging mastodonc/kixi.heimdall
+```
+(substituting mastodonc/kixi.heimdall in the snippets above by the desired docker image name)
 
 ## Running
 

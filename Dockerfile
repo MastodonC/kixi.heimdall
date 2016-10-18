@@ -1,6 +1,11 @@
 FROM phusion/baseimage:0.9.19
 MAINTAINER Elise Huard <elise@mastodonc.com>
 
+ARG SECRETS_BUCKET
+ARG AWS_REGION
+ENV SECRETS_BUCKET=$SECRETS_BUCKET
+ENV AWS_REGION=$AWS_REGION
+
 CMD ["/sbin/my_init"]
 
 RUN apt-get install software-properties-common

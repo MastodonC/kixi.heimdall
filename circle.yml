@@ -14,4 +14,4 @@ deployment:
       - docker tag mastodonc/kixi.heimdall mastodonc/kixi.heimdall:git-$(echo $CIRCLE_SHA1 | cut -c1-12)
       - docker login -e $DOCKER_EMAIL -u $DOCKER_USER -p $DOCKER_PASS
       - docker push mastodonc/kixi.heimdall
-      - ./scripts/deploy.sh sandpit-staging-deploy.mastodonc.net staging
+      - ./scripts/deploy.sh sandpit-staging-deploy.mastodonc.net staging mastodonc/kixi.heimdall

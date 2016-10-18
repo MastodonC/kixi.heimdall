@@ -6,7 +6,8 @@
             [clojure.tools.cli :refer [cli]]
             [taoensso.timbre :as log]
             [clojure.tools.nrepl.server :as nrepl-server]
-            [com.stuartsierra.component :as component])
+            [com.stuartsierra.component :as component]
+            [kixi.heimdall])
   (:gen-class))
 
 (defrecord ReplServer [config]
@@ -39,12 +40,12 @@
              ["-r" "--repl-port" "REPL server listen port"
               :default 5001 :parse-fn #(Integer/valueOf %)]
              ["-p" "--profile" "config environment/profile"
-              :default :dev :parse-fn keyword])]
+              :default :development :parse-fn keyword])]
 
     (when (:help opts)
       (println banner)
       (System/exit 0))
 
     (try
-      (component/start (build-application opts))
+      (alter-var-root #'kixi.heimdall/system (fn [_] (component/start (build-application opts))))
       (catch Throwable t (log/error t))))) ;; just to really be sure, should be caught elsewhere

@@ -3,6 +3,9 @@ curl "https://s3.amazonaws.com/aws-cli/awscli-bundle.zip" -o "/root/awscli-bundl
 unzip /root/awscli-bundle.zip -d /root/
 /root/awscli-bundle/install -i /usr/local/aws -b /usr/local/bin/aws
 
-aws s3 cp s3://kixi-vault/secrets.edn /root/.secrets.edn
-aws s3 cp s3://kixi-vault/prod_pubkey.edn /root/prod_pubkey.edn
-aws s3 cp s3://kixi-vault/prod_privkey.edn /root/prod_privkey.edn
+echo "aws s3 cp s3://$SECRETS_BUCKET/secrets.edn /root/.secrets.edn --region $AWS_REGION"
+aws s3 cp s3://$SECRETS_BUCKET/secrets.edn /root/.secrets.edn --region $AWS_REGION
+echo "aws s3 cp s3://$SECRETS_BUCKET/prod_pubkey.pem /root/prod_pubkey.pem --region $AWS_REGION"
+aws s3 cp s3://$SECRETS_BUCKET/prod_pubkey.pem /root/prod_pubkey.pem --region $AWS_REGION
+echo "aws s3 cp s3://$SECRETS_BUCKET/prod_pubkey.pem /root/prod_pubkey.pem --region $AWS_REGION"
+aws s3 cp s3://$SECRETS_BUCKET/prod_privkey.pem /root/prod_privkey.pem --region $AWS_REGION
