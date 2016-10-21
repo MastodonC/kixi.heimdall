@@ -1,6 +1,6 @@
 (def metrics-version "2.7.0")
 (def slf4j-version "1.7.21")
-(defproject kixi.heimdall "0.1.0-SNAPSHOT"
+(defproject kixi.heimdall "0.1.0"
   :description "Authentication and authorization service"
   :url "http://example.com/FIXME"
   :min-lein-version "2.0.0"

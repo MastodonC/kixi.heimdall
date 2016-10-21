@@ -1,10 +1,9 @@
 cassandra:
-        image: 'cassandra:2.2.4'
-        volumes:
-          - /usr/local/cassandra:/var/lib/cassandra
+        image: 'cassandra:2.2'
         ports:
           - "9042:9042"
-influxdb:
+          - "9160:9160"
+influx:
         image: 'tutum/influxdb'
         ports:
           - "8083:8083"
