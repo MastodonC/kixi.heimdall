@@ -1,10 +1,10 @@
 (def metrics-version "2.7.0")
 (def slf4j-version "1.7.21")
-(defproject kixi.heimdall "0.1.0"
+(defproject kixi.heimdall "0.2.0-SNAPSHOT"
   :description "Authentication and authorization service"
   :url "http://example.com/FIXME"
   :min-lein-version "2.0.0"
-  :dependencies [[org.clojure/clojure "1.8.0"]
+  :dependencies [[org.clojure/clojure "1.9.0-alpha13"]
                  [compojure "1.5.1"]
                  [ring/ring-defaults "0.2.1"]
                  [ring/ring-json "0.4.0"]
@@ -33,7 +33,9 @@
                  [org.clojure/tools.cli "0.3.5"]
                  [environ "1.1.0"]
                  [aero "1.0.0"]
-                 [prismatic/schema "1.1.3"]]
+                 [prismatic/schema "1.1.3"]
+                 [kixi/kixi.comms "0.1.6-SNAPSHOT"]
+                 [org.clojure/tools.analyzer "0.6.9"]] ;; not really dependency, dep collision https://groups.google.com/forum/#!topic/clojure/D_s9Drua6D4
   :plugins [[lein-ring "0.9.7"]]
   :pedantic? true
   :repl-options {:init-ns user}
