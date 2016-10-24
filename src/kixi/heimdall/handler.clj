@@ -11,21 +11,24 @@
             [clojure.edn :as edn]
             [environ.core :refer [env]]
             [buddy.sign.jwt :as jwt]
-            [buddy.core.keys :as ks]))
+            [buddy.core.keys :as ks]
+            [kixi.comms :refer [Communications] :as comms]))
 
 (defn auth-token [req]
   (let [[ok? res] (service/create-auth-token (:cassandra-session (:components req))
                                              (:auth-conf req)
                                              (:params req))]
     (if ok?
-      {:status 201 :body res}
+      (do (comms/send-event! (:communications (:components req)) :kixi.heimdall/user-logged-in "1.0.0" (select-keys (:params req) [:username]))
+          {:status 201 :body res})
       {:status 401 :body res})))
 
 (defn new-user [req]
   (let [[ok? res] (service/new-user (:cassandra-session (:components req))
                                     (:params req))]
     (if ok?
-      {:status 201 :body res}
+      (do  (comms/send-event! (:communications (:components req)) :kixi.heimdall/user-created "1.0.0" (select-keys (:params req) [:username]))
+           {:status 201 :body res})
       {:status 401 :body res})))
 
 (defn refresh-auth-token [req]
@@ -58,7 +61,8 @@
                                         (:user req)
                                         (:params req))]
     (if ok?
-      {:status 201 :body res}
+      (do (comms/send-event! (:communications (:components req)) :kixi.heimdall/group-created "1.0.0" (:params req))
+          {:status 201 :body res})
       {:status 401 :body res})))
 
 (defn escape-html
@@ -104,7 +108,7 @@
                           (catch Throwable t
                             (do (record-fn request 500)
                                 (throw t))))]
-        (record-fn metric-started-request (:status request))
+        (record-fn metric-started-request (:status response))
         response))))
 
 (defroutes public-routes

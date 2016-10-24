@@ -6,7 +6,8 @@
             [kixi.heimdall.components.metrics :as metrics]
             [kixi.heimdall.config :as config]
             [com.stuartsierra.component :as component]
-            [clojure.java.io :as io]))
+            [clojure.java.io :as io]
+            [kixi.comms.components.kafka :as kafka]))
 
 (defn system [profile]
   (let [config (config/config profile)]
@@ -18,7 +19,7 @@
          :cassandra-session (db/new-session (:cassandra-session config) profile)
          :web-server (web/new-http-server (config/webserver-port config) (config/auth-conf config))
          :repl-server  (Object.) ; dummy - replaced when invoked via uberjar.
-         )
+         :communications (kafka/map->Kafka (:kafka (:communications config))))
         (component/system-using
          {:logging [:metrics]
           :web-server [:metrics :logging :cassandra-session]

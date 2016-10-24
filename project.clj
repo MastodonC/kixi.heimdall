@@ -34,8 +34,10 @@
                  [environ "1.1.0"]
                  [aero "1.0.0"]
                  [prismatic/schema "1.1.3"]
-                 [kixi/kixi.comms "0.1.6-SNAPSHOT"]
-                 [org.clojure/tools.analyzer "0.6.9"]] ;; not really dependency, dep collision https://groups.google.com/forum/#!topic/clojure/D_s9Drua6D4
+                 [kixi/kixi.comms "0.1.8"]
+                 [org.clojure/tools.analyzer "0.6.9"]
+                 ;; not really dependency, dep collision https://groups.google.com/forum/#!topic/clojure/D_s9Drua6D4
+                 ]
   :plugins [[lein-ring "0.9.7"]]
   :pedantic? true
   :repl-options {:init-ns user}
