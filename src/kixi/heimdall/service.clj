@@ -106,11 +106,13 @@
     (fail "Invalid or expired refresh token provided")))
 
 (defn create-group
-  [session auth-conf {:keys [id] :as user} {:keys [group-name]}]
+  [session {:keys [group user]}]
   (when user
-    (let [group-id (:group-id (group/create! session {:name group-name}))]
-      (member/add-user-to-group session (java.util.UUID/fromString id) group-id "owner")
-      [true "Group successfully created"])))
+    (let [group-id (:group-id (group/create! session {:name (:group-name group)}))]
+      (member/add-user-to-group session (java.util.UUID/fromString (:id user)) group-id "owner")
+      {:kixi.comms.event/key :kixi.heimdall/group-created
+       :kixi.comms.event/version "1.0.0"
+       :kixi.comms.event/payload {:group-id group-id}})))
 
 (defn new-user
   [session params]

@@ -6,13 +6,15 @@
             [kixi.heimdall.application :as app]
             [kixi.heimdall.service :as service]
             [kixi.heimdall.util :as util]
+            [kixi.heimdall.schema :as schema]
             [taoensso.timbre :as log]
             [clojure.java.io :as io]
             [clojure.edn :as edn]
             [environ.core :refer [env]]
             [buddy.sign.jwt :as jwt]
             [buddy.core.keys :as ks]
-            [kixi.comms :refer [Communications] :as comms]))
+            [kixi.comms :refer [Communications] :as comms]
+            [clojure.spec :as spec]))
 
 (defn auth-token [req]
   (let [[ok? res] (service/create-auth-token (:cassandra-session (:components req))
@@ -55,15 +57,13 @@
            (re-find (re-pattern (str "^" token-name " (.+)$")))
            (second)))
 
+
 (defn create-group [req]
-  (let [[ok? res] (service/create-group (:cassandra-session (:components req))
-                                        (:auth-conf req)
-                                        (:user req)
-                                        (:params req))]
+  (let [ok? (and (spec/valid? :kixi.heimdall.schema/group-params (:params req)) (spec/valid? :kixi.heimdall.schema/user (:user req)))]
     (if ok?
-      (do (comms/send-event! (:communications (:components req)) :kixi.heimdall/group-created "1.0.0" (:params req))
-          {:status 201 :body res})
-      {:status 401 :body res})))
+      (do (comms/send-event! (:communications (:components req)) :kixi.heimdall/group-created "1.0.0" (merge {:group (:params req)} {:user (:user req)}))
+          {:status 201 :body "Group successfully created"})
+      {:status 401 :body "Please provide valid parameters (name for the group), and make sure you are authenticated"})))
 
 (defn escape-html
   "Change special characters into HTML character entities."

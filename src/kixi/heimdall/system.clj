@@ -4,6 +4,7 @@
             [kixi.heimdall.components.jettyserver :as web]
             [kixi.heimdall.components.logging :as logging]
             [kixi.heimdall.components.metrics :as metrics]
+            [kixi.heimdall.components.persistence :as persistence]
             [kixi.heimdall.config :as config]
             [com.stuartsierra.component :as component]
             [clojure.java.io :as io]
@@ -19,8 +20,10 @@
          :cassandra-session (db/new-session (:cassandra-session config) profile)
          :web-server (web/new-http-server (config/webserver-port config) (config/auth-conf config))
          :repl-server  (Object.) ; dummy - replaced when invoked via uberjar.
-         :communications (kafka/map->Kafka (:kafka (:communications config))))
+         :communications (kafka/map->Kafka (:kafka (:communications config)))
+         :persistence (persistence/->Persistence))
         (component/system-using
          {:logging [:metrics]
-          :web-server [:metrics :logging :cassandra-session]
-          :cassandra-session [:cluster]}))))
+          :web-server [:metrics :logging :cassandra-session :communications]
+          :cassandra-session [:cluster]
+          :persistence [:communications :cassandra-session]}))))

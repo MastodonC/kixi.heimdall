@@ -224,7 +224,7 @@
                                 events)]
         (is (= (:status response) 201))
         (is (= (:body response) "Group successfully created"))
-        (is (= @events {:comms {:sent '({:event :kixi.heimdall/group-created :version "1.0.0" :payload {:group-name "test-grp"}})}})))))
+        (is (= (:event (first (get-in @events [:comms :sent]))) :kixi.heimdall/group-created)))))
   (testing "without a token /create-group fails"
     (let [events (atom {})
           response (comms-app app (heimdall-request (mock/request :post "/create-group"
