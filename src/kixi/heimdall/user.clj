@@ -1,31 +1,22 @@
 (ns kixi.heimdall.user
   (:require [kixi.heimdall.components.database :as db]
             [kixi.heimdall.util :as util]
+            [kixi.heimdall.schema :as schema]
             [buddy.hashers :as hs]
             [qbits.alia.uuid :as uuid]
             [schema.core :as s]
-            [taoensso.timbre :as log]))
+            [taoensso.timbre :as log]
+            [clojure.spec :as spec]))
 
-
-;; schema
-
-;; regex from here http://www.lispcast.com/clojure.spec-vs-schema
-(def email-regex #"^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,63}")
-(def password-regex  #"(?=.*\d.*)(?=.*[a-z].*)(?=.*[A-Z].*).{8,}")
-
-(def Login
-  {:username email-regex
-   :password password-regex})
 
 (defn validate
   [user]
-  (let [validation (s/check Login user)]
+  (let [validation (spec/valid? :kixi.heimdall.schema/login user)]
     (if validation
-      [false (clojure.string/join ", " (mapv (fn [[k v]]
-                                               (cond
-                                                 (= k :username) "username should have an email format"
-                                                 (= k :password) "password should have at least 8 letters, one uppercase and one lowercase letter, and one number")) validation))]
-      [true nil])))
+      [true nil]
+      [false (if (spec/valid? :kixi.heimdall.schema/username (:username user))
+               "password should have at least 8 letters, one uppercase and one lowercase letter, and one number"
+               "username should have an email format")])))
 
 
 ;; data functions

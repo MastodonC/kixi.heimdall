@@ -6,31 +6,44 @@
             [kixi.heimdall.application :as app]
             [kixi.heimdall.service :as service]
             [kixi.heimdall.util :as util]
+            [kixi.heimdall.schema :as schema]
             [taoensso.timbre :as log]
             [clojure.java.io :as io]
             [clojure.edn :as edn]
             [environ.core :refer [env]]
             [buddy.sign.jwt :as jwt]
-            [buddy.core.keys :as ks]))
+            [buddy.core.keys :as ks]
+            [kixi.comms :refer [Communications] :as comms]
+            [clojure.spec :as spec]))
+
+(defn- cassandra-session
+  [req]
+  (:cassandra-session (:components req)))
+
+(defn- communications
+  [req]
+  (:communications (:components req)))
 
 (defn auth-token [req]
-  (let [[ok? res] (service/create-auth-token (:cassandra-session (:components req))
+  (let [[ok? res] (service/create-auth-token (cassandra-session req)
                                              (:auth-conf req)
                                              (:params req))]
     (if ok?
-      {:status 201 :body res}
+      (do (comms/send-event! (communications req) :kixi.heimdall/user-logged-in "1.0.0" (select-keys (:params req) [:username]))
+          {:status 201 :body res})
       {:status 401 :body res})))
 
 (defn new-user [req]
-  (let [[ok? res] (service/new-user (:cassandra-session (:components req))
+  (let [[ok? res] (service/new-user (cassandra-session req)
                                     (:params req))]
     (if ok?
-      {:status 201 :body res}
+      (do  (comms/send-event! (communications req) :kixi.heimdall/user-created "1.0.0" (select-keys (:params req) [:username]))
+           {:status 201 :body res})
       {:status 401 :body res})))
 
 (defn refresh-auth-token [req]
   (let [refresh-token (-> req :params :refresh-token)
-        [ok? res] (service/refresh-auth-token (:cassandra-session (:components req))
+        [ok? res] (service/refresh-auth-token (cassandra-session req)
                                               (:auth-conf req)
                                               refresh-token)]
     (if ok?
@@ -39,7 +52,7 @@
 
 (defn invalidate-refresh-token [req]
   (let [refresh-token (-> req :params :refresh-token)
-        [ok? res] (service/invalidate-refresh-token (:cassandra-session (:components req))
+        [ok? res] (service/invalidate-refresh-token (cassandra-session req)
                                                     (:auth-conf req)
                                                     refresh-token)]
     (if ok?
@@ -52,14 +65,13 @@
            (re-find (re-pattern (str "^" token-name " (.+)$")))
            (second)))
 
+
 (defn create-group [req]
-  (let [[ok? res] (service/create-group (:cassandra-session (:components req))
-                                        (:auth-conf req)
-                                        (:user req)
-                                        (:params req))]
+  (let [ok? (and (spec/valid? :kixi.heimdall.schema/group-params (:params req)) (spec/valid? :kixi.heimdall.schema/user (:user req)))]
     (if ok?
-      {:status 201 :body res}
-      {:status 401 :body res})))
+      (do (comms/send-event! (communications req) :kixi.heimdall/group-created "1.0.0" (merge {:group (:params req)} {:user (:user req)}))
+          {:status 201 :body "Group successfully created"})
+      {:status 401 :body "Please provide valid parameters (name for the group), and make sure you are authenticated"})))
 
 (defn escape-html
   "Change special characters into HTML character entities."
@@ -104,7 +116,7 @@
                           (catch Throwable t
                             (do (record-fn request 500)
                                 (throw t))))]
-        (record-fn metric-started-request (:status request))
+        (record-fn metric-started-request (:status response))
         response))))
 
 (defroutes public-routes

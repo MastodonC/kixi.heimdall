@@ -10,6 +10,12 @@
                                                                   :replication_factor 2}}}
  :jetty-server {:port #profile {:development 3002
                                 :production 3000}}
+ :communications {:kafka #profile {:development {:host "localhost"
+                                                 :port 2181
+                                                 :group-id "heimdall"}
+                                   :production {:host "master.mesos"
+                                                :port 2181
+                                                :group-id "heimdall"}}}
  :auth-conf {:privkey #profile {:development "auth_privkey.pem"
                                 :test "test_privkey.pem"
                                 :production "/root/prod_privkey.pem"}
