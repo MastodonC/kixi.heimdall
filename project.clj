@@ -24,8 +24,8 @@
                  [metrics-clojure-jvm ~metrics-version]
                  [metrics-clojure-ring ~metrics-version]
                  [clj-time "0.12.0"]
-                 [kixi/joplin.core "0.3.9-SNAPSHOT"]
-                 [kixi/joplin.cassandra "0.3.9-SNAPSHOT"]
+                 [joplin.core "0.3.9"]
+                 [joplin.cassandra "0.3.9"]
                  [cider/cider-nrepl "0.13.0"]
                  ;; these are dependencies around running the server in the repl
                  [org.clojure/tools.namespace    "0.2.11"]
@@ -33,7 +33,7 @@
                  [org.clojure/tools.cli "0.3.5"]
                  [environ "1.1.0"]
                  [aero "1.0.0"]
-                 [kixi/kixi.comms "0.1.8"]
+                 [kixi/kixi.comms "0.1.11"]
                  [org.clojure/tools.analyzer "0.6.9"]
                  ;; not really dependency, dep collision https://groups.google.com/forum/#!topic/clojure/D_s9Drua6D4
                  ]
