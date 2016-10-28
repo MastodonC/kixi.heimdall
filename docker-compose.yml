@@ -13,7 +13,7 @@ zookeeper:
         ports:
           - '2181:2181'
 kafka:
-        image: 'ches/kafka'
+        image: 'ches/kafka:0.10.0.1'
         links:
           - zookeeper:zookeeper
         ports:

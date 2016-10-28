@@ -16,26 +16,34 @@
             [kixi.comms :refer [Communications] :as comms]
             [clojure.spec :as spec]))
 
+(defn- cassandra-session
+  [req]
+  (:cassandra-session (:components req)))
+
+(defn- communications
+  [req]
+  (:communications (:components req)))
+
 (defn auth-token [req]
-  (let [[ok? res] (service/create-auth-token (:cassandra-session (:components req))
+  (let [[ok? res] (service/create-auth-token (cassandra-session req)
                                              (:auth-conf req)
                                              (:params req))]
     (if ok?
-      (do (comms/send-event! (:communications (:components req)) :kixi.heimdall/user-logged-in "1.0.0" (select-keys (:params req) [:username]))
+      (do (comms/send-event! (communications req) :kixi.heimdall/user-logged-in "1.0.0" (select-keys (:params req) [:username]))
           {:status 201 :body res})
       {:status 401 :body res})))
 
 (defn new-user [req]
-  (let [[ok? res] (service/new-user (:cassandra-session (:components req))
+  (let [[ok? res] (service/new-user (cassandra-session req)
                                     (:params req))]
     (if ok?
-      (do  (comms/send-event! (:communications (:components req)) :kixi.heimdall/user-created "1.0.0" (select-keys (:params req) [:username]))
+      (do  (comms/send-event! (communications req) :kixi.heimdall/user-created "1.0.0" (select-keys (:params req) [:username]))
            {:status 201 :body res})
       {:status 401 :body res})))
 
 (defn refresh-auth-token [req]
   (let [refresh-token (-> req :params :refresh-token)
-        [ok? res] (service/refresh-auth-token (:cassandra-session (:components req))
+        [ok? res] (service/refresh-auth-token (cassandra-session req)
                                               (:auth-conf req)
                                               refresh-token)]
     (if ok?
@@ -44,7 +52,7 @@
 
 (defn invalidate-refresh-token [req]
   (let [refresh-token (-> req :params :refresh-token)
-        [ok? res] (service/invalidate-refresh-token (:cassandra-session (:components req))
+        [ok? res] (service/invalidate-refresh-token (cassandra-session req)
                                                     (:auth-conf req)
                                                     refresh-token)]
     (if ok?
@@ -61,7 +69,7 @@
 (defn create-group [req]
   (let [ok? (and (spec/valid? :kixi.heimdall.schema/group-params (:params req)) (spec/valid? :kixi.heimdall.schema/user (:user req)))]
     (if ok?
-      (do (comms/send-event! (:communications (:components req)) :kixi.heimdall/group-created "1.0.0" (merge {:group (:params req)} {:user (:user req)}))
+      (do (comms/send-event! (communications req) :kixi.heimdall/group-created "1.0.0" (merge {:group (:params req)} {:user (:user req)}))
           {:status 201 :body "Group successfully created"})
       {:status 401 :body "Please provide valid parameters (name for the group), and make sure you are authenticated"})))
 
