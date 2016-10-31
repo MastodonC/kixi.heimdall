@@ -34,6 +34,15 @@
 
 (spec/def ::password password?)
 (spec/def ::login
-  (spec/keys :req-un [::username ::password])
+  (spec/keys :req-un [::username ::password]))
 
-  )
+;; Returning error messages with context
+(spec/def ::context
+  (spec/keys :req []
+             :opts []))
+
+(spec/def ::error #{:unauthenticated :user-creation-failed :invalidation-failed :runtime-exception})
+(spec/def ::msg (spec/keys :req []
+                           :opts []))
+(spec/def ::error-map
+  (spec/keys :req [::error ::msg]))

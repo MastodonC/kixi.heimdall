@@ -24,6 +24,23 @@
   [req]
   (:communications (:components req)))
 
+
+(spec/fdef return-error
+           :args (spec/cat :ctx :kixi.heimdall.schema/context
+                           :args (spec/alt :error-map :kixi.heimdall.schema/error-map
+                                           :error-parts (spec/cat :error :kixi.heimdall.schema/error
+                                                                  :msg :kixi.heimdall.schema/msg))))
+
+(defn return-error
+  ([information error status]
+   (log/info information)
+   {:status status
+    :body error})
+
+  ([ctx status error-key msg]
+   (return-error ctx status {:kixi.heimdall.schema/error error-key
+                             :kixi.heimdall.schema/msg msg})))
+
 (defn auth-token [req]
   (let [[ok? res] (service/create-auth-token (cassandra-session req)
                                              (:auth-conf req)
@@ -31,7 +48,7 @@
     (if ok?
       (do (comms/send-event! (communications req) :kixi.heimdall/user-logged-in "1.0.0" (select-keys (:params req) [:username]))
           {:status 201 :body res})
-      {:status 401 :body res})))
+      (return-error {:msg res :fn "auth-token"} :unauthenticated 401))))
 
 (defn new-user [req]
   (let [[ok? res] (service/new-user (cassandra-session req)
@@ -39,7 +56,7 @@
     (if ok?
       (do  (comms/send-event! (communications req) :kixi.heimdall/user-created "1.0.0" (select-keys (:params req) [:username]))
            {:status 201 :body res})
-      {:status 401 :body res})))
+      (return-error {:msg res :fn "new-user"} :user-creation-failed 500))))
 
 (defn refresh-auth-token [req]
   (let [refresh-token (-> req :params :refresh-token)
@@ -48,7 +65,7 @@
                                               refresh-token)]
     (if ok?
       {:status 201 :body res}
-      {:status 401 :body res})))
+      (return-error {:msg res :fn "refresh-auth-token"} :unauthenticated 401))))
 
 (defn invalidate-refresh-token [req]
   (let [refresh-token (-> req :params :refresh-token)
@@ -57,7 +74,7 @@
                                                     refresh-token)]
     (if ok?
       {:status 200 :body res}
-      {:status 401 :body res})))
+      (return-error {:msg res :fn "invalidate-refresh-token"} :invalidation-failed 500))))
 
 (defn- parse-header
   [request token-name]
@@ -71,7 +88,7 @@
     (if ok?
       (do (comms/send-event! (communications req) :kixi.heimdall/group-created "1.0.0" (merge {:group (:params req)} {:user (:user req)}))
           {:status 201 :body "Group successfully created"})
-      {:status 401 :body "Please provide valid parameters (name for the group), and make sure you are authenticated"})))
+      (return-error {:msg "Please provide valid parameters (name for the group), and make sure you are authenticated" :fn "create-group"} :group-creation-failed 500))))
 
 (defn escape-html
   "Change special characters into HTML character entities."
@@ -102,7 +119,8 @@
           unsigned (when token (service/unsign-token (:auth-conf request) token))]
       (if (and token unsigned)
         (handler (assoc request :user unsigned))
-        (do (log/warn "Unauthenticated") {:status 401 :body "Unauthenticated"})))))
+        (do (log/warn "Unauthenticated" request)
+            (return-error {:msg request :fn "wrap-authentication"} :unauthenticated 401))))))
 
 
 (defn wrap-record-metric
@@ -140,7 +158,7 @@
     (try (handler request)
          (catch Throwable t
            (do (log/error t)
-               {:status 500 :body {:message "Something went wrong ..."}})))))
+               (return-error {:msg "Something went wrong" :fn "wrap-catch-exception"} :runtime-exception 500))))))
 
 (def app
   (-> app-routes

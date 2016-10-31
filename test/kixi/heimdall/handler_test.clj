@@ -163,8 +163,8 @@
                                        (mock/request :post "/refresh-auth-token"
                                                      (json/write-str {:refresh-token refresh-token}))))]
           (is (= (:status response) 401))
-          (is (= (:message (json/read-str (:body response) :key-fn keyword))
-                 "Refresh token revoked/deleted or new refresh token already created"))))))
+          (is (= (:body response)
+                 :unauthenticated))))))
   (testing "Handles case when token to refresh wasn't signed properly"
     (with-redefs [rt/find-by-user-and-issued (fn [session user-id issued] nil)
                   user/find-by-id (fn [session user-id] nil)]
@@ -172,8 +172,8 @@
                                      (mock/request :post "/refresh-auth-token"
                                                    (json/write-str {:refresh-token "foo"}))))]
         (is (= (:status response) 401))
-        (is (= (:message (json/read-str (:body response) :key-fn keyword))
-               "Invalid or expired refresh token provided"))))))
+        (is (= (:body response)
+               :unauthenticated))))))
 
 (deftest test-invalidate-refresh-token
   (testing "invalidate existing refresh token"
@@ -191,18 +191,18 @@
   (testing "invalidate refresh token - token not valid signed"
     (let [response (comms-app app (heimdall-request (mock/request :post "/invalidate-refresh-token"
                                                                   (json/write-str {:refresh-token "abc"}))))]
-      (is (= (:status response) 401))
-      (is (= (:message (json/read-str (:body response) :key-fn keyword))
-             "Invalid or expired refresh token provided"))))
+      (is (= (:status response) 500))
+      (is (= (:body response)
+             :invalidation-failed))))
   (testing "invalidate refresh token not found"
     (let [refresh-token (valid-refresh-token)]
       (with-redefs [rt/find-by-user-and-issued (fn [session user-id issued] nil)]
         (let [response (comms-app app (heimdall-request
                                        (mock/request :post "/invalidate-refresh-token"
                                                      (:json/write-str {:refresh-token refresh-token}))))]
-          (is (= (:status response) 401))
-          (is (= (:message (json/read-str (:body response) :key-fn keyword))
-                 "Invalid or expired refresh token provided")))))))
+          (is (= (:status response) 500))
+          (is (= (:body response)
+                 :invalidation-failed)))))))
 
 (defn valid-auth-token
   []
@@ -230,7 +230,7 @@
           response (comms-app app (heimdall-request (mock/request :post "/create-group"
                                                                   (json/write-str {:group-name "test-grp"}))) events)]
       (is (= (:status response) 401))
-      (is (= (:body response) "Unauthenticated"))
+      (is (= (:body response) :unauthenticated))
       (is (= @events {}))))
   (testing "without a valid token /create-group fails"
     (let [response (comms-app app (heimdall-request
@@ -238,7 +238,7 @@
                                                               (json/write-str {:group-name "test-grp"}))
                                                 "authorization" (format "Token 384905-6"))))]
       (is (= (:status response) 401))
-      (is (= (:body response) "Unauthenticated")))))
+      (is (= (:body response) :unauthenticated)))))
 
 (deftest new-user-test
   (testing "new user can be added if password passes the validation"
@@ -256,9 +256,9 @@
                                      (mock/request :post "/user"
                                                    (json/write-str {:username "user@boo.com"
                                                                     :password "foo"}))))]
-        (is (= (:status response) 401))
-        (is (= (:message (json/read-str (:body response) :key-fn keyword))
-               "Please match the required format: password should have at least 8 letters, one uppercase and one lowercase letter, and one number")))))
+        (is (= (:status response) 500))
+        (is (= (:body response)
+               :user-creation-failed)))))
   (testing "new user triggers a send-event!"
     (with-redefs [user/add! (fn [_ _] '())
                   user/find-by-username (fn [_ _] nil)]
