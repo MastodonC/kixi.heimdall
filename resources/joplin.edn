@@ -1,6 +1,7 @@
 {:migrators    {:cass-mig "joplin/migrators/cassandra"}
- :seeds        {:cass-seed "seeds.cassandra/run"}
+ :seeds        {:cass-seed-dev "seeds.cassandra/run-dev"
+                :cass-seed-prod "seeds.cassandra/run-prod"}
  :databases    {:cass-dev  {:type :cass, :hosts ["127.0.0.1"], :keyspace "heimdall"}
                 :cass-prod {:type :cass, :hosts ["node-0.cassandra.mesos" "node-1.cassandra.mesos" "node-2.cassandra.mesos"] :keyspace "heimdall"}}
- :environments {:development [{:db :cass-dev,  :migrator :cass-mig, :seed :cass-seed}]
-                :production [{:db :cass-prod, :migrator :cass-mig, :seed :cass-seed}]}}
+ :environments {:development [{:db :cass-dev,  :migrator :cass-mig, :seed :cass-seed-dev}]
+                :production [{:db :cass-prod, :migrator :cass-mig, :seed :cass-seed-prod}]}}

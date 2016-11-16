@@ -11,10 +11,11 @@ You will need [Leiningen][] 2.0.0 or above installed.
 
 [leiningen]: https://github.com/technomancy/leiningen
 
-The apps requires a private key (RSA), to be generated with
+The apps requires a private key and public key (RSA), to be generated with
 
 ```
 openssl genrsa -aes128 -out auth_privkey.pem 2048
+openssl rsa -pubout -in auth_privkey.pem -out auth_pubkey.pem
 ```
 
 This should be moved to the resources/ folder.
@@ -49,9 +50,18 @@ The deployment file to post to marathon can be built using the deploy.sh script
 
 ## Running
 
-To start a web server for the application, run:
+Heimdall uses docker and docker-compose to manage external dependencies in development:
 
-    lein ring server
+```
+docker-compose up
+```
+(Wait until the system has settled before proceeding)
+
+To start the application, run:
+
+```
+lein run -m kixi.heimdall.bootstrap -p <development/production>
+```
 
 ## License
 
