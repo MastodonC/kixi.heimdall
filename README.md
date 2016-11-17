@@ -31,6 +31,14 @@ There should be a configuration file in the home directory called *.heimdall.aut
 
 The app has one significant URL: '/create-auth-token' which takes a username and password parameter in json format.
 
+## Development
+
+You can add seed data for development using the following command:
+
+```
+lein seed development
+```
+
 ## Deployment on mesos
 
 Assuming that mesos is running on AWS architecture.
