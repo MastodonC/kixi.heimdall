@@ -60,6 +60,37 @@
   (update!
     [this table what where]))
 
+(defrecord DirectConnection [conn]
+  Database
+  (drop-table! [this table]
+    (exec conn (hayt/drop-table table (hayt/if-exists))))
+  (create-table! [this table columns]
+    (exec conn (hayt/create-table table (hayt/column-definitions columns))))
+  (insert! [this table row {:keys [using]}]
+    (cond
+      using (exec conn (hayt/insert table (hayt/values row) (apply hayt/using using)))
+      :else (exec conn (hayt/insert table (hayt/values row)))))
+  (insert! [this table row]
+    (insert! this table (into {} (map util/hyphen->underscore row)) {}))
+  (select* [this table where]
+    (let [result (exec conn (hayt/select table (hayt/where where)))
+          reformatted (map util/underscore->hyphen result)]
+      (if (coll? result)
+        (map (partial into {}) reformatted)
+        reformatted)))
+  (select [this table what where]
+    (let [result (exec conn (hayt/select table (apply hayt/columns
+                                                      (map util/hyphen->underscore what))
+                                         (hayt/where (into {} (util/hyphen->underscore where)))))
+          reformatted (map util/underscore->hyphen result)]
+      (if (coll? result)
+        (map (partial into {}) reformatted)
+        reformatted)))
+  (update! [this table what where]
+    (exec conn (hayt/update table (hayt/set-columns
+                                   (into {} (util/underscore->hyphen what)))
+                            (hayt/where where)))))
+
 (defrecord CassandraSession [opts profile]
   Database
   (drop-table! [this table]

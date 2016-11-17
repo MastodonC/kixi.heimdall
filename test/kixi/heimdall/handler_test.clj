@@ -164,7 +164,7 @@
                                                      (json/write-str {:refresh-token refresh-token}))))]
           (is (= (:status response) 401))
           (is (= (:body response)
-                 :unauthenticated))))))
+                 "unauthenticated"))))))
   (testing "Handles case when token to refresh wasn't signed properly"
     (with-redefs [rt/find-by-user-and-issued (fn [session user-id issued] nil)
                   user/find-by-id (fn [session user-id] nil)]
@@ -173,7 +173,7 @@
                                                    (json/write-str {:refresh-token "foo"}))))]
         (is (= (:status response) 401))
         (is (= (:body response)
-               :unauthenticated))))))
+               "unauthenticated"))))))
 
 (deftest test-invalidate-refresh-token
   (testing "invalidate existing refresh token"
@@ -193,7 +193,7 @@
                                                                   (json/write-str {:refresh-token "abc"}))))]
       (is (= (:status response) 500))
       (is (= (:body response)
-             :invalidation-failed))))
+             "invalidation-failed"))))
   (testing "invalidate refresh token not found"
     (let [refresh-token (valid-refresh-token)]
       (with-redefs [rt/find-by-user-and-issued (fn [session user-id issued] nil)]
@@ -202,7 +202,7 @@
                                                      (:json/write-str {:refresh-token refresh-token}))))]
           (is (= (:status response) 500))
           (is (= (:body response)
-                 :invalidation-failed)))))))
+                 "invalidation-failed")))))))
 
 (defn valid-auth-token
   []
@@ -230,7 +230,7 @@
           response (comms-app app (heimdall-request (mock/request :post "/create-group"
                                                                   (json/write-str {:group-name "test-grp"}))) events)]
       (is (= (:status response) 401))
-      (is (= (:body response) :unauthenticated))
+      (is (= (:body response) "unauthenticated"))
       (is (= @events {}))))
   (testing "without a valid token /create-group fails"
     (let [response (comms-app app (heimdall-request
@@ -238,7 +238,7 @@
                                                               (json/write-str {:group-name "test-grp"}))
                                                 "authorization" (format "Token 384905-6"))))]
       (is (= (:status response) 401))
-      (is (= (:body response) :unauthenticated)))))
+      (is (= (:body response) "unauthenticated")))))
 
 (deftest new-user-test
   (testing "new user can be added if password passes the validation"
@@ -258,7 +258,7 @@
                                                                     :password "foo"}))))]
         (is (= (:status response) 500))
         (is (= (:body response)
-               :user-creation-failed)))))
+               "user-creation-failed")))))
   (testing "new user triggers a send-event!"
     (with-redefs [user/add! (fn [_ _] '())
                   user/find-by-username (fn [_ _] nil)]
@@ -268,4 +268,4 @@
                                                    (json/write-str {:username "user@boo.com"
                                                                     :password "secret1Pass"})))
                                 events)]
-        (is (= @events {:comms {:sent '({:event :kixi.heimdall/user-created :version "1.0.0" :payload {:username "user@boo.com"}})}}))))    ))
+        (is (= @events {:comms {:sent '({:event :kixi.heimdall/user-created :version "1.0.0" :payload {:username "user@boo.com"}})}}))))))

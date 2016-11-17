@@ -71,13 +71,13 @@
     {:groups groups-ids}))
 
 (defn create-auth-token [session auth-conf credentials]
-  (let [[ok? res] (user/auth session credentials)
-        groups (get-groups-for-user session (:id (:user res)))
-        user (merge (:user res) {:user-groups groups})]
-    (if (and ok? user)
-      (if-let [token-pair (make-token-pair! session auth-conf user)]
-        (success token-pair)
-        (fail "Invalid username or password"))
+  (let [[ok? res] (user/auth session credentials)]
+    (if ok?
+      (let [groups (get-groups-for-user session (:id (:user res)))
+            user (merge (:user res) {:user-groups groups})]
+        (if-let [token-pair (make-token-pair! session auth-conf user)]
+          (success token-pair)
+          (fail "Invalid username or password")))
       (fail "Invalid username or password"))))
 
 (defn refresh-auth-token [session auth-conf refresh-token]
