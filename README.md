@@ -11,21 +11,20 @@ You will need [Leiningen][] 2.0.0 or above installed.
 
 [leiningen]: https://github.com/technomancy/leiningen
 
-The apps requires a private key and public key (RSA), to be generated with
+The app requires a passphrase-protected private key and public key (RSA), to be generated with
 
 ```
 openssl genrsa -aes128 -out auth_privkey.pem 2048
 openssl rsa -pubout -in auth_privkey.pem -out auth_pubkey.pem
 ```
 
-This should be moved to the resources/ folder.
+These should be moved to the resources/ folder.
 
-There should be a configuration file in the home directory called *.heimdall.auth-conf.edn* , with following structure:
+There should be a configuration file in the home directory called `.secrets.edn` , with following structure:
 
 ```
 {
-  :privkey "key_file_name.pem"
-  :passphrase "secret-key"
+  :dev-passphrase "secret-key-you-used-to-create-pems"
 }
 ```
 
