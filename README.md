@@ -18,7 +18,7 @@ openssl genrsa -aes128 -out auth_privkey.pem 2048
 openssl rsa -pubout -in auth_privkey.pem -out auth_pubkey.pem
 ```
 
-These should be moved to the resources/ folder. Ensure the that the key names in match those in `resources/conf.edn` under `:auth-conf`.
+These should be moved to the resources/ folder. Ensure the that the key names match those in `resources/conf.edn` under `:auth-conf`.
 
 There should also be a configuration file in the home directory called `.secrets.edn` , with following structure:
 
