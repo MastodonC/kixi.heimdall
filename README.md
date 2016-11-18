@@ -11,21 +11,20 @@ You will need [Leiningen][] 2.0.0 or above installed.
 
 [leiningen]: https://github.com/technomancy/leiningen
 
-The apps requires a private key and public key (RSA), to be generated with
+The app requires a passphrase-protected private key and public key (RSA), to be generated with
 
 ```
 openssl genrsa -aes128 -out auth_privkey.pem 2048
 openssl rsa -pubout -in auth_privkey.pem -out auth_pubkey.pem
 ```
 
-This should be moved to the resources/ folder.
+These should be moved to the resources/ folder. Ensure the that the key names match those in `resources/conf.edn` under `:auth-conf`.
 
-There should be a configuration file in the home directory called *.heimdall.auth-conf.edn* , with following structure:
+There should also be a configuration file in the home directory called `.secrets.edn` , with following structure:
 
 ```
 {
-  :privkey "key_file_name.pem"
-  :passphrase "secret-key"
+  :dev-passphrase "secret-key-you-used-to-create-pems"
 }
 ```
 
@@ -63,7 +62,12 @@ Heimdall uses docker and docker-compose to manage external dependencies in devel
 ```
 docker-compose up
 ```
-(Wait until the system has settled before proceeding)
+Wait until the system has settled before proceeding.
+To supress InfluxDB warnings:
+
+```
+curl -G -X POST http://localhost:8086/query --data-urlencode "q=CREATE DATABASE metrics"
+```
 
 To start the application, run:
 
