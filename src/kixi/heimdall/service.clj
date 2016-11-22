@@ -11,7 +11,9 @@
             [kixi.heimdall.group :as group]
             [kixi.heimdall.member :as member]
             [kixi.heimdall.refresh-token :as refresh-token]
-            [kixi.heimdall.util :as util]))
+            [kixi.heimdall.util :as util]
+            [clojure.spec :as spec]
+            [kixi.comms :refer [Communications] :as comms]))
 
 
 (defn fail
@@ -70,13 +72,14 @@
         groups-ids (map :group-id groups-colls)]
     {:groups groups-ids}))
 
-(defn create-auth-token [session auth-conf credentials]
+(defn create-auth-token [session communications auth-conf credentials]
   (let [[ok? res] (user/auth session credentials)]
     (if ok?
       (let [groups (get-groups-for-user session (:id (:user res)))
             user (merge (:user res) {:user-groups groups})]
         (if-let [token-pair (make-token-pair! session auth-conf user)]
-          (success token-pair)
+          (do  (comms/send-event! communications :kixi.heimdall/user-logged-in "1.0.0" (select-keys credentials [:username]))
+               (success token-pair))
           (fail "Invalid username or password")))
       (fail "Invalid username or password"))))
 
@@ -105,17 +108,26 @@
       (success {:message "Invalidated successfully"}))
     (fail "Invalid or expired refresh token provided")))
 
+(defn create-group-event
+  [session communications {:keys [group user] :as input}]
+  (let [group-ok? (spec/valid? :kixi.heimdall.schema/group-params group)
+        user-ok? (spec/valid? :kixi.heimdall.schema/user user)]
+    (if (and user-ok? group-ok?)
+      (and (comms/send-event! communications :kixi.heimdall/group-created "1.0.0" (update input :user #(select-keys % [:id :username]))) true)
+      false)))
+
 (defn create-group
   [session {:keys [group user]}]
-  (when user
-    (let [group-id (:group-id (group/create! session {:name (:group-name group)}))]
-      (member/add-user-to-group session (java.util.UUID/fromString (:id user)) group-id "owner")
-      {:kixi.comms.event/key :kixi.heimdall/group-created
-       :kixi.comms.event/version "1.0.0"
-       :kixi.comms.event/payload {:group-id group-id}})))
+  (let [user-id  (java.util.UUID/fromString (:id user))
+        group-id (:group-id (group/create! session {:name (:group-name group)
+                                                    :user-id user-id}))]
+    (member/add-user-to-group session user-id group-id "owner")
+    {:kixi.comms.event/key :kixi.heimdall/group-created
+     :kixi.comms.event/version "1.0.0"
+     :kixi.comms.event/payload {:group-id group-id}}))
 
 (defn new-user
-  [session params]
+  [session communications params]
   (let [credentials (select-keys params [:username :password])
         [ok? res] (user/validate credentials)]
     (if ok?
@@ -123,5 +135,6 @@
         (fail "There is already a user with this username.")
         (do
           (user/add! session credentials)
+          (comms/send-event! communications :kixi.heimdall/user-created "1.0.0" (select-keys params [:username]))
           (success {:message "User successfully created!"})))
       (fail (str "Please match the required format: " res)))))
