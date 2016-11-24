@@ -1,7 +1,10 @@
 machine:
   services:
     - docker
-    - cassandra
+
+test:
+  pre:
+    - docker-compose up -d
 
 deployment:
   staging:

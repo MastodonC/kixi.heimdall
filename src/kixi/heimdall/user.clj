@@ -49,3 +49,17 @@
         [true {:user (dissoc user :password)}]
         unauthed)
       unauthed)))
+
+(defn change-password!
+  "Change the user's password"
+  [session username new-password]
+  (if-let [user (find-by-username session {:username username})]
+    (let [pwd (hs/encrypt new-password)]
+      (db/update! session :users_by_username
+                  {:password pwd}
+                  {:username username})
+      (db/update! session :users
+                  {:password pwd}
+                  {:id (:id user)})
+      true)
+    false))
