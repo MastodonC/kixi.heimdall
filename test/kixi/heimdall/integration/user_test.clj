@@ -12,11 +12,16 @@
     (add! session user)
     (is (first (auth session user)))))
 
-(deftest change-password-test
-  (let [user {:username "change-password-test@mastodonc.com"
+(deftest change-password-test-success
+  (let [user {:username "change-password-test1@mastodonc.com"
               :password "changeme"}
         new-pass "iamnowchanged"
         session (:cassandra-session @system)]
     (add! session user)
-    (change-password! session (:username user) new-pass)
+    (is (change-password! session (:username user) new-pass))
     (is (first (auth session (assoc user :password new-pass))))))
+
+(deftest change-password-test-fail
+  (let [user {:username "change-password-test2@mastodonc.com"}
+        session (:cassandra-session @system)]
+    (is (not (change-password! session (:username user) "thisshouldfail")))))

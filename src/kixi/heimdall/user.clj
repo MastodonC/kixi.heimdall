@@ -60,4 +60,6 @@
                   {:username username})
       (db/update! session :users
                   {:password pwd}
-                  {:id (:id user)}))))
+                  {:id (:id user)})
+      true)
+    false))
