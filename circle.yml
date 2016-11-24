@@ -3,6 +3,10 @@ machine:
     - docker
     - cassandra
 
+test:
+  pre:
+    - docker-compose up -d
+
 deployment:
   staging:
     branch: master
