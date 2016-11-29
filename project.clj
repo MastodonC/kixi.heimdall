@@ -33,7 +33,7 @@
                  [org.clojure/tools.cli "0.3.5"]
                  [environ "1.1.0"]
                  [aero "1.0.0"]
-                 [kixi/kixi.comms "0.1.17-SNAPSHOT"]
+                 [kixi/kixi.comms "0.1.17"]
                  [org.clojure/tools.analyzer "0.6.9"]
                  ;; not really dependency, dep collision https://groups.google.com/forum/#!topic/clojure/D_s9Drua6D4
                  ]
