@@ -12,10 +12,12 @@
                                 :production 3000}}
  :communications {:kafka #profile {:development {:host "localhost"
                                                  :port 2181
-                                                 :group-id "heimdall"}
+                                                 :group-id "heimdall"
+                                                 :zk-path "/"}
                                    :production {:host "master.mesos"
                                                 :port 2181
-                                                :group-id "heimdall"}}}
+                                                :group-id "heimdall"
+                                                :zk-path "/dcos-service-kafka/"}}}
  :auth-conf {:privkey #profile {:development "auth_privkey.pem"
                                 :test "test_privkey.pem"
                                 :production "/root/prod_privkey.pem"}
