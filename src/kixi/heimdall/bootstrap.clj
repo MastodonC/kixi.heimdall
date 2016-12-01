@@ -6,8 +6,7 @@
             [clojure.tools.cli :refer [cli]]
             [taoensso.timbre :as log]
             [clojure.tools.nrepl.server :as nrepl-server]
-            [com.stuartsierra.component :as component]
-            [kixi.heimdall])
+            [com.stuartsierra.component :as component])
   (:gen-class))
 
 (defrecord ReplServer [config]
