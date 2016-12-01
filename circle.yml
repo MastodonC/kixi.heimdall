@@ -12,7 +12,7 @@ deployment:
     commands:
       - lein clean
       - lein uberjar
-      - docker build -t mastodonc/kixi.heimdall .
+      - docker build -t mastodonc/kixi.heimdall --build-arg SECRETS_BUCKET=$SECRETS_BUCKET --build-arg AWS_REGION=eu-central-1 .
       - docker tag mastodonc/kixi.heimdall mastodonc/kixi.heimdall:git-$(echo $CIRCLE_SHA1 | cut -c1-12)
       - docker login -e $DOCKER_EMAIL -u $DOCKER_USER -p $DOCKER_PASS https://index.docker.io/v1/
       - docker push mastodonc/kixi.heimdall
