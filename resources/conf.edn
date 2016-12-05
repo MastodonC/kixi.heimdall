@@ -24,7 +24,8 @@
              :pubkey #profile {:development "auth_pubkey.pem"
                                :test "test_pubkey.pem"
                                :production "/root/prod_pubkey.pem"}
-             :secrets #include #join [#env HOME "/.secrets.edn"]
+             :secrets #profile {:development #include #join [#env HOME "/.secrets.edn"]
+                                :production #include "/root/.secrets.edn"}
              :passphrase #profile {:development ^:ref [:auth-conf :secrets :dev-passphrase]
                                    :test "test"
                                    :production ^:ref [:auth-conf :secrets :prod-passphrase]}}
