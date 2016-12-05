@@ -8,7 +8,7 @@
                  [compojure "1.5.1"]
                  [ring/ring-defaults "0.2.1"]
                  [ring/ring-json "0.4.0"]
-                 [buddy "1.0.0" :exclusions [cheshire]]
+                 [buddy "1.2.0" :exclusions [cheshire]]
                  [cc.qbits/alia-all "3.2.0" :exclusions [cc.qbits/hayt org.clojure/clojure]]
                  [cc.qbits/hayt "3.0.1"]
                  [com.stuartsierra/component "0.3.1"]
