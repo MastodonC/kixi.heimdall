@@ -16,6 +16,9 @@ RUN add-apt-repository -y ppa:webupd8team/java \
 software-properties-common \
 oracle-java8-installer
 
+ADD deploy-jars/bcpkix-jdk15on-1.55.jar /usr/lib/jvm/java-8-oracle/jre/lib/ext/bcpkix-jdk15on-1.55.jar
+ADD deploy-jars/bcprov-jdk15on-1.55.jar /usr/lib/jvm/java-8-oracle/jre/lib/ext/bcprov-jdk15on-1.55.jar
+ADD deploy-jars/java.security /etc/java-8-oracle/security/java.security
 
 RUN apt-get install -y python2.7 \
 unzip
