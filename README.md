@@ -75,6 +75,21 @@ To start the application, run:
 lein run -m kixi.heimdall.bootstrap -p <development/production>
 ```
 
+## Development docker image
+
+There's a docker-compose to start all the dependencies
+```
+`docker-compose up
+```
+in the root directory.
+
+To build a development docker image to use in dev setups, which expects all the dependencies to run on localhost:
+
+```
+docker build -t mastodonc/kixi.heimdall-dev -f Dockerfile-dev .
+docker run --net=host -p 3002:3002 -p 5001:5001 mastodonc/kixi.heimdall-dev
+```
+
 ## License
 
 Copyright © 2016 Mastodon C
