@@ -1,37 +1,50 @@
 {:service-name "kixi.heimdall"
  :cassandra-session {:hosts #profile {:development ["localhost"]
+                                      :dev-docker ["localhost"]
                                       :production ["node-0.cassandra.mesos"
                                                    "node-1.cassandra.mesos"
                                                    "node-2.cassandra.mesos"]}
                      :keyspace "heimdall"
                      :replication-strategy #profile {:development {:class "SimpleStrategy"
                                                                    :replication_factor 1}
+                                                     :dev-docker {:class "SimpleStrategy"
+                                                                  :replication_factor 1}
                                                      :production {:class  "SimpleStrategy"
                                                                   :replication_factor 2}}}
  :jetty-server {:port #profile {:development 3002
+                                :dev-docker 3002
                                 :production 3000}}
  :communications {:kafka #profile {:development {:host "localhost"
                                                  :port 2181
                                                  :group-id "heimdall"
                                                  :zk-path "/"}
+                                   :dev-docker {:host "localhost"
+                                                :port 2181
+                                                :group-id "heimdall"
+                                                :zk-path "/"}
                                    :production {:host "master.mesos"
                                                 :port 2181
                                                 :group-id "heimdall"
                                                 :zk-path "/dcos-service-kafka/"}}}
  :auth-conf {:privkey #profile {:development "auth_privkey.pem"
+                                :dev-docker "/root/prod_privkey.pem"
                                 :test "test_privkey.pem"
                                 :production "/root/prod_privkey.pem"}
              :pubkey #profile {:development "auth_pubkey.pem"
+                               :dev-docker "/root/auth_pubkey.pem"
                                :test "test_pubkey.pem"
                                :production "/root/prod_pubkey.pem"}
              :secrets #profile {:development #include #join [#env HOME "/.secrets.edn"]
+                                :dev-docker #include "/root/.secrets.edn"
                                 :production #include "/root/.secrets.edn"}
              :passphrase #profile {:development ^:ref [:auth-conf :secrets :dev-passphrase]
+                                   :dev-docker ^:ref [:auth-conf :secrets :test-passphrase]
                                    :test "test"
                                    :production ^:ref [:auth-conf :secrets :prod-passphrase]}}
 
  :metrics {:influx-reporter {:host #profile {:production "influxdb.sandpit-vpc.kixi"
-                                             :development "localhost"}
+                                             :development "localhost"
+                                             :dev-docker "localhost"}
                              :port 8086
                                         ;                             :auth
                              :connect-timeout 1500
@@ -51,7 +64,8 @@
                                     "service" ^:ref [:service-name]
                                     "taskid" #or [#env MESOS_TASK_ID #rand-uuid "rand"]}
                              :seconds #profile {:production 60
-                                                :development 1}}}
+                                                :development 1
+                                                :dev-docker 1}}}
  :logging {:level :info ; e/o #{:trace :debug :info :warn :error :fatal :report}
            ;; Control log filtering by namespaces/patterns. Useful for turning off
            ;; logging in noisy libraries, etc.:
