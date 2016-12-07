@@ -90,6 +90,8 @@ docker build -t mastodonc/kixi.heimdall-dev -f Dockerfile-dev .
 docker run --net=host -p 3002:3002 -p 5001:5001 mastodonc/kixi.heimdall-dev
 ```
 
+The public key to use in combination with this development setup is the test_pubkey.pem which is in the resources folder.
+
 ## License
 
 Copyright © 2016 Mastodon C
