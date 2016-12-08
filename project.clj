@@ -40,6 +40,7 @@
   :plugins [[lein-ring "0.9.7"]]
   :pedantic? true
   :repl-options {:init-ns user}
+  :jvm-opts ["-XX:+HeapDumpOnOutOfMemoryError"]
   :profiles
   {:uberjar {:aot [kixi.heimdall.bootstrap]
              :main kixi.heimdall.bootstrap
