@@ -9,10 +9,15 @@
   component/Lifecycle
   (start [{:keys [communications cassandra-session] :as component}]
     (c/attach-event-handler! communications
-                             :kixi.heimdall/persistence
+                             :kixi.heimdall/persistence-group-created
                              :kixi.heimdall/group-created
                              "1.0.0"
-                             (comp (partial service/create-group cassandra-session) :kixi.comms.event/payload))
+                             (comp (partial #'service/create-group cassandra-session) :kixi.comms.event/payload))
+    (c/attach-event-handler! communications
+                             :kixi.heimdall/persistence-member-added
+                             :kixi.heimdall/member-added
+                             "1.0.0"
+                             (comp (partial #'service/add-member cassandra-session) :kixi.comms.event/payload))
     component)
   (stop [component]
     component))

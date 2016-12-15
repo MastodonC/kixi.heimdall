@@ -7,7 +7,7 @@
             [taoensso.timbre :as log :refer [debug]]))
 
 (def system (atom nil))
-(def wait-tries (Integer/parseInt (env :wait-tries "10")))
+(def wait-tries (Integer/parseInt (env :wait-tries "50")))
 (def wait-per-try (Integer/parseInt (env :wait-per-try "100")))
 
 (defn drop-keyspace
@@ -26,14 +26,17 @@
   (reset! system nil))
 
 (defn wait-for
-  ([fn]
-   (wait-for fn 1))
-  ([fn cnt]
-   (when (< cnt wait-tries)
+  ([fn fail-fn]
+   (wait-for fn fail-fn 1))
+  ([fn fail-fn cnt]
+   (if (< cnt wait-tries)
      (let [value (fn)]
        (if value
          value
          (do
-           (log/debug "waiting ... " cnt)
+           (log/info "waiting ... " cnt)
            (Thread/sleep wait-per-try)
-           (wait-for fn (inc cnt))))))))
+           (recur fn fail-fn (inc cnt)))))
+     (do
+       (log/info "calling fail fn")
+       (fail-fn)))))

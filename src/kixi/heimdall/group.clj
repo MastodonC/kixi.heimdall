@@ -14,3 +14,7 @@
                     :created (util/db-now)}]
     (db/insert! session :groups group-data)
     {:group-id group-id}))
+
+(defn find-by-id
+  [session id]
+  (first (db/select* session :groups {:id id}))  )
