@@ -31,7 +31,7 @@
   [this x]
   (if-let [conn (get this :session)]
     (try
-      (log/debug "Executing" (hayt/->raw x))
+      (log/info "Executing" (hayt/->raw x))
       (alia/execute conn x)
       (catch Exception e (log/error "Failed to execute database command:" (str e))))
     (log/error "Unable to execute Cassandra comment - no connection")))
@@ -58,7 +58,9 @@
   (select
     [this table what where])
   (update!
-    [this table what where]))
+    [this table what where])
+  (delete!
+    [this table where]))
 
 (defrecord DirectConnection [conn]
   Database
@@ -89,7 +91,9 @@
   (update! [this table what where]
     (exec conn (hayt/update table (hayt/set-columns
                                    (into {} (util/underscore->hyphen what)))
-                            (hayt/where where)))))
+                            (hayt/where where))))
+  (delete! [this table where]
+    (exec conn (hayt/delete table (hayt/where (into {} (util/hyphen->underscore where)))))))
 
 (defrecord CassandraSession [opts profile]
   Database
@@ -121,6 +125,8 @@
     (exec this (hayt/update table (hayt/set-columns
                                    (into {} (util/underscore->hyphen what)))
                             (hayt/where where))))
+  (delete! [this table where]
+    (exec this (hayt/delete table (hayt/where (into {} (util/hyphen->underscore where))))))
 
   component/Lifecycle
   (start [component]
