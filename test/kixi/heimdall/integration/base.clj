@@ -7,7 +7,7 @@
             [taoensso.timbre :as log :refer [debug]]))
 
 (def system (atom nil))
-(def wait-tries (Integer/parseInt (env :wait-tries "50")))
+(def wait-tries (Integer/parseInt (env :wait-tries "80")))
 (def wait-per-try (Integer/parseInt (env :wait-per-try "100")))
 
 (defn drop-keyspace

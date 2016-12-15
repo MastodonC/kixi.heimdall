@@ -47,8 +47,7 @@
                                              (:auth-conf req)
                                              (:params req))]
     (if ok?
-      (do
-        {:status 201 :body res})
+      {:status 201 :body res}
       (return-error {:msg res :fn "auth-token"} :unauthenticated 401))))
 
 (defn new-user [req]

@@ -18,6 +18,11 @@
                              :kixi.heimdall/member-added
                              "1.0.0"
                              (comp (partial #'service/add-member cassandra-session) :kixi.comms.event/payload))
+    (c/attach-event-handler! communications
+                             :kixi.heimdall/persistence-member-removed
+                             :kixi.heimdall/member-removed
+                             "1.0.0"
+                             (comp (partial #'service/remove-member cassandra-session) :kixi.comms.event/payload))
     component)
   (stop [component]
     component))

@@ -6,6 +6,7 @@
             [kixi.heimdall.config :as config]
             [kixi.heimdall.components.database :as db]
             [kixi.heimdall.user :as u]
+            [kixi.heimdall.group :as group]
             [kixi.heimdall.member :as member]
             [taoensso.timbre :as log :refer [debug]]))
 
@@ -17,7 +18,7 @@
     (let [cassandra-session (:cassandra-session @system)
           _ (u/add! cassandra-session {:username "boo@bar.com" :password "Local123"})                       user (u/find-by-username cassandra-session {:username "boo@bar.com"})
           group-created (#'service/create-group cassandra-session {:group {:group-name "fantastic four"} :user (update user :id str)})]
-      (is (not (nil? (get-in group-created [:kixi.comms.event/payload :group-id]))))))
+      (is (== (count (member/retrieve-groups-ids cassandra-session (:id user))) 1))))
 
   (testing "creation after sending an event"
     (let [cassandra-session (:cassandra-session @system)
@@ -38,8 +39,7 @@
       (let [_  (u/add! cassandra-session {:username "bob@bar.com" :password "Local123"})                      owner-id (:id (u/find-by-username cassandra-session {:username "bob@bar.com"}))
             _  (u/add! cassandra-session {:username "aspiring@bar.com" :password "Local123"})
             member-id (:id (u/find-by-username cassandra-session {:username "aspiring@bar.com"}))
-            group-id (-> (#'service/create-group cassandra-session {:group {:group-name "specter"} :user {:id (str owner-id)}})
-                         (get-in [:kixi.comms.event/payload :group-id]))
+            group-id (:group-id (group/create! cassandra-session {:group {:name "specter" :user-id (str owner-id)}}))
             _ (#'service/add-member cassandra-session {:user-id (str member-id)
                                                        :group-id (str group-id)})]
         (is (some #{group-id} (member/retrieve-groups-ids cassandra-session member-id)))))
@@ -47,9 +47,35 @@
       (let [_  (u/add! cassandra-session {:username "boss@bar.com" :password "Local123"})                      owner-id (:id (u/find-by-username cassandra-session {:username "boss@bar.com"}))
             _  (u/add! cassandra-session {:username "new@bar.com" :password "Local123"})
             member-id (:id (u/find-by-username cassandra-session {:username "new@bar.com"}))
-            group-id (-> (#'service/create-group cassandra-session {:group {:group-name "hydra"} :user {:id (str owner-id)}})
-                         (get-in [:kixi.comms.event/payload :group-id]))
+            group-id (:group-id (group/create! cassandra-session {:group {:name "hydra" :user-id (str owner-id)}}))
             event-ok? (service/add-member-event cassandra-session comms (str member-id) (str group-id))]
         (is event-ok?)
         (wait-for #(some #{group-id} (member/retrieve-groups-ids cassandra-session member-id))
                   #(is (= :user-not-added-to-group :user-added-to-group)))))))
+
+(deftest removing-member-from-group
+  (let [cassandra-session (:cassandra-session @system)
+        comms (:communications @system)]
+    (testing "removing a member directly"
+      (let [_  (u/add! cassandra-session {:username "bob@bar.com" :password "Local123"})                      owner-id (:id (u/find-by-username cassandra-session {:username "bob@bar.com"}))
+            _  (u/add! cassandra-session {:username "aspiring@bar.com" :password "Local123"})
+            member-id (:id (u/find-by-username cassandra-session {:username "aspiring@bar.com"}))
+            group-id (:group-id (group/create! cassandra-session {:group {:name "specter" :user-id (str owner-id)}}))
+            _ (#'service/add-member cassandra-session {:user-id (str member-id)
+                                                       :group-id (str group-id)})
+            _ (#'service/remove-member cassandra-session {:user-id (str member-id)
+                                                          :group-id (str group-id)})
+            ]
+        (is (not-any? #{group-id} (member/retrieve-groups-ids cassandra-session member-id)))))
+    (testing "removing a member via an event"
+      (let [_  (u/add! cassandra-session {:username "boss@bar.com" :password "Local123"})                      owner-id (:id (u/find-by-username cassandra-session {:username "boss@bar.com"}))
+            _  (u/add! cassandra-session {:username "new@bar.com" :password "Local123"})
+            member-id (:id (u/find-by-username cassandra-session {:username "new@bar.com"}))
+            group-id (:group-id (group/create! cassandra-session {:group {:name "hydra" :user-id (str owner-id)}}))
+            _ (#'service/add-member cassandra-session {:user-id (str member-id)
+                                                       :group-id (str group-id)})
+            event-ok? (service/remove-member-event cassandra-session comms (str member-id) (str group-id))
+            ]
+        (is event-ok?)
+        (wait-for #(not-any? #{group-id} (member/retrieve-groups-ids cassandra-session member-id))
+                  #(is (= :member-not-removed :member-removed))))))  )

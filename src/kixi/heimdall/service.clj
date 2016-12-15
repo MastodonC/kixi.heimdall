@@ -121,10 +121,7 @@
   (let [user-id  (java.util.UUID/fromString (:id user))
         group-id (:group-id (group/create! session {:name (:group-name group)
                                                     :user-id user-id}))]
-    (member/add-user-to-group session user-id group-id)
-    {:kixi.comms.event/key :kixi.heimdall/group-created
-     :kixi.comms.event/version "1.0.0"
-     :kixi.comms.event/payload {:group-id group-id}}))
+    (member/add-user-to-group session user-id group-id)))
 
 (defn new-user
   [session communications params]
@@ -143,10 +140,7 @@
   [session {:keys [user-id group-id]}]
   (let [user-id  (java.util.UUID/fromString user-id)
         group-id (java.util.UUID/fromString group-id)]
-    (member/add-user-to-group session user-id group-id)
-    {:kixi.comms.event/key :kixi.heimdall/member-added
-     :kixi.comms.event/version "1.0.0"
-     :kixi.comms.event/payload {:group-id group-id :user-id user-id}}))
+    (member/add-user-to-group session user-id group-id)))
 
 (defn add-member-event
   [session communications user-id group-id]
@@ -157,6 +151,26 @@
     (if (and user-ok? group-ok?)
       (and (comms/send-event! communications
                               :kixi.heimdall/member-added
+                              "1.0.0"
+                              {:user-id user-id
+                               :group-id group-id}) true)
+      false)))
+
+(defn remove-member
+  [session {:keys [user-id group-id]}]
+  (let [user-id  (java.util.UUID/fromString user-id)
+        group-id (java.util.UUID/fromString group-id)]
+    (member/remove-member session user-id group-id)))
+
+(defn remove-member-event
+  [session communications user-id group-id]
+  (let [user-ok? (and (spec/valid? :kixi.heimdall.schema/id user-id)
+                      (user/find-by-id session (java.util.UUID/fromString user-id)))
+        group-ok? (and (spec/valid? :kixi.heimdall.schema/id group-id)
+                       (group/find-by-id session (java.util.UUID/fromString group-id)))]
+    (if (and user-ok? group-ok?)
+      (and (comms/send-event! communications
+                              :kixi.heimdall/member-removed
                               "1.0.0"
                               {:user-id user-id
                                :group-id group-id}) true)
