@@ -1,5 +1,5 @@
 (ns kixi.heimdall.integration.base
-  (:require [user :as repl]
+  (:require [kixi.heimdall.integration.repl :as repl]
             [environ.core :refer [env]]
             [qbits.alia :as alia]
             [qbits.hayt :as hayt]
@@ -19,11 +19,27 @@
 
 (defn cycle-system
   [all-tests]
-  (reset! system (repl/go :test))
+  (repl/start)
+  (try
+    (all-tests)
+    (finally (do (drop-keyspace)
+                 (repl/stop)))))
+
+(def comms (atom nil))
+
+(defn extract-comms
+  [all-tests]
+  (reset! comms (:communications @repl/system))
   (all-tests)
-  (drop-keyspace)
-  (repl/stop)
-  (reset! system nil))
+  (reset! comms nil))
+
+(def cassandra-session (atom nil))
+
+(defn extract-cassandra-session
+  [all-tests]
+  (reset! cassandra-session (:cassandra-session @repl/system))
+  (all-tests)
+  (reset! cassandra-session nil))
 
 (defn wait-for
   ([fn fail-fn]

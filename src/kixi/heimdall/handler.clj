@@ -13,7 +13,6 @@
             [environ.core :refer [env]]
             [buddy.sign.jwt :as jwt]
             [buddy.core.keys :as ks]
-            [kixi.comms :refer [Communications] :as comms]
             [clojure.spec :as spec]))
 
 (defn- cassandra-session
