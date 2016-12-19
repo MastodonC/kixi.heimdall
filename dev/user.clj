@@ -1,43 +1,33 @@
 (ns user
-
-  ;; DO NOT ADD ANYTHING HERE THAT MIGHT REMOTELY HAVE A COMPILATION ERROR.
-  ;; THIS IS TO ENSURE WE CAN ALWAYS GET A REPL STARTED.
-  ;;
-  ;; see (init) below.
-
   (:require [com.stuartsierra.component :as component]
             [clojure.tools.namespace.repl :refer [refresh refresh-all]]
             [kixi.heimdall.application]
-            [ring.adapter.jetty :as jetty]))
-
-(defn init
-  "Constructs the current development system."
-  [& args]
-
-  ;; We do some gymnastics here to make sure that the REPL can always start
-  ;; even in the presence of compilation errors.
-  (require '[kixi.heimdall.system])
-
-  (let [new-system (resolve 'kixi.heimdall.system/system)
-        profile (first args)]
-    (alter-var-root #'kixi.heimdall.application/system
-                    (constantly (new-system (or profile :development))))))
+            [kixi.heimdall.system :as system]
+            [ring.adapter.jetty :as jetty]
+            [environ.core :refer [env]]))
 
 (defn start
-  "Starts the current development system."
-  []
-  (alter-var-root #'kixi.heimdall.application/system component/start))
+  ([]
+   (start {}))
+  ([overrides]
+   (when-not @kixi.heimdall.application/system
+     (try
+       (prn "Starting system")
+       (->> (system/system (keyword (env :system-profile "development")))
+            (#(merge % overrides))
+            component/start-system
+            (reset! kixi.heimdall.application/system))
+       (catch Exception e
+         (reset! kixi.heimdall.application/system (:system (ex-data e)))
+         (throw e))))))
 
 (defn stop
-  "Shuts down and destroys the current development system."
   []
-  (alter-var-root #'kixi.heimdall.application/system
-                  (fn [s] (when s (component/stop s)))))
-
-(defn go [& args]
-  (apply init args)
-  (start))
+  (when @kixi.heimdall.application/system
+    (prn "Stopping system")
+    (component/stop-system @kixi.heimdall.application/system)
+    (reset! kixi.heimdall.application/system nil)))
 
 (defn reset []
   (stop)
-  (refresh :after 'user/go))
+  (start))

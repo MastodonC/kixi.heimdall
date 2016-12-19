@@ -11,4 +11,4 @@
 ;; started from a main method.
 ;;
 ;; See https://github.com/stuartsierra/component
-(def system)
+(def system (atom nil))
