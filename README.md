@@ -99,25 +99,28 @@ Beforehand:
 
 To create a user (including sending an event):
 ```
-(s/new-user (:cassandra-session kixi.heimdall.application/system)
-            (:communications kixi.heimdall.application/system)
+(s/new-user (:cassandra-session @kixi.heimdall.application/system)
+            (:communications @kixi.heimdall.application/system)
             {:username "moo@bar.com" :password "Local123"})
 ```
 
 To create a group:
 ```
-(s/create-group-event (:cassandra-session kixi.heimdall.application/system)
-                      (:communications kixi.heimdall.application/system)
+(s/create-group-event (:cassandra-session @kixi.heimdall.application/system)
+                      (:communications @kixi.heimdall.application/system)
                       {:group {:group-name "the rebellion"} :user {:id "group-id"}})
 ```
 The output in the repl shows the resulting ids, to be used for adding and removing members.
 
 Adding members and removing them
 ```
-(s/add-member-event (:cassandra-session kixi.heimdall.application/system)
-                    (:communications kixi.heimdall.application/system)
+(s/add-member-event (:cassandra-session @kixi.heimdall.application/system)
+                    (:communications @kixi.heimdall.application/system)
                     "user-id" "group-id")
 
+(s/remove-member-event (:cassandra-session @kixi.heimdall.application/system)
+                       (:communications @kixi.heimdall.application/system)
+                       "user-id" "group-id")
 ```
 
 *Note*: it's important to use the given functions so that an event gets fired off, especially when used in production.

@@ -46,6 +46,6 @@
       (System/exit 0))
 
     (try
-      (alter-var-root #'kixi.heimdall.application/system
-                      (fn [_] (component/start (build-application opts))))
+      (reset! kixi.heimdall.application/system
+              (component/start (build-application opts)))
       (catch Throwable t (log/error t))))) ;; just to really be sure, should be caught elsewhere
