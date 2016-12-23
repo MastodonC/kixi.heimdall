@@ -29,7 +29,7 @@
   (testing "creation after sending an event"
     (let [_ (u/add! @cassandra-session {:username "boo2@bar.com" :password "Local123"})
           user (u/find-by-username @cassandra-session {:username "boo2@bar.com"})
-          creation-params {:group {:group-name "the avengers"} :user (str (:id user))}
+          creation-params {:group {:group-name "the avengers"} :user {:id (str (:id user))}}
           event-ok? (service/create-group-event @cassandra-session @comms creation-params)]
       (is event-ok?)
       (wait-for #(first (member/retrieve-groups-ids @cassandra-session (:id user))) #(is (= :group-not-created :group-created)))

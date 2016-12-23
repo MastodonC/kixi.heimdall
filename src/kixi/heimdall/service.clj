@@ -121,7 +121,8 @@
   (let [user-id  (java.util.UUID/fromString (:id user))
         group-id (:group-id (group/create! session {:name (:group-name group)
                                                     :user-id user-id}))]
-    (member/add-user-to-group session user-id group-id)))
+    (member/add-user-to-group session user-id group-id)
+    {:group-id group-id}))
 
 (defn new-user
   [session communications params]
@@ -138,13 +139,15 @@
 
 (defn- add-member
   [session {:keys [user-id group-id]}]
-  (let [user-id  (java.util.UUID/fromString user-id)
+  (let [_ (log/info "GROUP-ID" group-id (type group-id))
+        user-id  (java.util.UUID/fromString user-id)
         group-id (java.util.UUID/fromString group-id)]
     (member/add-user-to-group session user-id group-id)))
 
 (defn add-member-event
   [session communications user-id group-id]
-  (let [user-ok? (and (spec/valid? :kixi.heimdall.schema/id user-id)
+  (let [_ (log/info "GROUP-ID" group-id)
+        user-ok? (and (spec/valid? :kixi.heimdall.schema/id user-id)
                       (user/find-by-id session (java.util.UUID/fromString user-id)))
         group-ok? (and (spec/valid? :kixi.heimdall.schema/id group-id)
                        (group/find-by-id session (java.util.UUID/fromString group-id)))]
