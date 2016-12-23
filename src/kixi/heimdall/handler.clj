@@ -13,7 +13,6 @@
             [environ.core :refer [env]]
             [buddy.sign.jwt :as jwt]
             [buddy.core.keys :as ks]
-            [kixi.comms :refer [Communications] :as comms]
             [clojure.spec :as spec]))
 
 (defn- cassandra-session
@@ -43,19 +42,19 @@
 
 (defn auth-token [req]
   (let [[ok? res] (service/create-auth-token (cassandra-session req)
+                                             (communications req)
                                              (:auth-conf req)
                                              (:params req))]
     (if ok?
-      (do (comms/send-event! (communications req) :kixi.heimdall/user-logged-in "1.0.0" (select-keys (:params req) [:username]))
-          {:status 201 :body res})
+      {:status 201 :body res}
       (return-error {:msg res :fn "auth-token"} :unauthenticated 401))))
 
 (defn new-user [req]
   (let [[ok? res] (service/new-user (cassandra-session req)
+                                    (communications req)
                                     (:params req))]
     (if ok?
-      (do  (comms/send-event! (communications req) :kixi.heimdall/user-created "1.0.0" (select-keys (:params req) [:username]))
-           {:status 201 :body res})
+      {:status 201 :body res}
       (return-error {:msg res :fn "new-user"} :user-creation-failed 500))))
 
 (defn refresh-auth-token [req]
@@ -84,10 +83,11 @@
 
 
 (defn create-group [req]
-  (let [ok? (and (spec/valid? :kixi.heimdall.schema/group-params (:params req)) (spec/valid? :kixi.heimdall.schema/user (:user req)))]
+  (let [ok? (service/create-group-event (cassandra-session req)
+                                        (communications req)
+                                        {:group (:params req) :user (:user req)})]
     (if ok?
-      (do (comms/send-event! (communications req) :kixi.heimdall/group-created "1.0.0" (merge {:group (:params req)} {:user (:user req)}))
-          {:status 201 :body "Group successfully created"})
+      {:status 201 :body "Group successfully created"}
       (return-error {:msg "Please provide valid parameters (name for the group), and make sure you are authenticated" :fn "create-group"} :group-creation-failed 500))))
 
 (defn escape-html
@@ -145,7 +145,7 @@
   (POST "/invalidate-refresh-token" [] invalidate-refresh-token))
 
 (defroutes secured-routes
-  (POST "/create-group" [] create-group))
+  (POST "/group" [] create-group))
 
 (defroutes app-routes
   public-routes

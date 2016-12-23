@@ -1,17 +1,24 @@
 {:service-name "kixi.heimdall"
  :cassandra-session {:hosts #profile {:development ["localhost"]
+                                      :test ["localhost"]
                                       :dev-docker ["localhost"]
                                       :production ["node-0.cassandra.mesos"
                                                    "node-1.cassandra.mesos"
                                                    "node-2.cassandra.mesos"]}
-                     :keyspace "heimdall"
+                     :keyspace #profile {:development "heimdall"
+                                         :dev-docker "heimdall"
+                                         :test "heimdall_test"
+                                         :production "heimdall"}
                      :replication-strategy #profile {:development {:class "SimpleStrategy"
                                                                    :replication_factor 1}
                                                      :dev-docker {:class "SimpleStrategy"
                                                                   :replication_factor 1}
+                                                     :test {:class "SimpleStrategy"
+                                                            :replication_factor 1}
                                                      :production {:class  "SimpleStrategy"
                                                                   :replication_factor 2}}}
  :jetty-server {:port #profile {:development 3002
+                                :test 3003
                                 :dev-docker 3002
                                 :production 3000}}
  :communications {:kafka #profile {:development {:host "localhost"
@@ -22,6 +29,10 @@
                                                 :port 2181
                                                 :group-id "heimdall"
                                                 :zk-path "/"}
+                                   :test {:host "localhost"
+                                          :port 2181
+                                          :group-id "heimdall"
+                                          :zk-path "/"}
                                    :production {:host "master.mesos"
                                                 :port 2181
                                                 :group-id "heimdall"
@@ -44,7 +55,8 @@
 
  :metrics {:influx-reporter {:host #profile {:production "influxdb.sandpit-vpc.kixi"
                                              :development "localhost"
-                                             :dev-docker "localhost"}
+                                             :dev-docker "localhost"
+                                             :test "localhost"}
                              :port 8086
                                         ;                             :auth
                              :connect-timeout 1500
@@ -65,7 +77,8 @@
                                     "taskid" #or [#env MESOS_TASK_ID #rand-uuid "rand"]}
                              :seconds #profile {:production 60
                                                 :development 1
-                                                :dev-docker 1}}}
+                                                :dev-docker 1
+                                                :test 1}}}
  :logging {:level :info ; e/o #{:trace :debug :info :warn :error :fatal :report}
            ;; Control log filtering by namespaces/patterns. Useful for turning off
            ;; logging in noisy libraries, etc.:

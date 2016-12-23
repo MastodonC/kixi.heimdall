@@ -54,6 +54,7 @@
       (hayt/column-definitions {:id           :uuid
                                 :name         :text
                                 :created      :timestamp
+                                :created_by   :uuid
                                 :primary-key  [:id]})))
 
     ;; to get all groups a user belongs to, and their roles in it

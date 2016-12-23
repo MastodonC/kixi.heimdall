@@ -41,7 +41,7 @@
     nil)
   (send-event! [_ _ _ _ _]
     nil)
-  (send-command! [_ _ _ _]
+  (send-command! [_ _ _ _ _]
     nil)
   (attach-event-handler! [_ _ _ _ _]
     nil))
@@ -53,8 +53,8 @@
     (swap! triggered update-in  [:comms :sent] concat [{:event event :version version :payload payload}]))
   (send-event! [_ event version payload command-id]
     (swap! triggered update-in [:comms :sent] concat [{:event event :version version :payload payload :command-id command-id}]))
-  (send-command! [_ command version payload]
-    (swap! triggered update-in [:comms :command] concat [{:command command :version version :payload payload}]))
+  (send-command! [_ command version user payload]
+    (swap! triggered update-in [:comms :command] concat [{:command command :user user :version version :payload payload}]))
   (attach-event-handler! [_ group-id event version handler]
     nil))
 
@@ -218,7 +218,7 @@
                                              '())]
       (let [events (atom {})
             response (comms-app app (heimdall-request
-                                     (mock/header (mock/request :post "/create-group"
+                                     (mock/header (mock/request :post "/group"
                                                                 (json/write-str {:group-name "test-grp"}))
                                                   "authorization" (format "Token %s" (valid-auth-token))))
                                 events)]
@@ -227,14 +227,14 @@
         (is (= (:event (first (get-in @events [:comms :sent]))) :kixi.heimdall/group-created)))))
   (testing "without a token /create-group fails"
     (let [events (atom {})
-          response (comms-app app (heimdall-request (mock/request :post "/create-group"
+          response (comms-app app (heimdall-request (mock/request :post "/group"
                                                                   (json/write-str {:group-name "test-grp"}))) events)]
       (is (= (:status response) 401))
       (is (= (:body response) "unauthenticated"))
       (is (= @events {}))))
   (testing "without a valid token /create-group fails"
     (let [response (comms-app app (heimdall-request
-                                   (mock/header (mock/request :post "/create-group"
+                                   (mock/header (mock/request :post "/group"
                                                               (json/write-str {:group-name "test-grp"}))
                                                 "authorization" (format "Token 384905-6"))))]
       (is (= (:status response) 401))

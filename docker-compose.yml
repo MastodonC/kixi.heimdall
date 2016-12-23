@@ -5,6 +5,10 @@ cassandra:
           - "9160:9160"
 influx:
         image: 'tutum/influxdb'
+        environment:
+          - ADMIN_USER="root"
+          - INFLUXDB_INIT_PWD="somepassword"
+          - PRE_CREATE_DB="metrics"
         ports:
           - "8083:8083"
           - "8086:8086"

@@ -63,11 +63,6 @@ Heimdall uses docker and docker-compose to manage external dependencies in devel
 docker-compose up
 ```
 Wait until the system has settled before proceeding.
-To supress InfluxDB warnings:
-
-```
-curl -G -X POST http://localhost:8086/query --data-urlencode "q=CREATE DATABASE metrics"
-```
 
 To start the application, run:
 
@@ -79,7 +74,7 @@ lein run -m kixi.heimdall.bootstrap -p <development/production>
 
 There's a docker-compose to start all the dependencies
 ```
-`docker-compose up
+docker-compose up
 ```
 in the root directory.
 
@@ -91,6 +86,44 @@ docker run --net=host -p 3002:3002 -p 5001:5001 mastodonc/kixi.heimdall-dev
 ```
 
 The public key to use in combination with this development setup is the test_pubkey.pem which is in the resources folder.
+
+## The repl to do user and group administration
+
+
+Beforehand:
+
+```
+(go)
+(require '[kixi.heimdall.service :as s])
+```
+
+To create a user (including sending an event):
+```
+(s/new-user (:cassandra-session @kixi.heimdall.application/system)
+            (:communications @kixi.heimdall.application/system)
+            {:username "moo@bar.com" :password "Local123"})
+```
+
+To create a group:
+```
+(s/create-group-event (:cassandra-session @kixi.heimdall.application/system)
+                      (:communications @kixi.heimdall.application/system)
+                      {:group {:group-name "the rebellion"} :user {:id "group-id"}})
+```
+The output in the repl shows the resulting ids, to be used for adding and removing members.
+
+Adding members and removing them
+```
+(s/add-member-event (:cassandra-session @kixi.heimdall.application/system)
+                    (:communications @kixi.heimdall.application/system)
+                    "user-id" "group-id")
+
+(s/remove-member-event (:cassandra-session @kixi.heimdall.application/system)
+                       (:communications @kixi.heimdall.application/system)
+                       "user-id" "group-id")
+```
+
+*Note*: it's important to use the given functions so that an event gets fired off, especially when used in production.
 
 ## License
 
