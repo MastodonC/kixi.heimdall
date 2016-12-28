@@ -178,3 +178,21 @@
                               {:user-id user-id
                                :group-id group-id}) true)
       false)))
+
+(defn update-group
+  [session {:keys [group-id name]}]
+  (group/update! session group-id {:name name}))
+
+(defn update-group-event
+  [session communications group-id new-group-name]
+  (let [group-ok? (and (spec/valid? :kixi.heimdall.schema/id group-id)
+                       (group/find-by-id session (java.util.UUID/fromString group-id)))
+        name-ok? (spec/valid? :kixi.heimdall.schema/group-name new-group-name)]
+    (if (and group-ok? name-ok?)
+      (and (comms/send-event! communications
+                              :kixi.heimdall/group-updated
+                              "1.0.0"
+                              {:group-id group-id
+                               :name new-group-name})
+           true)
+      false)))

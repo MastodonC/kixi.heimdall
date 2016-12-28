@@ -78,5 +78,12 @@
 
 (deftest modify-group
   (testing "modify directly"
-    )
-  (testing "modify via an event"))
+    (let [[_ group-id] (create-group! @cassandra-session "james@bond.net" "MI6")
+          _ (#'service/update-group @cassandra-session {:group-id (str group-id) :name "MI5"})]
+      (is (= (:name (group/find-by-id @cassandra-session group-id)) "MI5"))))
+  (testing "modify via an event"
+    (let [[_ group-id] (create-group! @cassandra-session "witch@broom.org" "Broom")
+          event-ok? (service/update-group-event @cassandra-session @comms (str group-id) "RoomOnTheBroom")]
+      (is event-ok?)
+      (wait-for #(= (:name (group/find-by-id @cassandra-session group-id)) "RoomOnTheBroom")
+                #(is (= :group-not-updated :group-updated))))))
