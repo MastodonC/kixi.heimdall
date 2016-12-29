@@ -21,3 +21,7 @@
 (defn find-by-id
   [session id]
   (first (db/select* session :groups {:id id}))  )
+
+(defn all
+  [session]
+  (db/select-all session :groups))

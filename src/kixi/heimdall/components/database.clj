@@ -53,6 +53,8 @@
   (insert!
     [this table row]
     [this table row args])
+  (select-all
+    [this table])
   (select*
     [this table where])
   (select
@@ -74,6 +76,10 @@
       :else (exec conn (hayt/insert table (hayt/values row)))))
   (insert! [this table row]
     (insert! this table (into {} (map util/hyphen->underscore row)) {}))
+  (select-all [this table]
+    (let [result (exec conn (hayt/select table))
+          reformatted (map util/underscore->hyphen result)]
+      reformatted))
   (select* [this table where]
     (let [result (exec conn (hayt/select table (hayt/where where)))
           reformatted (map util/underscore->hyphen result)]
@@ -107,6 +113,10 @@
       :else (exec this (hayt/insert table (hayt/values row)))))
   (insert! [this table row]
     (insert! this table (into {} (map util/hyphen->underscore row)) {}))
+  (select-all [this table]
+    (let [result (exec this (hayt/select table))
+          reformatted (map util/underscore->hyphen result)]
+      reformatted))
   (select* [this table where]
     (let [result (exec this (hayt/select table (hayt/where where)))
           reformatted (map util/underscore->hyphen result)]

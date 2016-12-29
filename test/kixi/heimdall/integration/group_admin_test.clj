@@ -8,9 +8,20 @@
             [kixi.heimdall.user :as u]
             [kixi.heimdall.group :as group]
             [kixi.heimdall.member :as member]
-            [taoensso.timbre :as log :refer [debug]]))
+            [taoensso.timbre :as log :refer [debug]]
+            [qbits.alia :as alia]
+            [qbits.hayt :as hayt]))
 
-(use-fixtures :each cycle-system extract-cassandra-session extract-comms)
+(defn cleanup-tables
+  [all-tests]
+  (alia/execute (:session @cassandra-session) (hayt/truncate :users))
+  (alia/execute (:session @cassandra-session) (hayt/truncate :users_by_username))
+  (alia/execute (:session @cassandra-session) (hayt/truncate :groups))
+  (alia/execute (:session @cassandra-session) (hayt/truncate :members_by_group))
+  (alia/execute (:session @cassandra-session) (hayt/truncate :members_by_user))
+  (all-tests))
+
+(use-fixtures :each cycle-system extract-cassandra-session extract-comms cleanup-tables)
 
 (defn create-group!
   [session owner-name group-name]
@@ -87,3 +98,12 @@
       (is event-ok?)
       (wait-for #(= (:name (group/find-by-id @cassandra-session group-id)) "RoomOnTheBroom")
                 #(is (= :group-not-updated :group-updated))))))
+
+(deftest return-groups
+  ;; TODO: all groups this user can search -> add groups parameter for permissions
+  (testing "return all groups"
+    (let [_ (doseq [[username group] [["tatouine@starwars.com" "planets1"]
+                                      ["jedha@starwars.com" "planets2"]
+                                      ["eadu@starwars.com" "planets3"]]]
+              (create-group! @cassandra-session username group))]
+      (is (= (count (service/groups @cassandra-session)) 3)))))

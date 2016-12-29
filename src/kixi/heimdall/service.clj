@@ -196,3 +196,7 @@
                                :name new-group-name})
            true)
       false)))
+
+(defn groups
+  [session]
+  (group/all session))
