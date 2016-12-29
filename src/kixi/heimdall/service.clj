@@ -76,7 +76,10 @@
   (let [[ok? res] (user/auth session credentials)]
     (if ok?
       (let [groups (get-groups-for-user session (:id (:user res)))
-            user (merge (:user res) {:user-groups groups})]
+            user (merge (select-keys (:user res) [:username
+                                                  :id
+                                                  :name
+                                                  :created]) {:user-groups groups})]
         (if-let [token-pair (make-token-pair! session auth-conf user)]
           (do  (comms/send-event! communications :kixi.heimdall/user-logged-in "1.0.0" (select-keys credentials [:username]))
                (success token-pair))
