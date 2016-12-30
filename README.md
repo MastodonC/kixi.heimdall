@@ -123,6 +123,12 @@ Adding members and removing them
                        "user-id" "group-id")
 ```
 
+Updating the group (name)/
+```
+(s/update-group-event (:cassandra-session @kixi.heimdall.application/system)
+                      (:communications @kixi.heimdall.application/system)
+                      "group-id" "new-name")
+```
 *Note*: it's important to use the given functions so that an event gets fired off, especially when used in production.
 
 ## License

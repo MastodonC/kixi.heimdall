@@ -6,7 +6,6 @@
 
 (defn create!
   [session {:keys [name user-id] :as group}]
-  (log/info "creating group" session group)
   (let [group-id (uuid/random)
         group-data {:id group-id
                     :name name
@@ -15,6 +14,14 @@
     (db/insert! session :groups group-data)
     {:group-id group-id}))
 
+(defn update!
+  [session group-id {:keys [name]}]
+  (db/update! session :groups {:name name} {:id (java.util.UUID/fromString group-id)}))
+
 (defn find-by-id
   [session id]
   (first (db/select* session :groups {:id id}))  )
+
+(defn all
+  [session]
+  (db/select-all session :groups))

@@ -10,20 +10,12 @@
 (def wait-tries (Integer/parseInt (env :wait-tries "80")))
 (def wait-per-try (Integer/parseInt (env :wait-per-try "100")))
 
-(defn drop-keyspace
-  []
-  (let [keyspace (get-in (config/config :test) [:cassandra-session :keyspace])]
-    (log/debug "droppin keyspace " keyspace)
-    (try (alia/execute (:cassandra-session @system) (hayt/drop-keyspace keyspace))
-         (catch Exception e (log/debug "DROP KEYSPACE FAILED " e)))))
-
 (defn cycle-system
   [all-tests]
   (repl/start)
   (try
     (all-tests)
-    (finally (do (drop-keyspace)
-                 (repl/stop)))))
+    (finally (repl/stop))))
 
 (def comms (atom nil))
 
