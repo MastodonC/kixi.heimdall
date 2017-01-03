@@ -243,16 +243,18 @@
 
 (deftest new-user-test
   (testing "new user can be added if password passes the validation"
-    (with-redefs [user/add! (fn [_ _] '())
-                  user/find-by-username (fn [_ _] nil)]
+    (with-redefs [user/add! (fn [_ _] {:user-id (java.util.UUID/randomUUID)})
+                  user/find-by-username (fn [_ _] nil)
+                  group/add! (fn [_ _] {:group-id (java.util.UUID/randomUUID)})]
       (let [response (comms-app app (heimdall-request
                                      (mock/request :post "/user"
                                                    (json/write-str {:username "user@boo.com"
                                                                     :password "secret1Pass"}))))]
         (is (= (:status response) 201)))))
   (testing "new user can not be added if password fails the validation"
-    (with-redefs [user/add! (fn [_ _] '())
-                  user/find-by-username (fn [_ _] nil)]
+    (with-redefs [user/add! (fn [_ _] {:user-id (java.util.UUID/randomUUID)})
+                  user/find-by-username (fn [_ _] nil)
+                  group/add! (fn [_ _] {:group-id (java.util.UUID/randomUUID)})]
       (let [response (comms-app app (heimdall-request
                                      (mock/request :post "/user"
                                                    (json/write-str {:username "user@boo.com"
@@ -261,8 +263,9 @@
         (is (= (:body response)
                "user-creation-failed")))))
   (testing "new user triggers a send-event!"
-    (with-redefs [user/add! (fn [_ _] '())
-                  user/find-by-username (fn [_ _] nil)]
+    (with-redefs [user/add! (fn [_ _] {:user-id (java.util.UUID/randomUUID)})
+                  user/find-by-username (fn [_ _] nil)
+                  group/add! (fn [_ _] {:group-id (java.util.UUID/randomUUID)})]
       (let [events (atom {})
             response (comms-app app (heimdall-request
                                      (mock/request :post "/user"

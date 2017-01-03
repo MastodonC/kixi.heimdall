@@ -46,16 +46,27 @@
                                 :refresh_token  :text
                                 :valid          :boolean
                                 :primary-key    [:user_id :issued]})))
-
     (alia/execute
      conn
      (hayt/create-table
       "groups"
       (hayt/column-definitions {:id           :uuid
                                 :name         :text
+                                :group_type   :text
                                 :created      :timestamp
                                 :created_by   :uuid
                                 :primary-key  [:id]})))
+
+    (alia/execute
+     conn
+     (hayt/create-table
+      "groups_by_user_and_type"
+      (hayt/column-definitions {:id           :uuid
+                                :name         :text
+                                :group_type   :text
+                                :created      :timestamp
+                                :created_by   :uuid
+                                :primary-key  [:created_by :group_type]})))
 
     ;; to get all groups a user belongs to, and their roles in it
     (alia/execute

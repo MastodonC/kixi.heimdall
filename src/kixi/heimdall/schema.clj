@@ -15,9 +15,10 @@
   (re-find #"(?=.*\d.*)(?=.*[a-z].*)(?=.*[A-Z].*).{8,}" s))
 
 (spec/def ::group-name string?)
+(spec/def ::group-type #{"user" "group"})
 (spec/def ::group-params
   (spec/keys :req-un [::group-name]
-             :opts [] ))
+             :opts [::group-type] ))
 
 
 (spec/def ::uuid #(instance? java.util.UUID %))
