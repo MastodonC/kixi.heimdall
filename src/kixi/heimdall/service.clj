@@ -121,9 +121,9 @@
 (defn- create-group
   [session {:keys [group user]}]
   (let [user-id  (java.util.UUID/fromString (:id user))
-        group-id (:group-id (group/create! session {:name (:group-name group)
-                                                    :user-id user-id}))]
-    (member/add-user-to-group session user-id group-id)
+        group-id (:group-id (group/add! session {:name (:group-name group)
+                                                 :user-id user-id}))]
+    (member/add! session user-id group-id)
     {:group-id group-id}))
 
 (defn new-user
@@ -144,7 +144,7 @@
   (let [_ (log/info "GROUP-ID" group-id (type group-id))
         user-id  (java.util.UUID/fromString user-id)
         group-id (java.util.UUID/fromString group-id)]
-    (member/add-user-to-group session user-id group-id)))
+    (member/add! session user-id group-id)))
 
 (defn add-member-event
   [session communications user-id group-id]

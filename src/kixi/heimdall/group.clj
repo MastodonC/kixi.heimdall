@@ -4,7 +4,7 @@
             [qbits.alia.uuid :as uuid]
             [taoensso.timbre :as log]))
 
-(defn create!
+(defn add!
   [session {:keys [name user-id] :as group}]
   (let [group-id (uuid/random)
         group-data {:id group-id

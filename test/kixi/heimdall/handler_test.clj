@@ -213,10 +213,10 @@
 
 (deftest test-create-group
   (testing "the /create-route route works"
-    (with-redefs [group/create! (fn [session group-name]
-                                  {:group-id #uuid "bfa00b8a-f57e-43ff-829b-d7469e797000"})
-                  member/add-user-to-group (fn [session user-id grp-id role]
-                                             '())]
+    (with-redefs [group/add! (fn [session group-name]
+                               {:group-id #uuid "bfa00b8a-f57e-43ff-829b-d7469e797000"})
+                  member/add! (fn [session user-id grp-id role]
+                                '())]
       (let [events (atom {})
             response (comms-app app (heimdall-request
                                      (mock/header (mock/request :post "/group"
