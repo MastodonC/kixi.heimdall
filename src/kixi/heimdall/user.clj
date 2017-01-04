@@ -30,7 +30,8 @@
     (db/insert! session :users_by_username
                 user-data)
     (db/insert! session :users
-                user-data)))
+                user-data)
+    user-data))
 
 (defn find-by-username
   [session {:keys [username]}]
