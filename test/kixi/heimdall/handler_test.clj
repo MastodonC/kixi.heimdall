@@ -17,14 +17,15 @@
             [clj-time.core :as t]
             [kixi.heimdall.config :as config]
             [kixi.comms :as comms]
-            [taoensso.timbre :as log]))
+            [taoensso.timbre :as log]
+            [environ.core :refer [env]]))
 
 (defn json-request
   [request]
   (mock/content-type request "application/json"))
 
 (def auth-config
-  (config/auth-conf (config/config :test)))
+  (config/auth-conf (config/config (keyword (env :system-profile "test")))))
 
 (defn auth-config-added
   [request]

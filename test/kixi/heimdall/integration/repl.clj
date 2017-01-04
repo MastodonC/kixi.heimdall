@@ -12,7 +12,7 @@
   ([overrides]
    (when-not @system
      (try
-       (prn "Starting system")
+       (prn "Starting system" (keyword (env :system-profile "test")))
        (->> (system/system (keyword (env :system-profile "test")))
             (#(merge % overrides))
             component/start-system
