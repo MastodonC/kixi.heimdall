@@ -68,8 +68,7 @@
       (log/debug "User credentials missing")))
 
 (defn- get-groups-for-user [session user-id]
-  (let [groups-colls (member/retrieve-groups-ids session user-id)
-        groups-ids (map :group-id groups-colls)]
+  (let [groups-ids (member/retrieve-groups-ids session user-id)]
     {:groups groups-ids}))
 
 (defn create-auth-token [session communications auth-conf credentials]
