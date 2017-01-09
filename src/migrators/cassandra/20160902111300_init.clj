@@ -1,10 +1,12 @@
-(ns migrators.cassandra.201609021113-init
+(ns migrators.cassandra.20160902111300-init
   (:use [joplin.cassandra.database])
   (:require [qbits.alia :as alia]
-            [qbits.hayt :as hayt]))
+            [qbits.hayt :as hayt]
+            [taoensso.timbre :as log]))
 
 (defn up
   [db]
+  (log/info "Joplin up" db)
   (let [conn (get-connection (:hosts db) (:keyspace db))]
     (alia/execute
      conn
@@ -52,21 +54,9 @@
       "groups"
       (hayt/column-definitions {:id           :uuid
                                 :name         :text
-                                :group_type   :text
                                 :created      :timestamp
                                 :created_by   :uuid
                                 :primary-key  [:id]})))
-
-    (alia/execute
-     conn
-     (hayt/create-table
-      "groups_by_user_and_type"
-      (hayt/column-definitions {:id           :uuid
-                                :name         :text
-                                :group_type   :text
-                                :created      :timestamp
-                                :created_by   :uuid
-                                :primary-key  [:created_by :group_type]})))
 
     ;; to get all groups a user belongs to, and their roles in it
     (alia/execute
@@ -94,4 +84,6 @@
     (alia/execute conn (hayt/drop-table "users_by_username"))
     (alia/execute conn (hayt/drop-table "refresh_tokens"))
     (alia/execute conn (hayt/drop-table "refresh_tokens_by_user_id_and_issued"))
-    (alia/execute conn (hayt/drop-table "groups"))))
+    (alia/execute conn (hayt/drop-table "groups"))
+    (alia/execute conn (hayt/drop-table "members_by_group"))
+    (alia/execute conn (hayt/drop-table "members_by_user"))))
