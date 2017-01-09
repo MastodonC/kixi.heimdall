@@ -95,7 +95,9 @@
                     rt/add! (fn [session m] true)
                     member/retrieve-groups-ids (fn [session user-id]
                                                  '({:group-id "group-id-1"}
-                                                   {:group-id "group-id-2"}))]
+                                                   {:group-id "group-id-2"}))
+                    group/find-user-group (fn [session user-id]
+                                            {:id (java.util.UUID/randomUUID)})]
         (let [events (atom {})
               response (comms-app app (heimdall-request
                                        (mock/request :post "/create-auth-token"
@@ -103,11 +105,12 @@
           (is (= (:status response) 201))
           (let [body-resp (json/read-str (:body response) :key-fn keyword)]
             (is (:token-pair body-resp)))
-          (is (= @events {:comms {:sent '({:event :kixi.heimdall/user-logged-in :version "1.0.0" :payload {:username "user@boo.com"}})}}))          )))
+          (is (= @events {:comms {:sent '({:event :kixi.heimdall/user-logged-in :version "1.0.0" :payload {:username "user@boo.com"}})}})))))
     (testing "authentication fails wrong user"
       (with-redefs [user/find-by-username (fn [session m] nil)
                     member/retrieve-groups-ids (fn [session user-id]
-                                                 '())]
+                                                 '())
+                    group/find-user-group (fn [session _] nil)]
         (let [response (comms-app app (heimdall-request
                                        (mock/request :post "/create-auth-token"
                                                      (json/write-str {:username "user@boo.com" :password "foo12CCbb"}))))]

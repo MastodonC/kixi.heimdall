@@ -67,18 +67,16 @@
                              :refresh-token refresh-token}}))
       (log/debug "User credentials missing")))
 
-(defn- get-groups-for-user [session user-id]
-  (let [groups-ids (member/retrieve-groups-ids session user-id)]
-    {:groups groups-ids}))
-
 (defn create-auth-token [session communications auth-conf credentials]
   (let [[ok? res] (user/auth session credentials)]
     (if ok?
-      (let [groups (get-groups-for-user session (:id (:user res)))
+      (let [groups (member/retrieve-groups-ids session (:id (:user res)))
+            self-group (group/find-user-group session (:id (:user res)))
             user (merge (select-keys (:user res) [:username
                                                   :id
                                                   :name
-                                                  :created]) {:user-groups groups})]
+                                                  :created]) {:user-groups groups
+                                                              :self-group (:id self-group)})]
         (if-let [token-pair (make-token-pair! session auth-conf user)]
           (do  (comms/send-event! communications :kixi.heimdall/user-logged-in "1.0.0" (select-keys credentials [:username]))
                (success token-pair))
