@@ -1,7 +1,8 @@
 (ns kixi.heimdall.components.logging
   (:require [clojure.string :as str]
             [com.stuartsierra.component :as component]
-            [taoensso.timbre :as log]))
+            [taoensso.timbre :as log]
+            [environ.core :refer [env]]))
 
 (def logback-timestamp-opts
   {:pattern  "yyyy-MM-dd HH:mm:ss,SSS"
@@ -38,19 +39,19 @@
 
 (defrecord Log
     [level ns-blacklist metrics]
-    component/Lifecycle
-    (start [component]
-      (when-not (:full-config component)
-        (let [full-config {:level level
-                           :ns-blacklist ns-blacklist
-                           :timestamp-opts logback-timestamp-opts ; iso8601 timestamps
-                           :output-fn (partial output-fn {:stacktrace-fonts {}})
-                           :middleware [(log-metrics (:meter-mark metrics))]}]
-          (log/merge-config! full-config)
-          (log/handle-uncaught-jvm-exceptions!
-           (fn [throwable ^Thread thread]
-             (log/error throwable (str "Unhandled exception on " (.getName thread)))))
-          (assoc component :full-config full-config))))
-    (stop [component]
-      (when (:full-config component)
-        (dissoc component :full-config))))
+  component/Lifecycle
+  (start [component]
+    (when-not (:full-config component)
+      (let [full-config {:level (keyword (env :log-level level))
+                         :ns-blacklist ns-blacklist
+                         :timestamp-opts logback-timestamp-opts ; iso8601 timestamps
+                         :output-fn (partial output-fn {:stacktrace-fonts {}})
+                         :middleware [(log-metrics (:meter-mark metrics))]}]
+        (log/merge-config! full-config)
+        (log/handle-uncaught-jvm-exceptions!
+         (fn [throwable ^Thread thread]
+           (log/error throwable (str "Unhandled exception on " (.getName thread)))))
+        (assoc component :full-config full-config))))
+  (stop [component]
+    (when (:full-config component)
+      (dissoc component :full-config))))
