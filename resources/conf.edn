@@ -44,8 +44,8 @@
                                              :port 2181
                                              :group-id "heimdall_test"
                                              :zk-path "/dcos-service-kafka/"
-                                             :topics {:command "command-test"
-                                                      :event "event-test"}}
+                                             :topics {:command "command-heimdall-testing"
+                                                      :event "event-heimdall-testing"}}
                                    :production {:host "master.mesos"
                                                 :port 2181
                                                 :group-id "heimdall"
