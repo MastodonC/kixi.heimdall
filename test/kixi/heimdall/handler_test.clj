@@ -95,7 +95,9 @@
                     rt/add! (fn [session m] true)
                     member/retrieve-groups-ids (fn [session user-id]
                                                  '({:group-id "group-id-1"}
-                                                   {:group-id "group-id-2"}))]
+                                                   {:group-id "group-id-2"}))
+                    group/find-user-group (fn [session user-id]
+                                            {:id (java.util.UUID/randomUUID)})]
         (let [events (atom {})
               response (comms-app app (heimdall-request
                                        (mock/request :post "/create-auth-token"
@@ -103,11 +105,12 @@
           (is (= (:status response) 201))
           (let [body-resp (json/read-str (:body response) :key-fn keyword)]
             (is (:token-pair body-resp)))
-          (is (= @events {:comms {:sent '({:event :kixi.heimdall/user-logged-in :version "1.0.0" :payload {:username "user@boo.com"}})}}))          )))
+          (is (= @events {:comms {:sent '({:event :kixi.heimdall/user-logged-in :version "1.0.0" :payload {:username "user@boo.com"}})}})))))
     (testing "authentication fails wrong user"
       (with-redefs [user/find-by-username (fn [session m] nil)
                     member/retrieve-groups-ids (fn [session user-id]
-                                                 '())]
+                                                 '())
+                    group/find-user-group (fn [session _] nil)]
         (let [response (comms-app app (heimdall-request
                                        (mock/request :post "/create-auth-token"
                                                      (json/write-str {:username "user@boo.com" :password "foo12CCbb"}))))]
@@ -213,10 +216,10 @@
 
 (deftest test-create-group
   (testing "the /create-route route works"
-    (with-redefs [group/create! (fn [session group-name]
-                                  {:group-id #uuid "bfa00b8a-f57e-43ff-829b-d7469e797000"})
-                  member/add-user-to-group (fn [session user-id grp-id role]
-                                             '())]
+    (with-redefs [group/add! (fn [session group-name]
+                               {:group-id #uuid "bfa00b8a-f57e-43ff-829b-d7469e797000"})
+                  member/add! (fn [session user-id grp-id role]
+                                '())]
       (let [events (atom {})
             response (comms-app app (heimdall-request
                                      (mock/header (mock/request :post "/group"
@@ -243,16 +246,18 @@
 
 (deftest new-user-test
   (testing "new user can be added if password passes the validation"
-    (with-redefs [user/add! (fn [_ _] '())
-                  user/find-by-username (fn [_ _] nil)]
+    (with-redefs [user/add! (fn [_ _] {:user-id (java.util.UUID/randomUUID)})
+                  user/find-by-username (fn [_ _] nil)
+                  group/add! (fn [_ _] {:group-id (java.util.UUID/randomUUID)})]
       (let [response (comms-app app (heimdall-request
                                      (mock/request :post "/user"
                                                    (json/write-str {:username "user@boo.com"
                                                                     :password "secret1Pass"}))))]
         (is (= (:status response) 201)))))
   (testing "new user can not be added if password fails the validation"
-    (with-redefs [user/add! (fn [_ _] '())
-                  user/find-by-username (fn [_ _] nil)]
+    (with-redefs [user/add! (fn [_ _] {:user-id (java.util.UUID/randomUUID)})
+                  user/find-by-username (fn [_ _] nil)
+                  group/add! (fn [_ _] {:group-id (java.util.UUID/randomUUID)})]
       (let [response (comms-app app (heimdall-request
                                      (mock/request :post "/user"
                                                    (json/write-str {:username "user@boo.com"
@@ -261,8 +266,9 @@
         (is (= (:body response)
                "user-creation-failed")))))
   (testing "new user triggers a send-event!"
-    (with-redefs [user/add! (fn [_ _] '())
-                  user/find-by-username (fn [_ _] nil)]
+    (with-redefs [user/add! (fn [_ _] {:user-id (java.util.UUID/randomUUID)})
+                  user/find-by-username (fn [_ _] nil)
+                  group/add! (fn [_ _] {:group-id (java.util.UUID/randomUUID)})]
       (let [events (atom {})
             response (comms-app app (heimdall-request
                                      (mock/request :post "/user"

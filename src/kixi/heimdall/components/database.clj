@@ -81,7 +81,7 @@
           reformatted (map util/underscore->hyphen result)]
       reformatted))
   (select* [this table where]
-    (let [result (exec conn (hayt/select table (hayt/where where)))
+    (let [result (exec conn (hayt/select table (hayt/where (util/hyphen->underscore where))))
           reformatted (map util/underscore->hyphen result)]
       (if (coll? result)
         (map (partial into {}) reformatted)
@@ -97,9 +97,9 @@
   (update! [this table what where]
     (exec conn (hayt/update table (hayt/set-columns
                                    (into {} (util/underscore->hyphen what)))
-                            (hayt/where where))))
+                            (hayt/where (util/hyphen->underscore where)))))
   (delete! [this table where]
-    (exec conn (hayt/delete table (hayt/where (into {} (util/hyphen->underscore where)))))))
+    (exec conn (hayt/delete table (hayt/where (into {} (util/hyphen->underscore (util/hyphen->underscore where))))))))
 
 (defrecord CassandraSession [opts profile]
   Database
@@ -118,7 +118,7 @@
           reformatted (map util/underscore->hyphen result)]
       reformatted))
   (select* [this table where]
-    (let [result (exec this (hayt/select table (hayt/where where)))
+    (let [result (exec this (hayt/select table (hayt/where (util/hyphen->underscore where))))
           reformatted (map util/underscore->hyphen result)]
       (if (coll? result)
         (map (partial into {}) reformatted)
@@ -134,7 +134,7 @@
   (update! [this table what where]
     (exec this (hayt/update table (hayt/set-columns
                                    (into {} (util/underscore->hyphen what)))
-                            (hayt/where where))))
+                            (hayt/where (util/hyphen->underscore where)))))
   (delete! [this table where]
     (exec this (hayt/delete table (hayt/where (into {} (util/hyphen->underscore where))))))
 

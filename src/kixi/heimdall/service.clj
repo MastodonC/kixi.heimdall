@@ -67,18 +67,16 @@
                              :refresh-token refresh-token}}))
       (log/debug "User credentials missing")))
 
-(defn- get-groups-for-user [session user-id]
-  (let [groups-ids (member/retrieve-groups-ids session user-id)]
-    {:groups groups-ids}))
-
 (defn create-auth-token [session communications auth-conf credentials]
   (let [[ok? res] (user/auth session credentials)]
     (if ok?
-      (let [groups (get-groups-for-user session (:id (:user res)))
+      (let [groups (member/retrieve-groups-ids session (:id (:user res)))
+            self-group (group/find-user-group session (:id (:user res)))
             user (merge (select-keys (:user res) [:username
                                                   :id
                                                   :name
-                                                  :created]) {:user-groups groups})]
+                                                  :created]) {:user-groups groups
+                                                              :self-group (:id self-group)})]
         (if-let [token-pair (make-token-pair! session auth-conf user)]
           (do  (comms/send-event! communications :kixi.heimdall/user-logged-in "1.0.0" (select-keys credentials [:username]))
                (success token-pair))
@@ -121,9 +119,9 @@
 (defn- create-group
   [session {:keys [group user]}]
   (let [user-id  (java.util.UUID/fromString (:id user))
-        group-id (:group-id (group/create! session {:name (:group-name group)
-                                                    :user-id user-id}))]
-    (member/add-user-to-group session user-id group-id)
+        group-id (:group-id (group/add! session {:name (:group-name group)
+                                                 :user-id user-id}))]
+    (member/add! session user-id group-id)
     {:group-id group-id}))
 
 (defn new-user
@@ -134,22 +132,23 @@
       (if (user/find-by-username session {:username (:username credentials)})
         (fail "There is already a user with this username.")
         (do
-          (user/add! session credentials)
+          (let [added-user (user/add! session credentials)]
+            (group/add! session {:name (:username credentials)
+                                 :user-id (:id added-user)
+                                 :group-type "user"}))
           (comms/send-event! communications :kixi.heimdall/user-created "1.0.0" (select-keys params [:username]))
           (success {:message "User successfully created!"})))
       (fail (str "Please match the required format: " res)))))
 
 (defn- add-member
   [session {:keys [user-id group-id]}]
-  (let [_ (log/info "GROUP-ID" group-id (type group-id))
-        user-id  (java.util.UUID/fromString user-id)
+  (let [user-id  (java.util.UUID/fromString user-id)
         group-id (java.util.UUID/fromString group-id)]
-    (member/add-user-to-group session user-id group-id)))
+    (member/add! session user-id group-id)))
 
 (defn add-member-event
   [session communications user-id group-id]
-  (let [_ (log/info "GROUP-ID" group-id)
-        user-ok? (and (spec/valid? :kixi.heimdall.schema/id user-id)
+  (let [user-ok? (and (spec/valid? :kixi.heimdall.schema/id user-id)
                       (user/find-by-id session (java.util.UUID/fromString user-id)))
         group-ok? (and (spec/valid? :kixi.heimdall.schema/id group-id)
                        (group/find-by-id session (java.util.UUID/fromString group-id)))]

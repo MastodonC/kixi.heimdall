@@ -6,7 +6,7 @@
   [session id]
   (map :group-id (db/select session :members_by_user [:group-id] {:user-id id})))
 
-(defn add-user-to-group
+(defn add!
   [session user-id group-id]
   {:pre [user-id group-id]}
   (db/insert! session :members_by_group

@@ -4,23 +4,32 @@
             [qbits.alia.uuid :as uuid]
             [taoensso.timbre :as log]))
 
-(defn create!
-  [session {:keys [name user-id] :as group}]
+(defn add!
+  [session {:keys [name user-id group-type] :as group}]
   (let [group-id (uuid/random)
         group-data {:id group-id
                     :name name
+                    :group-type (or group-type "group")
                     :created-by user-id
                     :created (util/db-now)}]
     (db/insert! session :groups group-data)
+    (db/insert! session :groups_by_user_and_type group-data)
     {:group-id group-id}))
-
-(defn update!
-  [session group-id {:keys [name]}]
-  (db/update! session :groups {:name name} {:id (java.util.UUID/fromString group-id)}))
 
 (defn find-by-id
   [session id]
-  (first (db/select* session :groups {:id id}))  )
+  (first (db/select* session :groups {:id id})))
+
+(defn find-user-group
+  [session user-id]
+  (first (db/select* session :groups_by_user_and_type {:created-by user-id
+                                                       :group-type "user"})))
+
+(defn update!
+  [session group-id {:keys [name]}]
+  (db/update! session :groups {:name name} {:id (java.util.UUID/fromString group-id)})
+  (let [group (find-by-id session (java.util.UUID/fromString group-id))]
+    (db/update! session :groups_by_user_and_type {:name name} {:created-by (:created-by group) :group-type (:group-type group)})))
 
 (defn all
   [session]

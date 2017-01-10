@@ -23,10 +23,11 @@
 
 (defn add!
   [session user]
-  (let [user-data (-> user
+  (let [user-id (uuid/random)
+        user-data (-> user
                       (update-in [:password] #(hs/encrypt %))
                       (assoc :created (util/db-now)
-                             :id (uuid/random)))]
+                             :id user-id))]
     (db/insert! session :users_by_username
                 user-data)
     (db/insert! session :users
