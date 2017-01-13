@@ -41,7 +41,7 @@
   :pedantic? true
   :repl-options {:init-ns user}
   :jvm-opts ["-XX:+HeapDumpOnOutOfMemoryError"
-             "-XX:-PrintGC"
+             "-Xloggc"
              "-Xms512m"
              "-Xmx1024m"]
   :profiles
