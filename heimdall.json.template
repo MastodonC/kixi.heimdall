@@ -28,6 +28,8 @@
   "id": "heimdall",
   "cpus": 0.2,
   "mem": 1536,
+  "instances": @@INSTANCES@@,
+  "constraints": [["hostname", "UNIQUE"]],
   "healthChecks": [{
         "protocol": "TCP",
         "gracePeriodSeconds": 600,
