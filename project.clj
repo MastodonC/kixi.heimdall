@@ -41,8 +41,12 @@
   :pedantic? true
   :repl-options {:init-ns user}
   :jvm-opts ["-XX:+HeapDumpOnOutOfMemoryError"
-             "-Xms512m"
-             "-Xmx1024m"]
+             "-XX:+UseG1GC"
+             "-Xloggc:gc.log"
+             "-XX:+PrintGCCause"
+             "-XX:+UseGCLogFileRotation"
+             "-XX:NumberOfGCLogFiles=3"
+             "-XX:GCLogFileSize=2M"]
   :profiles
   {:uberjar {:aot [kixi.heimdall.bootstrap]
              :main kixi.heimdall.bootstrap

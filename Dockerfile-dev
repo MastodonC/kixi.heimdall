@@ -7,6 +7,9 @@ ADD resources/test_pubkey.pem /root/prod_pubkey.pem
 ADD resources/test_privkey.pem /root/prod_privkey.pem
 ADD resources/secrets.edn.dummy /root/.secrets.edn
 
+ENV ENVIRONMENT development
+ENV PROFILE dev-docker
+
 RUN apt-get install software-properties-common
 RUN add-apt-repository -y ppa:webupd8team/java \
 && apt-get update \
