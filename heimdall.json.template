@@ -5,6 +5,8 @@
       "image": "@@IMAGE@@:@@TAG@@",
       "parameters": [
          {"key": "env", "value": "ENVIRONMENT=@@ENVIRONMENT@@"},
+         {"key": "env", "value": "JAVA_OPTS=@@JAVA_OPTS@@"},
+         {"key": "env", "value": "PROFILE=@@PROFILE@@"},
          {"key": "log-driver", "value": "gelf"},
          {"key": "log-opt", "value": "gelf-address=udp://logstash.@@VPC@@-vpc.kixi:12201"},
          {"key": "label", "value": "cluster=@@ENVIRONMENT@@"},
@@ -26,8 +28,10 @@
     }
   },
   "id": "heimdall",
-  "cpus": 0.2,
-  "mem": 2048,
+  "cpus": @@CPUS@@,
+  "mem": @@MEM@@,
+  "instances": @@INSTANCES@@,
+  "constraints": [["hostname", "UNIQUE"]],
   "healthChecks": [{
         "protocol": "TCP",
         "gracePeriodSeconds": 600,
