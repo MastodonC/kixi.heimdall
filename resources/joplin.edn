@@ -11,4 +11,6 @@
  :environments {:development [{:db :cass-dev, :migrator :cass-mig, :seed :cass-seed-dev}]
                 :staging [{:db :cass-staging, :migrator :cass-mig, :seed :cass-seed-staging} ]
                 :test [{:db :cass-test, :migrator :cass-mig, :seed :cass-seed-dev}]
-                :jenkins [{:db :cass-jenkins, :migrator :cass-mig, :seed :cass-seed-dev}]                         :dev-docker [{:db :cass-dev-docker,  :migrator :cass-mig, :seed :cass-seed-dev}]                  :production [{:db :cass-prod, :migrator :cass-mig, :seed :cass-seed-prod}]}}
+                :jenkins [{:db :cass-jenkins, :migrator :cass-mig, :seed :cass-seed-dev}]
+                :dev-docker [{:db :cass-dev-docker,  :migrator :cass-mig, :seed :cass-seed-dev}]
+                :production [{:db :cass-prod, :migrator :cass-mig, :seed :cass-seed-prod}]}}
