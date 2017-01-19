@@ -16,7 +16,9 @@
 
 (defn create-group!
   [session owner-name group-name]
-  (let [_ (u/add! session {:username owner-name :password "Local123"})
+  (let [_ (service/new-user (:cassandra-session @cassandra-session)
+                            (:communications @comms)
+                            {:username owner-name :password "Local123"})
         owner-id (:id (u/find-by-username session {:username owner-name}))
         group-id (:group-id (#'service/create-group session {:group {:group-name group-name} :user {:id (str owner-id)}}))]
     [owner-id group-id]))

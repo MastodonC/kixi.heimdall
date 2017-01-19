@@ -3,6 +3,7 @@
             [qbits.hayt                 :as hayt]
             [joplin.cassandra.database :refer [get-connection]]
             [kixi.heimdall.user :as user]
+            [kixi.heimdall.group :as group]
             [kixi.heimdall.service :as service]
             [kixi.heimdall.components.database :as db]))
 
@@ -11,9 +12,10 @@
                              (-> target :db :keyspace))
         dc (db/->DirectConnection {:session conn})
         ;; Add a test user
-        test-user (user/add! dc {:username "test@mastodonc.com"
-                                 :name     "Test User"
-                                 :password "Secret123"})]
+        test-user (user/add! dc {:username "test@mastodonc.com" :password "Secret123"})
+        _ (group/add! dc {:name (:username {:username "test@mastodonc.com" :password "Secret123"})
+                          :user-id (:id test-user)
+                          :group-type "user"})]
     ;; Add a test group
     (#'service/create-group dc
                             {:group {:group-name "Test Group"}
@@ -24,9 +26,10 @@
                              (-> target :db :keyspace))
         dc (db/->DirectConnection {:session conn})
         ;; Add a test user
-        test-user (user/add! dc {:username "test@mastodonc.com"
-                                 :name     "Test User"
-                                 :password "Secret123"})]
+        test-user (user/add! dc {:username "test@mastodonc.com" :password "Secret123"})
+        _ (group/add! dc {:name (:username {:username "test@mastodonc.com" :password "Secret123"})
+                          :user-id (:id test-user)
+                          :group-type "user"})]
     ;; Add a test group
     (#'service/create-group dc
                             {:group {:group-name "Test Group"}
