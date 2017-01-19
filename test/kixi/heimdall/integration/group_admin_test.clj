@@ -16,8 +16,8 @@
 
 (defn create-group!
   [session owner-name group-name]
-  (let [_ (service/new-user (:cassandra-session @cassandra-session)
-                            (:communications @comms)
+  (let [_ (service/new-user @cassandra-session
+                            @comms
                             {:username owner-name :password "Local123"})
         owner-id (:id (u/find-by-username session {:username owner-name}))
         group-id (:group-id (#'service/create-group session {:group {:group-name group-name} :user {:id (str owner-id)}}))]
@@ -110,10 +110,10 @@
 
 (deftest return-groups
   ;; TODO: all groups this user can search -> add groups parameter for permissions
-  (testing "return all groups"
+  (testing "return all groups" ;; add 3 people with self-groups and groups
     (let [cnt (count (service/groups @cassandra-session))
           _ (doseq [[username group] [[(rand-username) "planets1"]
                                       [(rand-username) "planets2"]
                                       [(rand-username) "planets3"]]]
               (create-group! @cassandra-session username group))]
-      (is (= (count (service/groups @cassandra-session)) (+ cnt 3))))))
+      (is (= (count (service/groups @cassandra-session)) (+ cnt 6))))))
