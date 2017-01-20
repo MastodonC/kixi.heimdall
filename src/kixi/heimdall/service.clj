@@ -229,9 +229,10 @@
   [session group-ids]
   (keep #(when-let [raw-group (group/find-by-id session %)]
            (clojure.set/rename-keys  (select-keys raw-group
-                                                  [:id :name :created_by :created])
+                                                  [:id :name :created-by :created :group-type])
                                      {:id :kixi.group/id
                                       :name :kixi.group/name
+                                      :group-type :kixi.group/type
                                       :created_by :kixi.group/created_by
                                       :created :kixi.group/created}))
         (keep toUUID (vec-if-not group-ids))))
