@@ -116,5 +116,9 @@
           _ (doseq [[username group] [[(rand-username) "planets1"]
                                       [(rand-username) "planets2"]
                                       [(rand-username) "planets3"]]]
-              (create-group! @cassandra-session username group))]
-      (is (= (count (service/all-groups @cassandra-session)) (+ cnt 6))))))
+              (create-group! @cassandra-session username group))
+          all-groups (service/all-groups @cassandra-session)
+          all-group-names (map :name all-groups)]
+      (is (some #{"planets1"} all-group-names))
+      (is (some #{"planets2"} all-group-names))
+      (is (some #{"planets3"} all-group-names)))))
