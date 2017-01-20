@@ -109,31 +109,31 @@
     (fail "Invalid or expired refresh token provided")))
 
 (defn create-group-event
-  [session communications {:keys [group user] :as input}]
+  [session communications {:keys [group user-id] :as input}]
   (let [group-ok? (spec/valid? :kixi.heimdall.schema/group-params group)
-        user-ok? (spec/valid? :kixi.heimdall.schema/user user)]
+        user-ok? (spec/valid? :kixi.heimdall.schema/id user-id)]
     (if (and user-ok? group-ok?)
-      (and (comms/send-event! communications :kixi.heimdall/group-created "1.0.0" (update input :user #(select-keys % [:id :username]))) true)
+      (and (comms/send-event! communications :kixi.heimdall/group-created "1.0.0" input) true)
       false)))
 
 (defn- create-group
-  [session {:keys [group user]}]
-  (let [user-id  (java.util.UUID/fromString (:id user))
+  [session {:keys [group user-id]}]
+  (let [user-uuid  (java.util.UUID/fromString user-id)
         group-id (:group-id (group/add! session {:name (:group-name group)
-                                                 :user-id user-id}))]
-    (member/add! session user-id group-id)
+                                                 :user-id user-uuid}))]
+    (member/add! session user-uuid group-id)
     {:group-id group-id}))
 
 (defn new-user
   [session communications params]
-  (let [credentials (select-keys params [:username :password])
+  (let [credentials (select-keys params [:username :password :name])
         [ok? res] (user/validate credentials)]
     (if ok?
       (if (user/find-by-username session {:username (:username credentials)})
         (fail "There is already a user with this username.")
         (do
           (let [added-user (user/add! session credentials)]
-            (group/add! session {:name (:username credentials)
+            (group/add! session {:name (:name credentials)
                                  :user-id (:id added-user)
                                  :group-type "user"}))
           (comms/send-event! communications :kixi.heimdall/user-created "1.0.0" (select-keys params [:username]))
@@ -229,9 +229,10 @@
   [session group-ids]
   (keep #(when-let [raw-group (group/find-by-id session %)]
            (clojure.set/rename-keys  (select-keys raw-group
-                                                  [:id :name :created_by :created])
+                                                  [:id :name :created-by :created :group-type])
                                      {:id :kixi.group/id
                                       :name :kixi.group/name
+                                      :group-type :kixi.group/type
                                       :created_by :kixi.group/created_by
                                       :created :kixi.group/created}))
         (keep toUUID (vec-if-not group-ids))))

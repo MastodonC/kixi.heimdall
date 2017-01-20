@@ -18,9 +18,10 @@
   [session owner-name group-name]
   (let [_ (service/new-user @cassandra-session
                             @comms
-                            {:username owner-name :password "Local123"})
+                            {:username owner-name :password "Local123" :name "randomName"})
         owner-id (:id (u/find-by-username session {:username owner-name}))
-        group-id (:group-id (#'service/create-group session {:group {:group-name group-name} :user {:id (str owner-id)}}))]
+        group-id (:group-id (#'service/create-group session {:group {:group-name group-name}
+                                                             :user-id (str owner-id)}))]
     [owner-id group-id]))
 
 (defn rand-username
@@ -30,16 +31,16 @@
 (deftest creating-groups
   (testing "the actual creation"
     (let [username (rand-username)
-          _ (u/add! @cassandra-session {:username username :password "Local123"})
+          _ (u/add! @cassandra-session {:username username :password "Local123" :name "anothername"})
           user (u/find-by-username @cassandra-session {:username username})
-          group-created (#'service/create-group @cassandra-session {:group {:group-name "fantastic four"} :user (update user :id str)})]
+          group-created (#'service/create-group @cassandra-session {:group {:group-name "fantastic four"} :user-id (str (:id user))})]
       (is (== (count (member/retrieve-groups-ids @cassandra-session (:id user))) 1))))
 
   (testing "creation after sending an event"
     (let [username (rand-username)
-          _ (u/add! @cassandra-session {:username username :password "Local123"})
+          _ (u/add! @cassandra-session {:username username :password "Local123" :name "booya"})
           user (u/find-by-username @cassandra-session {:username username})
-          creation-params {:group {:group-name "the avengers"} :user {:id (str (:id user))}}
+          creation-params {:group {:group-name "the avengers"} :user-id (str (:id user))}
           event-ok? (service/create-group-event @cassandra-session @comms creation-params)]
       (is event-ok?)
       (wait-for #(first (member/retrieve-groups-ids @cassandra-session (:id user))) #(is (= :group-not-created :group-created)))
@@ -51,7 +52,7 @@
     (let [username1 (rand-username)
           username2 (rand-username)
           [_ group-id] (create-group! @cassandra-session username1 "Specter")
-          _ (u/add! @cassandra-session {:username username2 :password "Local123"})
+          _ (u/add! @cassandra-session {:username username2 :password "Local123" :name "Jane"})
           member-id (:id (u/find-by-username @cassandra-session {:username username2}))
           _ (#'service/add-member @cassandra-session {:user-id (str member-id)
                                                       :group-id (str group-id)})]
@@ -60,7 +61,7 @@
     (let [username1 (rand-username)
           username2 (rand-username)
           [_ group-id] (create-group! @cassandra-session "boss@bar.com" "Hydra")
-          _  (u/add! @cassandra-session {:username "new@bar.com" :password "Local123"})
+          _  (u/add! @cassandra-session {:username "new@bar.com" :password "Local123" :name "Joe"})
           member-id (:id (u/find-by-username @cassandra-session {:username "new@bar.com"}))
           event-ok? (service/add-member-event @cassandra-session @comms (str member-id) (str group-id))]
       (is event-ok?)
@@ -72,7 +73,7 @@
     (let [username1 (rand-username)
           username2 (rand-username)
           [_ group-id] (create-group! @cassandra-session username1 "Specter")
-          _  (u/add! @cassandra-session {:username username2 :password "Local123"})
+          _  (u/add! @cassandra-session {:username username2 :password "Local123" :name "blob"})
           member-id (:id (u/find-by-username @cassandra-session {:username username2}))
           _ (#'service/add-member @cassandra-session {:user-id (str member-id)
                                                       :group-id (str group-id)})
@@ -84,7 +85,7 @@
     (let [username1 (rand-username)
           username2 (rand-username)
           [_ group-id] (create-group! @cassandra-session username1 "Hydra")
-          _  (u/add! @cassandra-session {:username username2 :password "Local123"})
+          _  (u/add! @cassandra-session {:username username2 :password "Local123" :name "mob"})
           member-id (:id (u/find-by-username @cassandra-session {:username username2}))
           _ (#'service/add-member @cassandra-session {:user-id (str member-id)
                                                       :group-id (str group-id)})

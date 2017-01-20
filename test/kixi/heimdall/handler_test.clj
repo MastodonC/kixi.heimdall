@@ -59,11 +59,20 @@
   (attach-event-handler! [_ group-id event version handler]
     nil))
 
+(defn auth-info-added
+  [request]
+  (mock/header
+   (mock/header request
+                "user-id" (java.util.UUID/randomUUID)
+                )
+   "user-groups" [(java.util.UUID/randomUUID)]))
+
 (defn heimdall-request
   [request]
   (-> request
       json-request
       auth-config-added
+      auth-info-added
       metrics-added))
 
 (defn comms-app
@@ -106,6 +115,7 @@
           (let [body-resp (json/read-str (:body response) :key-fn keyword)]
             (is (:token-pair body-resp)))
           (is (= @events {:comms {:sent '({:event :kixi.heimdall/user-logged-in :version "1.0.0" :payload {:username "user@boo.com"}})}})))))
+
     (testing "authentication fails wrong user"
       (with-redefs [user/find-by-username (fn [session m] nil)
                     member/retrieve-groups-ids (fn [session user-id]
@@ -115,6 +125,7 @@
                                        (mock/request :post "/create-auth-token"
                                                      (json/write-str {:username "user@boo.com" :password "foo12CCbb"}))))]
           (is (= (:status response) 401)))))
+
     (testing "authentication fails wrong pass"
       (with-redefs [user/find-by-username
                     (fn [session m] {:username "user" :password (hs/encrypt "foobar")})
@@ -216,33 +227,17 @@
 
 (deftest test-create-group
   (testing "the /create-route route works"
-    (with-redefs [group/add! (fn [session group-name]
-                               {:group-id #uuid "bfa00b8a-f57e-43ff-829b-d7469e797000"})
+    (with-redefs [group/add! (fn [session _] {:group-id (java.util.UUID/randomUUID)})
                   member/add! (fn [session user-id grp-id role]
                                 '())]
       (let [events (atom {})
             response (comms-app app (heimdall-request
-                                     (mock/header (mock/request :post "/group"
-                                                                (json/write-str {:group-name "test-grp"}))
-                                                  "authorization" (format "Token %s" (valid-auth-token))))
+                                     (mock/request :post "/group"
+                                                   (json/write-str {:group-name "test-grp"})))
                                 events)]
         (is (= (:status response) 201))
         (is (= (:body response) "Group successfully created"))
-        (is (= (:event (first (get-in @events [:comms :sent]))) :kixi.heimdall/group-created)))))
-  (testing "without a token /create-group fails"
-    (let [events (atom {})
-          response (comms-app app (heimdall-request (mock/request :post "/group"
-                                                                  (json/write-str {:group-name "test-grp"}))) events)]
-      (is (= (:status response) 401))
-      (is (= (:body response) "unauthenticated"))
-      (is (= @events {}))))
-  (testing "without a valid token /create-group fails"
-    (let [response (comms-app app (heimdall-request
-                                   (mock/header (mock/request :post "/group"
-                                                              (json/write-str {:group-name "test-grp"}))
-                                                "authorization" (format "Token 384905-6"))))]
-      (is (= (:status response) 401))
-      (is (= (:body response) "unauthenticated")))))
+        (is (= (:event (first (get-in @events [:comms :sent]))) :kixi.heimdall/group-created))))))
 
 (deftest new-user-test
   (testing "new user can be added if password passes the validation"
