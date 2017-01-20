@@ -109,19 +109,19 @@
     (fail "Invalid or expired refresh token provided")))
 
 (defn create-group-event
-  [session communications {:keys [group user] :as input}]
+  [session communications {:keys [group user-id] :as input}]
   (let [group-ok? (spec/valid? :kixi.heimdall.schema/group-params group)
-        user-ok? (spec/valid? :kixi.heimdall.schema/user user)]
+        user-ok? (spec/valid? :kixi.heimdall.schema/id user-id)]
     (if (and user-ok? group-ok?)
-      (and (comms/send-event! communications :kixi.heimdall/group-created "1.0.0" (update input :user #(select-keys % [:id :username]))) true)
+      (and (comms/send-event! communications :kixi.heimdall/group-created "1.0.0" input) true)
       false)))
 
 (defn- create-group
-  [session {:keys [group user]}]
-  (let [user-id  (java.util.UUID/fromString (:id user))
+  [session {:keys [group user-id]}]
+  (let [user-uuid  (java.util.UUID/fromString user-id)
         group-id (:group-id (group/add! session {:name (:group-name group)
-                                                 :user-id user-id}))]
-    (member/add! session user-id group-id)
+                                                 :user-id user-uuid}))]
+    (member/add! session user-uuid group-id)
     {:group-id group-id}))
 
 (defn new-user
