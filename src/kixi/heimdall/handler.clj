@@ -122,11 +122,20 @@
         (record-fn metric-started-request (:status response))
         response))))
 
+(defn vec-if-not
+  [x]
+  (if (or (nil? x)
+          (vector? x))
+    x
+    (vector x)))
+
 (defn wrap-insert-auth-info
   [handler]
   (fn [request]
     (let [user-id (get (:headers request) "user-id")
-          user-groups (get (:headers request) "user-groups")
+          user-groups (-> (get (:headers request) "user-groups")
+                          (clojure.string/split #",")
+                          vec-if-not)
           new-req (assoc request
                          :user-id user-id
                          :user-groups user-groups)]
