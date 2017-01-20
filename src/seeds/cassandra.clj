@@ -12,8 +12,8 @@
                              (-> target :db :keyspace))
         dc (db/->DirectConnection {:session conn})
         ;; Add a test user
-        test-user (user/add! dc {:username "test@mastodonc.com" :password "Secret123"})
-        _ (group/add! dc {:name (:username {:username "test@mastodonc.com" :password "Secret123"})
+        test-user (user/add! dc {:username "test@mastodonc.com" :password "Secret123"} :name "Test User")
+        _ (group/add! dc {:name "Test User"
                           :user-id (:id test-user)
                           :group-type "user"})]
     ;; Add a test group
@@ -26,8 +26,8 @@
                              (-> target :db :keyspace))
         dc (db/->DirectConnection {:session conn})
         ;; Add a test user
-        test-user (user/add! dc {:username "test@mastodonc.com" :password "Secret123"})
-        _ (group/add! dc {:name (:username {:username "test@mastodonc.com" :password "Secret123"})
+        test-user (user/add! dc {:username "test@mastodonc.com" :password "Secret123" :name "Test User"})
+        _ (group/add! dc {:name "Test User"
                           :user-id (:id test-user)
                           :group-type "user"})]
     ;; Add a test group

@@ -126,14 +126,14 @@
 
 (defn new-user
   [session communications params]
-  (let [credentials (select-keys params [:username :password])
+  (let [credentials (select-keys params [:username :password :name])
         [ok? res] (user/validate credentials)]
     (if ok?
       (if (user/find-by-username session {:username (:username credentials)})
         (fail "There is already a user with this username.")
         (do
           (let [added-user (user/add! session credentials)]
-            (group/add! session {:name (:username credentials)
+            (group/add! session {:name (:name credentials)
                                  :user-id (:id added-user)
                                  :group-type "user"}))
           (comms/send-event! communications :kixi.heimdall/user-created "1.0.0" (select-keys params [:username]))

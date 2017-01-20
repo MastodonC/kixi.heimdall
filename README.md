@@ -101,7 +101,7 @@ To create a user (including sending an event):
 ```
 (s/new-user (:cassandra-session @kixi.heimdall.application/system)
             (:communications @kixi.heimdall.application/system)
-            {:username "moo@bar.com" :password "Local123"})
+            {:username "moo@bar.com" :password "Local123" :name "john doe"})
 ```
 
 To create a group:
