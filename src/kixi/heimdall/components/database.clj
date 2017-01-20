@@ -79,7 +79,9 @@
   (select-all [this table]
     (let [result (exec conn (hayt/select table))
           reformatted (map util/underscore->hyphen result)]
-      reformatted))
+      (if (coll? result)
+        (map (partial into {}) reformatted)
+        reformatted)))
   (select* [this table where]
     (let [result (exec conn (hayt/select table (hayt/where (util/hyphen->underscore where))))
           reformatted (map util/underscore->hyphen result)]
@@ -116,7 +118,9 @@
   (select-all [this table]
     (let [result (exec this (hayt/select table))
           reformatted (map util/underscore->hyphen result)]
-      reformatted))
+      (if (coll? result)
+        (map (partial into {}) reformatted)
+        reformatted)))
   (select* [this table where]
     (let [result (exec this (hayt/select table (hayt/where (util/hyphen->underscore where))))
           reformatted (map util/underscore->hyphen result)]
