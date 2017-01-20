@@ -220,7 +220,7 @@
                                                   [:id :name :created_by :created :username])
                                      {:id :kixi.user/id
                                       :name :kixi.user/name
-                                      :created_by :kixi.user/created_by
+                                      :created-by :kixi.user/created-by
                                       :created :kixi.user/created
                                       :username :kixi.user/username}))
         (keep toUUID (vec-if-not user-ids))))
@@ -233,6 +233,6 @@
                                      {:id :kixi.group/id
                                       :name :kixi.group/name
                                       :group-type :kixi.group/type
-                                      :created_by :kixi.group/created_by
+                                      :created-by :kixi.group/created-by
                                       :created :kixi.group/created}))
         (keep toUUID (vec-if-not group-ids))))
