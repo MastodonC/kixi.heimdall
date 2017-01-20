@@ -3,6 +3,7 @@
             [compojure.route :as route]
             [ring.middleware.json :refer [wrap-json-response wrap-json-params]]
             [ring.middleware.keyword-params :refer [wrap-keyword-params]]
+            [ring.middleware.params :refer [wrap-params]]
             [kixi.heimdall.application :as app]
             [kixi.heimdall.service :as service]
             [kixi.heimdall.util :as util]
@@ -90,6 +91,12 @@
       {:status 201 :body "Group successfully created"}
       (return-error {:msg "Please provide valid parameters (name for the group), and make sure you are authenticated" :fn "create-group"} :group-creation-failed 500))))
 
+(defn get-users [req]
+  {:status 200 :body {:type "users" :items (service/users (cassandra-session req) (get (:params req) "id"))}})
+
+(defn get-groups [req]
+  {:status 200 :body {:type "groups" :items (service/groups (cassandra-session req) (get (:params req) "id"))}})
+
 (defn escape-html
   "Change special characters into HTML character entities."
   [text]
@@ -145,7 +152,9 @@
   (POST "/invalidate-refresh-token" [] invalidate-refresh-token))
 
 (defroutes secured-routes
-  (POST "/group" [] create-group))
+  (POST "/group" [] create-group)
+  (GET "/users" [] get-users)
+  (GET "/groups" [] get-groups))
 
 (defroutes app-routes
   public-routes
@@ -163,6 +172,7 @@
 (def app
   (-> app-routes
       wrap-escape-html
+      wrap-params
       wrap-record-metric
       wrap-catch-exceptions
       wrap-keyword-params

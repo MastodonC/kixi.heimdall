@@ -111,9 +111,9 @@
 (deftest return-groups
   ;; TODO: all groups this user can search -> add groups parameter for permissions
   (testing "return all groups" ;; add 3 people with self-groups and groups
-    (let [cnt (count (service/groups @cassandra-session))
+    (let [cnt (count (service/all-groups @cassandra-session))
           _ (doseq [[username group] [[(rand-username) "planets1"]
                                       [(rand-username) "planets2"]
                                       [(rand-username) "planets3"]]]
               (create-group! @cassandra-session username group))]
-      (is (= (count (service/groups @cassandra-session)) (+ cnt 6))))))
+      (is (= (count (service/all-groups @cassandra-session)) (+ cnt 6))))))

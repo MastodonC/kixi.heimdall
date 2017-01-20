@@ -198,6 +198,40 @@
            true)
       false)))
 
-(defn groups
+(defn all-groups
   [session]
   (group/all session))
+
+(defn vec-if-not
+  [value]
+  (if (coll? value)
+    value
+    (vector value)))
+
+(defn toUUID
+  [id]
+  (try (java.util.UUID/fromString id)
+       (catch IllegalArgumentException _ nil)))
+
+(defn users
+  [session user-ids]
+  (keep #(when-let [raw-user (user/find-by-id session %)]
+           (clojure.set/rename-keys  (select-keys raw-user
+                                                  [:id :name :created_by :created :username])
+                                     {:id :kixi.user/id
+                                      :name :kixi.user/name
+                                      :created_by :kixi.user/created_by
+                                      :created :kixi.user/created
+                                      :username :kixi.user/username}))
+        (keep toUUID (vec-if-not user-ids))))
+
+(defn groups
+  [session group-ids]
+  (keep #(when-let [raw-group (group/find-by-id session %)]
+           (clojure.set/rename-keys  (select-keys raw-group
+                                                  [:id :name :created_by :created])
+                                     {:id :kixi.group/id
+                                      :name :kixi.group/name
+                                      :created_by :kixi.group/created_by
+                                      :created :kixi.group/created}))
+        (keep toUUID (vec-if-not group-ids))))
