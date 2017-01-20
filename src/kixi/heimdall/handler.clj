@@ -149,12 +149,12 @@
   (POST "/user" [] new-user)
   (POST "/create-auth-token" [] auth-token)
   (POST "/refresh-auth-token" [] refresh-auth-token)
-  (POST "/invalidate-refresh-token" [] invalidate-refresh-token)
-  (GET "/groups" [] get-groups)  )
+  (POST "/invalidate-refresh-token" [] invalidate-refresh-token))
 
 (defroutes secured-routes
   (POST "/group" [] create-group)
-  (GET "/users" [] get-users) )
+  (GET "/users" [] get-users)
+  (GET "/groups" [] get-groups))
 
 (defroutes app-routes
   public-routes
