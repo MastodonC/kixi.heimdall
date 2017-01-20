@@ -141,16 +141,23 @@
                          :user-groups user-groups)]
       (handler new-req))))
 
-(defroutes app-routes
+
+(defroutes secured-routes
+  (POST "/group" [] create-group)
+  (GET "/users" [] get-users)
+  (GET "/groups" [] get-groups))
+
+(defroutes public-routes
   (GET "/" [] "Hello World")
   (POST "/user" [] new-user)
   (POST "/create-auth-token" [] auth-token)
   (POST "/refresh-auth-token" [] refresh-auth-token)
-  (POST "/invalidate-refresh-token" [] invalidate-refresh-token)
-  (POST "/group" [] create-group)
-  (GET "/users" [] get-users)
-  (GET "/groups" [] get-groups)
-  (route/not-found "Not Found"))
+  (POST "/invalidate-refresh-token" [] invalidate-refresh-token))
+
+(defroutes app-routes
+  public-routes
+  (wrap-routes secured-routes wrap-insert-auth-info)
+  (route/not-found "Not Found")  )
 
 (defn wrap-catch-exceptions [handler]
   (fn [request]
@@ -161,7 +168,6 @@
 
 (def app
   (-> app-routes
-      wrap-insert-auth-info
       wrap-escape-html
       wrap-params
       wrap-record-metric
