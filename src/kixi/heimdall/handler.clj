@@ -148,8 +148,8 @@
 (defroutes secured-routes
   (POST "/group" [] create-group)
   (GET "/users" [] get-users)
-  (GET "/groups" [] get-groups)
-  (GET "/groups/search" [] get-all-groups))
+  (GET "/groups/search" [] get-all-groups)
+  (GET "/groups" [] get-groups))
 
 (defroutes public-routes
   (GET "/" [] "Hello World")
