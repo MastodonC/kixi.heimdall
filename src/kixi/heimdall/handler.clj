@@ -92,6 +92,9 @@
 (defn get-groups [req]
   {:status 200 :body {:type "groups" :items (service/groups (cassandra-session req) (get (:params req) "id"))}})
 
+(defn get-all-groups [req]
+  {:status 200 :body {:type "groups" :items (service/all-groups (cassandra-session req))}})
+
 (defn escape-html
   "Change special characters into HTML character entities."
   [text]
@@ -145,7 +148,8 @@
 (defroutes secured-routes
   (POST "/group" [] create-group)
   (GET "/users" [] get-users)
-  (GET "/groups" [] get-groups))
+  (GET "/groups" [] get-groups)
+  (GET "/search" [] get-all-groups))
 
 (defroutes public-routes
   (GET "/" [] "Hello World")
