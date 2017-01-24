@@ -149,7 +149,7 @@
   (POST "/group" [] create-group)
   (GET "/users" [] get-users)
   (GET "/groups" [] get-groups)
-  (GET "/search" [] get-all-groups))
+  (GET "/groups/search" [] get-all-groups))
 
 (defroutes public-routes
   (GET "/" [] "Hello World")
