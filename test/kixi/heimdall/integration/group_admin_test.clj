@@ -118,7 +118,7 @@
                                       [(rand-username) "planets3"]]]
               (create-group! @cassandra-session username group))
           all-groups (service/all-groups @cassandra-session)
-          all-group-names (map :name all-groups)]
+          all-group-names (map :kixi.group/name all-groups)]
       (is (some #{"planets1"} all-group-names))
       (is (some #{"planets2"} all-group-names))
       (is (some #{"planets3"} all-group-names)))))
