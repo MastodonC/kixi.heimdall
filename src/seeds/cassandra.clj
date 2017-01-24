@@ -12,14 +12,14 @@
                              (-> target :db :keyspace))
         dc (db/->DirectConnection {:session conn})
         ;; Add a test user
-        test-user (user/add! dc {:username "test@mastodonc.com" :password "Secret123"} :name "Test User")
+        test-user (user/add! dc {:username "test@mastodonc.com" :password "Secret123" :name "Test User"})
         _ (group/add! dc {:name "Test User"
                           :user-id (:id test-user)
                           :group-type "user"})]
     ;; Add a test group
     (#'service/create-group dc
                             {:group {:group-name "Test Group"}
-                             :user {:id (str (:id test-user))}})))
+                             :user-id (str (:id test-user))})))
 
 (defn run-staging [target & args]
   (let [conn (get-connection (-> target :db :hosts)
@@ -33,7 +33,7 @@
     ;; Add a test group
     (#'service/create-group dc
                             {:group {:group-name "Test Group"}
-                             :user {:id (str (:id test-user))}})))
+                             :user-id (str (:id test-user))})))
 
 (defn run-prod [target & args]
   (let [conn (get-connection (-> target :db :hosts)
