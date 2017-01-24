@@ -200,7 +200,13 @@
 
 (defn all-groups
   [session]
-  (group/all session))
+  (map #(clojure.set/rename-keys %
+                                 {:id :kixi.group/id
+                                  :name :kixi.group/name
+                                  :group-type :kixi.group/type
+                                  :created-by :kixi.group/created-by
+                                  :created :kixi.group/created})
+       (group/all session)))
 
 (defn vec-if-not
   [value]
