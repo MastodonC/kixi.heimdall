@@ -142,7 +142,7 @@
   []
   (service/make-refresh-token (sign/to-timestamp (t/now))
                               auth-config
-                              {:username "foo" :id #uuid "b14bf8f1-d98b-4ca2-97e9-7c95ebffbcb1"}))
+                              {:id #uuid "b14bf8f1-d98b-4ca2-97e9-7c95ebffbcb1"}))
 
 (defn refresh-token-record
   [refresh-token]
@@ -161,7 +161,10 @@
                                       {:id #uuid "b14bf8f1-d98b-4ca2-97e9-7c95ebffbcb1"
                                        :username "foo"})
                     rt/invalidate! (fn [session id] '())
-                    rt/add! (fn [session token] '())]
+                    rt/add! (fn [session token] '())
+                    member/retrieve-groups-ids (fn [_ _] [])
+                    group/find-user-group (fn [_ _] {:id (java.util.UUID/randomUUID)
+                                                     :name "username@boo.com"})]
         (let [response (comms-app app (heimdall-request
                                        (mock/request :post "/refresh-auth-token"
                                                      (json/write-str {:refresh-token refresh-token}))))
@@ -173,7 +176,10 @@
   (testing "Handles a refresh token not found"
     (let [refresh-token (valid-refresh-token)]
       (with-redefs [rt/find-by-user-and-issued (fn [session user-id issued] nil)
-                    user/find-by-id (fn [session user-id] nil)]
+                    user/find-by-id (fn [session user-id] nil)
+                    member/retrieve-groups-ids (fn [_ _] [])
+                    group/find-user-group (fn [_ _] {:id (java.util.UUID/randomUUID)
+                                                     :name "username@boo.com"})]
         (let [response (comms-app app (heimdall-request
                                        (mock/request :post "/refresh-auth-token"
                                                      (json/write-str {:refresh-token refresh-token}))))]
@@ -182,7 +188,8 @@
                  "unauthenticated"))))))
   (testing "Handles case when token to refresh wasn't signed properly"
     (with-redefs [rt/find-by-user-and-issued (fn [session user-id issued] nil)
-                  user/find-by-id (fn [session user-id] nil)]
+                  user/find-by-id (fn [session user-id] nil)
+                  member/retrieve-groups-ids (fn [_ _] [])]
       (let [response (comms-app app (heimdall-request
                                      (mock/request :post "/refresh-auth-token"
                                                    (json/write-str {:refresh-token "foo"}))))]
@@ -243,27 +250,32 @@
   (testing "new user can be added if password passes the validation"
     (with-redefs [user/add! (fn [_ _] {:user-id (java.util.UUID/randomUUID)})
                   user/find-by-username (fn [_ _] nil)
-                  group/add! (fn [_ _] {:group-id (java.util.UUID/randomUUID)})]
+                  group/add! (fn [_ _] {:group-id (java.util.UUID/randomUUID)})
+                  member/add! (fn [_ _ _] '())]
       (let [response (comms-app app (heimdall-request
                                      (mock/request :post "/user"
                                                    (json/write-str {:username "user@boo.com"
-                                                                    :password "secret1Pass"}))))]
+                                                                    :password "secret1Pass"
+                                                                    :name "Jane Doe"}))))]
         (is (= (:status response) 201)))))
   (testing "new user can not be added if password fails the validation"
     (with-redefs [user/add! (fn [_ _] {:user-id (java.util.UUID/randomUUID)})
                   user/find-by-username (fn [_ _] nil)
-                  group/add! (fn [_ _] {:group-id (java.util.UUID/randomUUID)})]
+                  group/add! (fn [_ _] {:group-id (java.util.UUID/randomUUID)})
+                  member/add! (fn [_ _ _] '())]
       (let [response (comms-app app (heimdall-request
                                      (mock/request :post "/user"
                                                    (json/write-str {:username "user@boo.com"
-                                                                    :password "foo"}))))]
+                                                                    :password "foo"
+                                                                    :name "Bob Marley"}))))]
         (is (= (:status response) 500))
         (is (= (:body response)
                "user-creation-failed")))))
   (testing "new user triggers a send-event!"
     (with-redefs [user/add! (fn [_ _] {:user-id (java.util.UUID/randomUUID)})
                   user/find-by-username (fn [_ _] nil)
-                  group/add! (fn [_ _] {:group-id (java.util.UUID/randomUUID)})]
+                  group/add! (fn [_ _] {:group-id (java.util.UUID/randomUUID)})
+                  member/add! (fn [_ _ _] '())]
       (let [events (atom {})
             response (comms-app app (heimdall-request
                                      (mock/request :post "/user"
