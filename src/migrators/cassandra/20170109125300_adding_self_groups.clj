@@ -21,7 +21,7 @@
                                 :group_type   :text
                                 :created      :timestamp
                                 :created_by   :uuid
-                                :primary-key  [:created_by :group_type]})))))
+                                :primary-key  [:created_by :group_type :id]})))))
 
 (defn down [db]
   (let [conn (get-connection (:hosts db) (:keyspace db))]

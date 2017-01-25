@@ -29,7 +29,7 @@
 
 (defn find-user-group
   [session user-id]
-  (find-by-user user-id "user"))
+  (find-by-user session user-id "user"))
 
 (defn update!
   [session group-id {:keys [name]}]

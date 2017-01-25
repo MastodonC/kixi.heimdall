@@ -130,6 +130,14 @@
     (member/add! session user-uuid group-id)
     {:group-id group-id}))
 
+(defn add-self-group
+  [session user]
+  (let [self-group (group/add! session {:name (:name user)
+                                        :user-id (:id user)
+                                        :group-type "user"})]
+    (member/add! session (:id user) (:group-id self-group))
+    {:group-id self-group}))
+
 (defn new-user
   [session communications params]
   (let [credentials (select-keys params [:username :password :name])
@@ -138,9 +146,7 @@
       (if (user/find-by-username session {:username (:username credentials)})
         (fail "There is already a user with this username.")
         (let [added-user (user/add! session credentials)
-              self-group (group/add! session {:name (:name credentials)
-                                              :user-id (:id added-user)
-                                              :group-type "user"})]
+              self-group (add-self-group session added-user)]
 
           (log/warn "user id created for " (:username credentials) " : " (:id added-user)) ;; needed for REPL admin
           (log/warn "self-group created: " (:group-id self-group))
