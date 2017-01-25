@@ -20,10 +20,16 @@
   [session id]
   (first (db/select* session :groups {:id id})))
 
+(defn find-by-user
+  ([session user-id]
+   (first (db/select* session :groups_by_user_and_type {:created-by user-id})))
+  ([session user-id group-type]
+   (first (db/select* session :groups_by_user_and_type {:created-by user-id
+                                                        :group-type group-type}))))
+
 (defn find-user-group
   [session user-id]
-  (first (db/select* session :groups_by_user_and_type {:created-by user-id
-                                                       :group-type "user"})))
+  (find-by-user user-id "user"))
 
 (defn update!
   [session group-id {:keys [name]}]

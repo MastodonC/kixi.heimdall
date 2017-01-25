@@ -128,7 +128,6 @@
         group-id (:group-id (group/add! session {:name (:group-name group)
                                                  :user-id user-uuid}))]
     (member/add! session user-uuid group-id)
-    (log/warn "group id created for " (:group-name group) ": " group-id) ;; needed for repl useage
     {:group-id group-id}))
 
 (defn new-user
@@ -153,7 +152,6 @@
   [session {:keys [user-id group-id]}]
   (let [user-id  (java.util.UUID/fromString user-id)
         group-id (java.util.UUID/fromString group-id)]
-    (log/warn "member " user-id " added to group " group-id) ;; needed for REPL admin
     (member/add! session user-id group-id)))
 
 (defn add-member-event
@@ -174,7 +172,6 @@
   [session {:keys [user-id group-id]}]
   (let [user-id  (java.util.UUID/fromString user-id)
         group-id (java.util.UUID/fromString group-id)]
-    (log/warn "member " user-id " removed from " group-id) ;; needed for REPL admin
     (member/remove-member session user-id group-id)))
 
 (defn remove-member-event
@@ -193,7 +190,6 @@
 
 (defn update-group
   [session {:keys [group-id name]}]
-  (log/warn "updated group " group-id " with name " name) ;; for REPL admin
   (group/update! session group-id {:name name}))
 
 (defn update-group-event
