@@ -67,17 +67,22 @@
                              :refresh-token refresh-token}}))
       (log/debug "User credentials missing")))
 
+(defn- token-data
+  [session user]
+  (let [groups (member/retrieve-groups-ids session (:id user))
+        self-group (group/find-user-group session (:id user))]
+    (-> (select-keys user [:username
+                           :id
+                           :name
+                           :created])
+        (merge {:user-groups groups
+                :self-group (:id self-group)}))))
+
 (defn create-auth-token [session communications auth-conf credentials]
   (let [[ok? res] (user/auth session credentials)]
     (if ok?
-      (let [groups (member/retrieve-groups-ids session (:id (:user res)))
-            self-group (group/find-user-group session (:id (:user res)))
-            user (merge (select-keys (:user res) [:username
-                                                  :id
-                                                  :name
-                                                  :created]) {:user-groups groups
-                                                              :self-group (:id self-group)})]
-        (if-let [token-pair (make-token-pair! session auth-conf user)]
+      (let [token-info (token-data session (:user res))]
+        (if-let [token-pair (make-token-pair! session auth-conf token-info)]
           (do  (comms/send-event! communications :kixi.heimdall/user-logged-in "1.0.0" (select-keys credentials [:username]))
                (success token-pair))
           (fail "Invalid username or password")))
@@ -90,7 +95,8 @@
                                                                     user-uuid
                                                                     (:iat unsigned))
           user (user/find-by-id session user-uuid)
-          new-token-pair (make-token-pair! session auth-conf user)]
+          token-info (token-data session user)
+          new-token-pair (make-token-pair! session auth-conf token-info)]
       (if (and (:valid refresh-token-data) new-token-pair)
         (do
           (refresh-token/invalidate! session (:id refresh-token-data))
@@ -122,6 +128,7 @@
         group-id (:group-id (group/add! session {:name (:group-name group)
                                                  :user-id user-uuid}))]
     (member/add! session user-uuid group-id)
+    (log/warn "group id created for " (:group-name group) ": " group-id) ;; needed for repl useage
     {:group-id group-id}))
 
 (defn new-user
@@ -131,11 +138,13 @@
     (if ok?
       (if (user/find-by-username session {:username (:username credentials)})
         (fail "There is already a user with this username.")
-        (do
-          (let [added-user (user/add! session credentials)]
-            (group/add! session {:name (:name credentials)
-                                 :user-id (:id added-user)
-                                 :group-type "user"}))
+        (let [added-user (user/add! session credentials)
+              self-group (group/add! session {:name (:name credentials)
+                                              :user-id (:id added-user)
+                                              :group-type "user"})]
+
+          (log/warn "user id created for " (:username credentials) " : " (:id added-user)) ;; needed for REPL admin
+          (log/warn "self-group created: " (:group-id self-group))
           (comms/send-event! communications :kixi.heimdall/user-created "1.0.0" (select-keys params [:username]))
           (success {:message "User successfully created!"})))
       (fail (str "Please match the required format: " res)))))
@@ -144,6 +153,7 @@
   [session {:keys [user-id group-id]}]
   (let [user-id  (java.util.UUID/fromString user-id)
         group-id (java.util.UUID/fromString group-id)]
+    (log/warn "member " user-id " added to group " group-id) ;; needed for REPL admin
     (member/add! session user-id group-id)))
 
 (defn add-member-event
@@ -164,6 +174,7 @@
   [session {:keys [user-id group-id]}]
   (let [user-id  (java.util.UUID/fromString user-id)
         group-id (java.util.UUID/fromString group-id)]
+    (log/warn "member " user-id " removed from " group-id) ;; needed for REPL admin
     (member/remove-member session user-id group-id)))
 
 (defn remove-member-event
@@ -182,6 +193,7 @@
 
 (defn update-group
   [session {:keys [group-id name]}]
+  (log/warn "updated group " group-id " with name " name) ;; for REPL admin
   (group/update! session group-id {:name name}))
 
 (defn update-group-event
