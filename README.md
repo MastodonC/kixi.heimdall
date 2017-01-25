@@ -110,7 +110,7 @@ To create a group:
                       (:communications @kixi.heimdall.application/system)
                       {:group {:group-name "the rebellion"} :user-id "<user id>"})
 (group/find-by-user (:cassandra-session @kixi.heimdall.application/system)
-                    {:created-by "<user-id>"})
+                    "<user-id>")
 ```
 The last instruction may need to be repeated, and will show all the groups under the user, since `create-group-event` triggers the creation but the creation is asynchronous.
 
