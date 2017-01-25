@@ -95,7 +95,7 @@
                                                                     user-uuid
                                                                     (:iat unsigned))
           user (user/find-by-id session user-uuid)
-          token-info (token-data session user)
+          token-info (when user (token-data session user))
           new-token-pair (make-token-pair! session auth-conf token-info)]
       (if (and (:valid refresh-token-data) new-token-pair)
         (do
