@@ -93,8 +93,8 @@ The public key to use in combination with this development setup is the test_pub
 Beforehand:
 
 ```
-(go)
 (require '[kixi.heimdall.service :as s])
+(require '[kixi.heimdall.group :as group])
 ```
 
 To create a user (including sending an event):
@@ -108,9 +108,11 @@ To create a group:
 ```
 (s/create-group-event (:cassandra-session @kixi.heimdall.application/system)
                       (:communications @kixi.heimdall.application/system)
-                      {:group {:group-name "the rebellion"} :user {:id "group-id"}})
+                      {:group {:group-name "the rebellion"} :user-id "<user id>"})
+(group/find-by-user (:cassandra-session @kixi.heimdall.application/system)
+                    {:created-by "<user-id>"})
 ```
-The output in the repl shows the resulting ids, to be used for adding and removing members.
+The last instruction may need to be repeated, and will show all the groups under the user, since `create-group-event` triggers the creation but the creation is asynchronous.
 
 Adding members and removing them
 ```
