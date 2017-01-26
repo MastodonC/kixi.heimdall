@@ -19,7 +19,7 @@
     ;; Add a test group
     (#'service/create-group dc
                             {:group {:group-name "Test Group"}
-                             :user-id (str (:id test-))})))
+                             :user-id (str (:id test-user))})))
 
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -42,12 +42,15 @@
   {"Dev Team" [:antony :tom :elise]
    "Product Team" [:sam :bruce]
    "Cool Kids" [:seb :sunny :eleonore :jase]
-   "Sales Team" [:fran :chris]})
+   "Sales Team" [:fran :chris]
+   "Mastodon C" (keys staging-users)
+   "Boys" [:antony :tom :bruce :seb :chris :jase]
+   "Girls" [:elise :sam :sunny :eleonore :fran]})
 
 (defn create-user!
   [dc [k user-name]]
   (let [email (str (name k)"@mastodonc.com")
-        existing (user/find-by-username session {:username email})]
+        existing (user/find-by-username dc {:username email})]
     (if existing
       existing
       (let [u (user/add! dc {:username email
@@ -56,14 +59,14 @@
         (service/add-self-group dc u)
         u))))
 
-(defm create-group!
+(defn create-group!
   [dc all-users [group-name users]]
   (let [group (#'service/create-group dc
                                       {:group {:group-name group-name}
                                        :user-id (str (:id (get all-users (first users))))})]
     (run! (fn [user]
             (#'service/add-member dc
-                                  {:group-id (:group-id group)
+                                  {:group-id (str (:group-id group))
                                    :user-id (str (:id (get all-users user)))}))
           (rest users))))
 
@@ -73,7 +76,7 @@
         dc (db/->DirectConnection {:session conn})
         ;; Add test users
         users (zipmap (keys staging-users)
-                      (map (partial create-users! dc) staging-users))
+                      (map (partial create-user! dc) staging-users))
 
         ;; Add test groups
         groups (zipmap (keys staging-groups)
