@@ -36,16 +36,17 @@
    :eleonore "Eleonore"
    :fran "Fran"
    :chris "Chris"
-   :jase "Jase"})
+   :jase "Jase"
+   :lora "Lora"})
 
 (def staging-groups
   {"Dev Team" [:antony :tom :elise]
    "Product Team" [:sam :bruce]
-   "Cool Kids" [:seb :sunny :eleonore :jase]
+   "Cool Kids" [:seb :sunny :eleonore :jase :lora]
    "Sales Team" [:fran :chris]
    "Mastodon C" (keys staging-users)
    "Boys" [:antony :tom :bruce :seb :chris :jase]
-   "Girls" [:elise :sam :sunny :eleonore :fran]})
+   "Girls" [:elise :sam :sunny :eleonore :fran :lora]})
 
 (defn create-user!
   [dc [k user-name]]
