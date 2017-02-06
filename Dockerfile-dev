@@ -27,7 +27,7 @@ RUN mkdir /etc/service/auth
 
 ADD target/kixi.heimdall.jar /srv/kixi.heimdall.jar
 
-ADD scripts/run-dev.sh /etc/service/auth/run
+ADD scripts/run.sh /etc/service/auth/run
 
 EXPOSE 3000
 EXPOSE 5001

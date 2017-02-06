@@ -8,6 +8,9 @@
             [taoensso.timbre :as log]
             [clojure.spec :as spec]))
 
+(defn all
+  [session]
+  (db/select-all session :users))
 
 (defn validate
   [user]

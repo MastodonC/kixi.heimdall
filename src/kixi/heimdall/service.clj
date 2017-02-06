@@ -67,17 +67,22 @@
                              :refresh-token refresh-token}}))
       (log/debug "User credentials missing")))
 
+(defn- token-data
+  [session user]
+  (let [groups (member/retrieve-groups-ids session (:id user))
+        self-group (group/find-user-group session (:id user))]
+    (-> (select-keys user [:username
+                           :id
+                           :name
+                           :created])
+        (merge {:user-groups groups
+                :self-group (:id self-group)}))))
+
 (defn create-auth-token [session communications auth-conf credentials]
   (let [[ok? res] (user/auth session credentials)]
     (if ok?
-      (let [groups (member/retrieve-groups-ids session (:id (:user res)))
-            self-group (group/find-user-group session (:id (:user res)))
-            user (merge (select-keys (:user res) [:username
-                                                  :id
-                                                  :name
-                                                  :created]) {:user-groups groups
-                                                              :self-group (:id self-group)})]
-        (if-let [token-pair (make-token-pair! session auth-conf user)]
+      (let [token-info (token-data session (:user res))]
+        (if-let [token-pair (make-token-pair! session auth-conf token-info)]
           (do  (comms/send-event! communications :kixi.heimdall/user-logged-in "1.0.0" (select-keys credentials [:username]))
                (success token-pair))
           (fail "Invalid username or password")))
@@ -90,7 +95,8 @@
                                                                     user-uuid
                                                                     (:iat unsigned))
           user (user/find-by-id session user-uuid)
-          new-token-pair (make-token-pair! session auth-conf user)]
+          token-info (when user (token-data session user))
+          new-token-pair (make-token-pair! session auth-conf token-info)]
       (if (and (:valid refresh-token-data) new-token-pair)
         (do
           (refresh-token/invalidate! session (:id refresh-token-data))
@@ -109,33 +115,41 @@
     (fail "Invalid or expired refresh token provided")))
 
 (defn create-group-event
-  [session communications {:keys [group user] :as input}]
+  [session communications {:keys [group user-id] :as input}]
   (let [group-ok? (spec/valid? :kixi.heimdall.schema/group-params group)
-        user-ok? (spec/valid? :kixi.heimdall.schema/user user)]
+        user-ok? (spec/valid? :kixi.heimdall.schema/id user-id)]
     (if (and user-ok? group-ok?)
-      (and (comms/send-event! communications :kixi.heimdall/group-created "1.0.0" (update input :user #(select-keys % [:id :username]))) true)
+      (and (comms/send-event! communications :kixi.heimdall/group-created "1.0.0" input) true)
       false)))
 
 (defn- create-group
-  [session {:keys [group user]}]
-  (let [user-id  (java.util.UUID/fromString (:id user))
+  [session {:keys [group user-id]}]
+  (let [user-uuid  (java.util.UUID/fromString user-id)
         group-id (:group-id (group/add! session {:name (:group-name group)
-                                                 :user-id user-id}))]
-    (member/add! session user-id group-id)
+                                                 :user-id user-uuid}))]
+    (member/add! session user-uuid group-id)
     {:group-id group-id}))
+
+(defn add-self-group
+  [session user]
+  (let [self-group (group/add! session {:name (:name user)
+                                        :user-id (:id user)
+                                        :group-type "user"})]
+    (member/add! session (:id user) (:group-id self-group))
+    {:group-id self-group}))
 
 (defn new-user
   [session communications params]
-  (let [credentials (select-keys params [:username :password])
+  (let [credentials (select-keys params [:username :password :name])
         [ok? res] (user/validate credentials)]
     (if ok?
       (if (user/find-by-username session {:username (:username credentials)})
         (fail "There is already a user with this username.")
-        (do
-          (let [added-user (user/add! session credentials)]
-            (group/add! session {:name (:username credentials)
-                                 :user-id (:id added-user)
-                                 :group-type "user"}))
+        (let [added-user (user/add! session credentials)
+              self-group (add-self-group session added-user)]
+
+          (log/warn "user id created for " (:username credentials) " : " (:id added-user)) ;; needed for REPL admin
+          (log/warn "self-group created: " (:group-id self-group))
           (comms/send-event! communications :kixi.heimdall/user-created "1.0.0" (select-keys params [:username]))
           (success {:message "User successfully created!"})))
       (fail (str "Please match the required format: " res)))))
@@ -198,6 +212,47 @@
            true)
       false)))
 
-(defn groups
+(defn all-groups
   [session]
-  (group/all session))
+  (map #(clojure.set/rename-keys %
+                                 {:id :kixi.group/id
+                                  :name :kixi.group/name
+                                  :group-type :kixi.group/type
+                                  :created-by :kixi.group/created-by
+                                  :created :kixi.group/created})
+       (group/all session)))
+
+(defn vec-if-not
+  [value]
+  (if (coll? value)
+    value
+    (vector value)))
+
+(defn toUUID
+  [id]
+  (try (java.util.UUID/fromString id)
+       (catch IllegalArgumentException _ nil)))
+
+(defn users
+  [session user-ids]
+  (keep #(when-let [raw-user (user/find-by-id session %)]
+           (clojure.set/rename-keys  (select-keys raw-user
+                                                  [:id :name :created_by :created :username])
+                                     {:id :kixi.user/id
+                                      :name :kixi.user/name
+                                      :created-by :kixi.user/created-by
+                                      :created :kixi.user/created
+                                      :username :kixi.user/username}))
+        (keep toUUID (vec-if-not user-ids))))
+
+(defn groups
+  [session group-ids]
+  (keep #(when-let [raw-group (group/find-by-id session %)]
+           (clojure.set/rename-keys  (select-keys raw-group
+                                                  [:id :name :created-by :created :group-type])
+                                     {:id :kixi.group/id
+                                      :name :kixi.group/name
+                                      :group-type :kixi.group/type
+                                      :created-by :kixi.group/created-by
+                                      :created :kixi.group/created}))
+        (keep toUUID (vec-if-not group-ids))))

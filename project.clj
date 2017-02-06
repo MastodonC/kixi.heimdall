@@ -54,6 +54,7 @@
    :dev {:source-paths ["dev"]
          :dependencies [[javax.servlet/servlet-api "2.5"]
                         [ring/ring-mock "0.3.0"]
+                        [clj-http "3.4.1"]
                         [org.clojure/data.json "0.2.6"]]}}
   :aliases {"seed" ["run" "-m" "joplin.alias/seed" "joplin.edn"],
             ,"migrate" ["run" "-m" "joplin.alias/migrate" "joplin.edn"]})

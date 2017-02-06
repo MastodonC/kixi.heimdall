@@ -3,7 +3,7 @@
             [kixi.heimdall.integration.base :refer :all]
             [kixi.heimdall.user :refer :all]))
 
-(use-fixtures :each cycle-system extract-cassandra-session)
+(use-fixtures :once cycle-system extract-cassandra-session)
 
 (deftest add-user-test
   (let [user {:username "change-password-test@mastodonc.com"

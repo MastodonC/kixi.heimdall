@@ -3,6 +3,7 @@
             [compojure.route :as route]
             [ring.middleware.json :refer [wrap-json-response wrap-json-params]]
             [ring.middleware.keyword-params :refer [wrap-keyword-params]]
+            [ring.middleware.params :refer [wrap-params]]
             [kixi.heimdall.application :as app]
             [kixi.heimdall.service :as service]
             [kixi.heimdall.util :as util]
@@ -75,20 +76,24 @@
       {:status 200 :body res}
       (return-error {:msg res :fn "invalidate-refresh-token"} :invalidation-failed 500))))
 
-(defn- parse-header
-  [request token-name]
-  (some->> (get (:headers request) "authorization")
-           (re-find (re-pattern (str "^" token-name " (.+)$")))
-           (second)))
-
-
 (defn create-group [req]
-  (let [ok? (service/create-group-event (cassandra-session req)
-                                        (communications req)
-                                        {:group (:params req) :user (:user req)})]
+  (let [ok? (and
+             (:user-id req)
+             (service/create-group-event (cassandra-session req)
+                                         (communications req)
+                                         {:group (:params req) :user-id (:user-id req)}))]
     (if ok?
       {:status 201 :body "Group successfully created"}
-      (return-error {:msg "Please provide valid parameters (name for the group), and make sure you are authenticated" :fn "create-group"} :group-creation-failed 500))))
+      (return-error {:msg "Please provide valid parameters (name for the group)" :fn "create-group"} :group-creation-failed 500))))
+
+(defn get-users [req]
+  {:status 200 :body {:type "users" :items (service/users (cassandra-session req) (get (:params req) "id"))}})
+
+(defn get-groups [req]
+  {:status 200 :body {:type "groups" :items (service/groups (cassandra-session req) (get (:params req) "id"))}})
+
+(defn get-all-groups [req]
+  {:status 200 :body {:type "groups" :items (service/all-groups (cassandra-session req))}})
 
 (defn escape-html
   "Change special characters into HTML character entities."
@@ -106,23 +111,6 @@
                                                                            (escape-html v)
                                                                            v)) %)))))
 
-(defn- parse-header
-  [request token-name]
-  (some->> (get (:headers request) "authorization")
-           (re-find (re-pattern (str "^" token-name " (.+)$")))
-           (second)))
-
-(defn wrap-authentication
-  [handler]
-  (fn [request]
-    (let [token (parse-header request "Token")
-          unsigned (when token (service/unsign-token (:auth-conf request) token))]
-      (if (and token unsigned)
-        (handler (assoc request :user unsigned))
-        (do (log/warn "Unauthenticated" request)
-            (return-error {:msg request :fn "wrap-authentication"} :unauthenticated 401))))))
-
-
 (defn wrap-record-metric
   [handler]
   (fn [request]
@@ -137,6 +125,32 @@
         (record-fn metric-started-request (:status response))
         response))))
 
+(defn vec-if-not
+  [x]
+  (if (or (nil? x)
+          (vector? x))
+    x
+    (vector x)))
+
+(defn wrap-insert-auth-info
+  [handler]
+  (fn [request]
+    (let [user-id (get (:headers request) "user-id")
+          user-groups (-> (get (:headers request) "user-groups")
+                          (clojure.string/split #",")
+                          vec-if-not)
+          new-req (assoc request
+                         :user-id user-id
+                         :user-groups user-groups)]
+      (handler new-req))))
+
+
+(defroutes secured-routes
+  (POST "/group" [] create-group)
+  (GET "/users" [] get-users)
+  (GET "/groups/search" [] get-all-groups)
+  (GET "/groups" [] get-groups))
+
 (defroutes public-routes
   (GET "/" [] "Hello World")
   (POST "/user" [] new-user)
@@ -144,14 +158,10 @@
   (POST "/refresh-auth-token" [] refresh-auth-token)
   (POST "/invalidate-refresh-token" [] invalidate-refresh-token))
 
-(defroutes secured-routes
-  (POST "/group" [] create-group))
-
 (defroutes app-routes
   public-routes
-  (wrap-routes secured-routes
-               wrap-authentication)
-  (route/not-found "Not Found"))
+  (wrap-routes secured-routes wrap-insert-auth-info)
+  (route/not-found "Not Found")  )
 
 (defn wrap-catch-exceptions [handler]
   (fn [request]
@@ -163,6 +173,7 @@
 (def app
   (-> app-routes
       wrap-escape-html
+      wrap-params
       wrap-record-metric
       wrap-catch-exceptions
       wrap-keyword-params

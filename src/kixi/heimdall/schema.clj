@@ -37,6 +37,21 @@
 (spec/def ::login
   (spec/keys :req-un [::username ::password]))
 
+
+(spec/def ::name string?)
+(spec/def ::self-group uuid?)
+(spec/def ::user-groups (spec/coll-of ::id))
+(spec/def ::created integer?)
+(spec/def ::auth-token
+  (spec/keys :req-un [::id
+                      ::username
+                      ::name
+                      ::created
+                      ::user-groups
+                      ::self-group
+                      ::exp]))
+
+
 ;; Returning error messages with context
 (spec/def ::context
   (spec/keys :req []
