@@ -63,7 +63,7 @@
       (let [full-config {:level (keyword (env :log-level level))
                          :ns-blacklist ns-blacklist
                          :timestamp-opts logback-timestamp-opts ; iso8601 timestamps
-                         :output-fn {:stacktrace-fonts {}}
+                         :options {:stacktrace-fonts {}}
                          :appenders  {:direct-json {:enabled?   true
                                                     :async?     false
                                                     :output-fn identity
