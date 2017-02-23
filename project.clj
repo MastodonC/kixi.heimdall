@@ -33,7 +33,7 @@
                  [org.clojure/tools.cli "0.3.5"]
                  [environ "1.1.0"]
                  [aero "1.0.0"]
-                 [kixi/kixi.comms "0.1.26"]
+                 [kixi/kixi.comms "0.1.27"]
                  [org.clojure/tools.analyzer "0.6.9"]
                  ;; not really dependency, dep collision https://groups.google.com/forum/#!topic/clojure/D_s9Drua6D4
                  ]
@@ -57,4 +57,12 @@
                         [clj-http "3.4.1"]
                         [org.clojure/data.json "0.2.6"]]}}
   :aliases {"seed" ["run" "-m" "joplin.alias/seed" "joplin.edn"],
-            ,"migrate" ["run" "-m" "joplin.alias/migrate" "joplin.edn"]})
+            ,"migrate" ["run" "-m" "joplin.alias/migrate" "joplin.edn"]}
+  :release-tasks [["vcs" "assert-committed"]
+                  ["change" "version"
+                   "leiningen.release/bump-version" "release"]
+                  ["vcs" "commit"]
+                  ["vcs" "tag"]
+                  ["change" "version" "leiningen.release/bump-version"]
+                  ["vcs" "commit"]
+                  ["vcs" "push"]])
