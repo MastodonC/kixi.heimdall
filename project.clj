@@ -14,12 +14,12 @@
                  [com.stuartsierra/component "0.3.1"]
                  [ring/ring-jetty-adapter "1.5.0"]
                  [com.taoensso/timbre "4.8.0"]
+                 [kixi/kixi.log "0.1.1"]
                  [com.izettle/dropwizard-metrics-influxdb "1.1.6"
                   :exclusions [ch.qos.logback/logback-classic
                                org.eclipse.jetty/jetty-util
                                com.fasterxml.jackson.core/jackson-core
                                org.apache.commons/commons-lang3]]
-                 [com.fzakaria/slf4j-timbre "0.3.2"]
                  [metrics-clojure ~metrics-version]
                  [metrics-clojure-jvm ~metrics-version]
                  [metrics-clojure-ring ~metrics-version]
