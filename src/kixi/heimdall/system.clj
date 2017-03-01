@@ -16,7 +16,7 @@
   (let [config (config/config profile)]
     (log/set-config! {:level (keyword (env :log-level (get-in config [:logging :level])))
                       :timestamp-opts kixi-log/default-timestamp-opts
-                      :appenders {:direct-json (kixi-log/timbre-appender-logstash "kixi.heimdall")}})
+                      :appenders {:direct-json (kixi-log/timbre-appender-logstash)}})
     (log/info "System with" profile)
     (-> (component/system-map
          :metrics (metrics/map->Metrics (:metrics config))
