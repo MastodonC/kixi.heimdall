@@ -14,7 +14,8 @@
                  [com.stuartsierra/component "0.3.1"]
                  [ring/ring-jetty-adapter "1.5.0"]
                  [com.taoensso/timbre "4.8.0"]
-                 [kixi/kixi.log "0.1.1"]
+                 [kixi/kixi.log "0.1.3"]
+                 [kixi/kixi.metrics "0.4.0"]
                  [com.izettle/dropwizard-metrics-influxdb "1.1.6"
                   :exclusions [ch.qos.logback/logback-classic
                                org.eclipse.jetty/jetty-util
