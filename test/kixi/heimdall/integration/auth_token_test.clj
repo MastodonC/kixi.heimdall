@@ -9,7 +9,7 @@
             [taoensso.timbre :as log :refer [debug]]
             [clojure.spec :as spec]))
 
-(use-fixtures :once cycle-system extract-cassandra-session extract-comms)
+(use-fixtures :once cycle-system extract-db-session extract-comms)
 
 (defn post-to-auth [uri params]
   (client/post uri
@@ -22,22 +22,22 @@
 (deftest auth-token
   (testing "auth token contains required fields"
     (let [username (str "boo" (rand-int 1000) "@test.com")
-          _ (service/new-user @cassandra-session @comms {:username username
-                                                         :password "Secret123"
-                                                         :name "Bravo Charlie"})
+          _ (service/new-user @db-session @comms {:username username
+                                                  :password "Secret123"
+                                                  :name "Bravo Charlie"})
           conf (config/config (keyword (env :system-profile "test")))
           body (:body (post-to-auth (str "http://localhost:" (config/webserver-port conf) "/create-auth-token")
                                     {:username username
                                      :password "Secret123"}))]
       (is (get-in body [:token-pair :auth-token]))
-      (let [unsigned (service/unsign-token (config/auth-conf conf)
+      (let [unsigned (service/unsign-token (:auth-conf conf)
                                            (get-in body [:token-pair :auth-token]))]
-        (is (spec/valid? :kixi.heimdall.schema/auth-token unsigned)))))
+        (is (spec/valid? :kixi.heimdall.schema/auth-token unsigned) (pr-str unsigned)))))
   (testing "refreshed token contains required fields"
     (let [username (str "boo" (rand-int 1000) "@test.com")
-          _ (service/new-user @cassandra-session @comms {:username username
-                                                         :password "Secret123"
-                                                         :name "Bravo Charlie"})
+          _ (service/new-user @db-session @comms {:username username
+                                                  :password "Secret123"
+                                                  :name "Bravo Charlie"})
           conf (config/config (keyword (env :system-profile "test")))
           auth-body (:body (post-to-auth (str "http://localhost:" (config/webserver-port conf) "/create-auth-token")
                                          {:username username
@@ -46,6 +46,6 @@
           refresh-body (:body (post-to-auth (str "http://localhost:" (config/webserver-port conf) "/refresh-auth-token")
                                             {:refresh-token refresh-token}))]
       (is (get-in refresh-body [:token-pair :auth-token]))
-      (let [unsigned (service/unsign-token (config/auth-conf conf)
+      (let [unsigned (service/unsign-token (:auth-conf conf)
                                            (get-in refresh-body [:token-pair :auth-token]))]
         (is (spec/valid? :kixi.heimdall.schema/auth-token unsigned)))))  )

@@ -16,14 +16,13 @@
             [buddy.core.keys :as ks]
             [clojure.spec :as spec]))
 
-(defn- cassandra-session
+(defn- dynamodb
   [req]
-  (:cassandra-session (:components req)))
+  (:db (:components req)))
 
 (defn- communications
   [req]
   (:communications (:components req)))
-
 
 (spec/fdef return-error
            :args (spec/cat :ctx :kixi.heimdall.schema/context
@@ -42,7 +41,7 @@
                              :kixi.heimdall.schema/msg msg})))
 
 (defn auth-token [req]
-  (let [[ok? res] (service/create-auth-token (cassandra-session req)
+  (let [[ok? res] (service/create-auth-token (dynamodb req)
                                              (communications req)
                                              (:auth-conf req)
                                              (:params req))]
@@ -51,7 +50,7 @@
       (return-error {:msg res :fn "auth-token"} :unauthenticated 401))))
 
 (defn new-user [req]
-  (let [[ok? res] (service/new-user (cassandra-session req)
+  (let [[ok? res] (service/new-user (dynamodb req)
                                     (communications req)
                                     (:params req))]
     (if ok?
@@ -60,7 +59,7 @@
 
 (defn refresh-auth-token [req]
   (let [refresh-token (-> req :params :refresh-token)
-        [ok? res] (service/refresh-auth-token (cassandra-session req)
+        [ok? res] (service/refresh-auth-token (dynamodb req)
                                               (:auth-conf req)
                                               refresh-token)]
     (if ok?
@@ -69,7 +68,7 @@
 
 (defn invalidate-refresh-token [req]
   (let [refresh-token (-> req :params :refresh-token)
-        [ok? res] (service/invalidate-refresh-token (cassandra-session req)
+        [ok? res] (service/invalidate-refresh-token (dynamodb req)
                                                     (:auth-conf req)
                                                     refresh-token)]
     (if ok?
@@ -79,7 +78,7 @@
 (defn create-group [req]
   (let [ok? (and
              (:user-id req)
-             (service/create-group-event (cassandra-session req)
+             (service/create-group-event (dynamodb req)
                                          (communications req)
                                          {:group (:params req) :user-id (:user-id req)}))]
     (if ok?
@@ -87,13 +86,13 @@
       (return-error {:msg "Please provide valid parameters (name for the group)" :fn "create-group"} :group-creation-failed 500))))
 
 (defn get-users [req]
-  {:status 200 :body {:type "users" :items (service/users (cassandra-session req) (get (:params req) "id"))}})
+  {:status 200 :body {:type "users" :items (service/users (dynamodb req) (get (:params req) "id"))}})
 
 (defn get-groups [req]
-  {:status 200 :body {:type "groups" :items (service/groups (cassandra-session req) (get (:params req) "id"))}})
+  {:status 200 :body {:type "groups" :items (service/groups (dynamodb req) (get (:params req) "id"))}})
 
 (defn get-all-groups [req]
-  {:status 200 :body {:type "groups" :items (service/all-groups (cassandra-session req))}})
+  {:status 200 :body {:type "groups" :items (service/all-groups (dynamodb req))}})
 
 (defn escape-html
   "Change special characters into HTML character entities."

@@ -1,16 +1,18 @@
 (ns kixi.heimdall.user
-  (:require [kixi.heimdall.components.database :as db]
-            [kixi.heimdall.util :as util]
-            [kixi.heimdall.schema :as schema]
-            [buddy.hashers :as hs]
-            [qbits.alia.uuid :as uuid]
-            [schema.core :as s]
-            [taoensso.timbre :as log]
-            [clojure.spec :as spec]))
+  (:require [buddy.hashers :as hs]
+            [clojure.spec :as spec]
+            [kixi.heimdall
+             [schema :as schema]
+             [util :as util]]
+            [kixi.heimdall.components.database :as db]))
+
+(def user-table "users")
+(def users-by-username "users-by-username")
 
 (defn all
-  [session]
-  (db/select-all session :users))
+  [db]
+  (db/scan db
+           user-table))
 
 (defn validate
   [user]
@@ -25,29 +27,39 @@
 ;; data functions
 
 (defn add!
-  [session user]
-  (let [user-id (uuid/random)
+  [db user]
+  (let [user-id (str (java.util.UUID/randomUUID))
         user-data (-> user
                       (update-in [:password] #(hs/encrypt %))
                       (assoc :created (util/db-now)
                              :id user-id))]
-    (db/insert! session :users_by_username
-                user-data)
-    (db/insert! session :users
-                user-data)
+                                        ;add user-data spec
+    (db/put-item db
+                 user-table
+                 user-data
+                 {:return :none})
     user-data))
 
 (defn find-by-username
-  [session {:keys [username]}]
-  (first (db/select* session :users_by_username {:username username})))
+  [db {:keys [username]}]
+  (first
+   (db/query db
+             user-table
+             {:username [:eq username]}
+             {:index users-by-username
+              :limit 1
+              :return :all-attributes})))
 
 (defn find-by-id
-  [session id]
-  (first (db/select* session :users {:id id})))
+  [db id]
+  (db/get-item db
+               user-table
+               {:id id}
+               {:consistent? true}))
 
 (defn auth
-  [session {:keys [username password]}]
-  (let [user (find-by-username session {:username username})
+  [db {:keys [username password]}]
+  (let [user (find-by-username db {:username username})
         unauthed [false {:message "Invalid username or password"}]]
     (if user
       (if (hs/check password (:password user))
@@ -57,14 +69,14 @@
 
 (defn change-password!
   "Change the user's password"
-  [session username new-password]
-  (if-let [user (find-by-username session {:username username})]
+  [db username new-password]
+  (if-let [user (find-by-username db {:username username})]
     (let [pwd (hs/encrypt new-password)]
-      (db/update! session :users_by_username
-                  {:password pwd}
-                  {:username username})
-      (db/update! session :users
-                  {:password pwd}
-                  {:id (:id user)})
+      (db/update-item db
+                      user-table
+                      {:id (:id user)}
+                      {:update-expr "SET password = :p"
+                       :expr-attr-vals {":p" pwd}
+                       :return :none})
       true)
     false))

@@ -8,15 +8,13 @@
             [kixi.heimdall.user :as u]
             [kixi.heimdall.group :as group]
             [kixi.heimdall.member :as member]
-            [taoensso.timbre :as log :refer [debug]]
-            [qbits.alia :as alia]
-            [qbits.hayt :as hayt]))
+            [taoensso.timbre :as log :refer [debug]]))
 
-(use-fixtures :once cycle-system extract-cassandra-session extract-comms)
+(use-fixtures :once cycle-system extract-db-session extract-comms)
 
 (defn create-group!
   [session owner-name group-name]
-  (let [_ (service/new-user @cassandra-session
+  (let [_ (service/new-user @db-session
                             @comms
                             {:username owner-name :password "Local123" :name "randomName"})
         owner-id (:id (u/find-by-username session {:username owner-name}))
@@ -31,93 +29,94 @@
 (deftest creating-groups
   (testing "the actual creation"
     (let [username (rand-username)
-          _ (u/add! @cassandra-session {:username username :password "Local123" :name "anothername"})
-          user (u/find-by-username @cassandra-session {:username username})
-          group-created (#'service/create-group @cassandra-session {:group {:group-name "fantastic four"} :user-id (str (:id user))})]
-      (is (== (count (member/retrieve-groups-ids @cassandra-session (:id user))) 1))))
+          _ (u/add! @db-session {:username username :password "Local123" :name "anothername"})
+          user (u/find-by-username @db-session {:username username})
+          group-created (#'service/create-group @db-session {:group {:group-name "fantastic four"} :user-id (str (:id user))})]
+      (is (== (count (member/retrieve-groups-ids @db-session (:id user))) 1))))
 
   (testing "creation after sending an event"
     (let [username (rand-username)
-          _ (u/add! @cassandra-session {:username username :password "Local123" :name "booya"})
-          user (u/find-by-username @cassandra-session {:username username})
+          _ (u/add! @db-session {:username username :password "Local123" :name "booya"})
+          user (u/find-by-username @db-session {:username username})
           creation-params {:group {:group-name "the avengers"} :user-id (str (:id user))}
-          event-ok? (service/create-group-event @cassandra-session @comms creation-params)]
+          event-ok? (service/create-group-event @db-session @comms creation-params)]
       (is event-ok?)
-      (wait-for #(first (member/retrieve-groups-ids @cassandra-session (:id user))) #(is (= :group-not-created :group-created)))
-      (is (== (count (member/retrieve-groups-ids @cassandra-session (:id user))) 1)))))
+      (wait-for #(first (member/retrieve-groups-ids @db-session (:id user))) #(is (= :group-not-created :group-created)))
+      (is (== (count (member/retrieve-groups-ids @db-session (:id user))) 1)))))
 
 
 (deftest adding-member-to-group
   (testing "adding a member directly"
     (let [username1 (rand-username)
           username2 (rand-username)
-          [_ group-id] (create-group! @cassandra-session username1 "Specter")
-          _ (u/add! @cassandra-session {:username username2 :password "Local123" :name "Jane"})
-          member-id (:id (u/find-by-username @cassandra-session {:username username2}))
-          _ (#'service/add-member @cassandra-session {:user-id (str member-id)
-                                                      :group-id (str group-id)})]
-      (is (some #{group-id} (member/retrieve-groups-ids @cassandra-session member-id)))))
+          [_ group-id] (create-group! @db-session username1 "Specter")
+          _ (u/add! @db-session {:username username2 :password "Local123" :name "Jane"})
+          member-id (:id (u/find-by-username @db-session {:username username2}))
+          _ (#'service/add-member @db-session {:user-id (str member-id)
+                                               :group-id (str group-id)})]
+      (is (some #{group-id} (member/retrieve-groups-ids @db-session member-id)))))
   (testing "adding a member via an event"
     (let [username1 (rand-username)
           username2 (rand-username)
-          [_ group-id] (create-group! @cassandra-session "boss@bar.com" "Hydra")
-          _  (u/add! @cassandra-session {:username "new@bar.com" :password "Local123" :name "Joe"})
-          member-id (:id (u/find-by-username @cassandra-session {:username "new@bar.com"}))
-          event-ok? (service/add-member-event @cassandra-session @comms (str member-id) (str group-id))]
+          [_ group-id] (create-group! @db-session "boss@bar.com" "Hydra")
+          _  (u/add! @db-session {:username "new@bar.com" :password "Local123" :name "Joe"})
+          member-id (:id (u/find-by-username @db-session {:username "new@bar.com"}))
+          event-ok? (service/add-member-event @db-session @comms (str member-id) (str group-id))]
       (is event-ok?)
-      (wait-for #(some #{group-id} (member/retrieve-groups-ids @cassandra-session member-id))
+      (wait-for #(some #{group-id} (member/retrieve-groups-ids @db-session member-id))
                 #(is (= :user-not-added-to-group :user-added-to-group))))))
 
 (deftest removing-member-from-group
   (testing "removing a member directly"
     (let [username1 (rand-username)
           username2 (rand-username)
-          [_ group-id] (create-group! @cassandra-session username1 "Specter")
-          _  (u/add! @cassandra-session {:username username2 :password "Local123" :name "blob"})
-          member-id (:id (u/find-by-username @cassandra-session {:username username2}))
-          _ (#'service/add-member @cassandra-session {:user-id (str member-id)
-                                                      :group-id (str group-id)})
-          _ (#'service/remove-member @cassandra-session {:user-id (str member-id)
-                                                         :group-id (str group-id)})
+          [_ group-id] (create-group! @db-session username1 "Specter")
+          _  (u/add! @db-session {:username username2 :password "Local123" :name "blob"})
+          member-id (:id (u/find-by-username @db-session {:username username2}))
+          _ (#'service/add-member @db-session {:user-id (str member-id)
+                                               :group-id (str group-id)})
+          _ (#'service/remove-member @db-session {:user-id (str member-id)
+                                                  :group-id (str group-id)})
           ]
-      (is (not-any? #{group-id} (member/retrieve-groups-ids @cassandra-session member-id)))))
+      (is (not-any? #{group-id} (member/retrieve-groups-ids @db-session member-id)))))
   (testing "removing a member via an event"
     (let [username1 (rand-username)
           username2 (rand-username)
-          [_ group-id] (create-group! @cassandra-session username1 "Hydra")
-          _  (u/add! @cassandra-session {:username username2 :password "Local123" :name "mob"})
-          member-id (:id (u/find-by-username @cassandra-session {:username username2}))
-          _ (#'service/add-member @cassandra-session {:user-id (str member-id)
-                                                      :group-id (str group-id)})
-          event-ok? (service/remove-member-event @cassandra-session @comms (str member-id) (str group-id))
+          [_ group-id] (create-group! @db-session username1 "Hydra")
+          _  (u/add! @db-session {:username username2 :password "Local123" :name "mob"})
+          member-id (:id (u/find-by-username @db-session {:username username2}))
+          _ (#'service/add-member @db-session {:user-id (str member-id)
+                                               :group-id (str group-id)})
+          event-ok? (service/remove-member-event @db-session @comms (str member-id) (str group-id))
           ]
       (is event-ok?)
-      (wait-for #(not-any? #{group-id} (member/retrieve-groups-ids @cassandra-session member-id))
+      (wait-for #(not-any? #{group-id} (member/retrieve-groups-ids @db-session member-id))
                 #(is (= :member-not-removed :member-removed))))))
 
 (deftest modify-group
   (testing "modify directly"
     (let [username (rand-username)
-          [_ group-id] (create-group! @cassandra-session username "MI6")
-          _ (#'service/update-group @cassandra-session {:group-id (str group-id) :name "MI5"})]
-      (is (= (:name (group/find-by-id @cassandra-session group-id)) "MI5"))))
+          [_ group-id] (create-group! @db-session username "MI6")
+          _ (#'service/update-group @db-session {:group-id (str group-id) :name "MI5"})
+          result (group/find-by-id @db-session group-id)]
+      (is (= (:group-name result) "MI5") (pr-str result))))
   (testing "modify via an event"
     (let [username (rand-username)
-          [_ group-id] (create-group! @cassandra-session username "Broom")
-          event-ok? (service/update-group-event @cassandra-session @comms (str group-id) "RoomOnTheBroom")]
+          [_ group-id] (create-group! @db-session username "Broom")
+          event-ok? (service/update-group-event @db-session @comms (str group-id) "RoomOnTheBroom")]
       (is event-ok?)
-      (wait-for #(= (:name (group/find-by-id @cassandra-session group-id)) "RoomOnTheBroom")
+      (wait-for #(= (:group-name (group/find-by-id @db-session group-id)) "RoomOnTheBroom")
                 #(is (= :group-not-updated :group-updated))))))
 
 (deftest return-groups
   ;; TODO: all groups this user can search -> add groups parameter for permissions
   (testing "return all groups" ;; add 3 people with self-groups and groups
-    (let [cnt (count (service/all-groups @cassandra-session))
+    (let [cnt (count (service/all-groups @db-session))
           _ (doseq [[username group] [[(rand-username) "planets1"]
                                       [(rand-username) "planets2"]
                                       [(rand-username) "planets3"]]]
-              (create-group! @cassandra-session username group))
-          all-groups (service/all-groups @cassandra-session)
+              (create-group! @db-session username group))
+          all-groups (service/all-groups @db-session)
           all-group-names (map :kixi.group/name all-groups)]
       (is (some #{"planets1"} all-group-names))
       (is (some #{"planets2"} all-group-names))

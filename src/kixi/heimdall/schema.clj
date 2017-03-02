@@ -24,7 +24,7 @@
 (spec/def ::uuid #(instance? java.util.UUID %))
 (spec/def ::id uuid?)
 (spec/def ::username email?)
-(spec/def ::created integer?)
+(spec/def ::created string?)
 (spec/def ::exp integer?)
 (spec/def ::groups (spec/coll-of ::uuid))
 (spec/def ::user-groups (spec/keys :req-un [::groups] :opts []))
@@ -41,7 +41,6 @@
 (spec/def ::name string?)
 (spec/def ::self-group uuid?)
 (spec/def ::user-groups (spec/coll-of ::id))
-(spec/def ::created integer?)
 (spec/def ::auth-token
   (spec/keys :req-un [::id
                       ::username

@@ -1,32 +1,39 @@
 (ns user
   (:require [com.stuartsierra.component :as component]
             [clojure.tools.namespace.repl :refer [refresh refresh-all]]
-            [kixi.heimdall.application]
+            [kixi.heimdall.application :as app]
             [kixi.heimdall.system :as system]
             [ring.adapter.jetty :as jetty]
-            [environ.core :refer [env]]))
+            [environ.core :refer [env]]
+            [joplin.repl :as jrepl]
+            [taoensso.timbre :as log]
+            [clojure.java.io :as io]))
+
+(defn seed [conf env & args]
+  (reset! app/profile (keyword env))
+  (apply (partial jrepl/seed (jrepl/load-config (io/resource conf)) (keyword env)) args))
 
 (defn start
   ([]
    (start {}))
   ([overrides]
-   (when-not @kixi.heimdall.application/system
+   (when-not @app/system
      (try
        (prn "Starting system")
        (->> (system/system (keyword (env :system-profile "development")))
             (#(merge % overrides))
             component/start-system
-            (reset! kixi.heimdall.application/system))
+            (reset! app/system))
        (catch Exception e
-         (reset! kixi.heimdall.application/system (:system (ex-data e)))
+         (reset! app/system (:system (ex-data e)))
          (throw e))))))
 
 (defn stop
   []
-  (when @kixi.heimdall.application/system
+  (when @app/system
     (prn "Stopping system")
-    (component/stop-system @kixi.heimdall.application/system)
-    (reset! kixi.heimdall.application/system nil)))
+    (component/stop-system @app/system)
+    (reset! app/system nil)))
 
 (defn reset []
   (stop)

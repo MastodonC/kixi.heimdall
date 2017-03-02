@@ -1,8 +1,6 @@
 (ns kixi.heimdall.integration.base
   (:require [kixi.heimdall.integration.repl :as repl]
             [environ.core :refer [env]]
-            [qbits.alia :as alia]
-            [qbits.hayt :as hayt]
             [kixi.heimdall.config :as config :refer [config]]
             [taoensso.timbre :as log :refer [debug]]))
 
@@ -25,13 +23,13 @@
   (all-tests)
   (reset! comms nil))
 
-(def cassandra-session (atom nil))
+(def db-session (atom nil))
 
-(defn extract-cassandra-session
+(defn extract-db-session
   [all-tests]
-  (reset! cassandra-session (:cassandra-session @repl/system))
+  (reset! db-session (:db @repl/system))
   (all-tests)
-  (reset! cassandra-session nil))
+  (reset! db-session nil))
 
 (defn wait-for
   ([fn fail-fn]

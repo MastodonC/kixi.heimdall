@@ -17,6 +17,3 @@
 
 (defn webserver-port [config]
   (get-in config [:jetty-server :port]))
-
-(defn auth-conf [config]
-  (get-in config [:auth-conf]))

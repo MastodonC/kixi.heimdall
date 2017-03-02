@@ -10,23 +10,23 @@
             [taoensso.timbre :as log]
             [kixi.log :as kixi-log]
             [environ.core :refer [env]]
-            [kixi.comms.components.kafka :as kafka]))
+            [kixi.comms.components.kafka :as kafka]
+            [kixi.heimdall.application :as app]))
 
 (defn system [profile]
-  (let [config (config/config profile)]
+  (let [config (config/config profile)
+        _ (reset! app/profile profile)]
     (log/set-config! {:level (keyword (env :log-level (get-in config [:logging :level])))
                       :timestamp-opts kixi-log/default-timestamp-opts
                       :appenders {:direct-json (kixi-log/timbre-appender-logstash)}})
     (log/info "System with" profile)
     (-> (component/system-map
          :metrics (metrics/map->Metrics (:metrics config))
-         :cluster (db/new-cluster {:contact-points (-> config :cassandra-session :hosts)})
-         :cassandra-session (db/new-session (:cassandra-session config) profile)
-         :web-server (web/new-http-server (config/webserver-port config) (config/auth-conf config))
+         :web-server (web/new-http-server (config/webserver-port config) config)
          :repl-server  (Object.) ; dummy - replaced when invoked via uberjar.
+         :db (db/new-session (:dynamodb config) profile)
          :communications (kafka/map->Kafka (:kafka (:communications config)))
          :persistence (persistence/->Persistence))
         (component/system-using
-         {:web-server [:metrics :cassandra-session :communications]
-          :cassandra-session [:cluster]
-          :persistence [:communications :cassandra-session]}))))
+         {:web-server [:metrics :communications :db]
+          :persistence [:communications :db]}))))

@@ -9,11 +9,10 @@
                  [ring/ring-defaults "0.2.1"]
                  [ring/ring-json "0.4.0"]
                  [kixi/buddy "1.2.1" :exclusions [cheshire]]
-                 [cc.qbits/alia-all "3.2.0" :exclusions [cc.qbits/hayt org.clojure/clojure]]
-                 [cc.qbits/hayt "3.0.1"]
                  [com.stuartsierra/component "0.3.1"]
                  [ring/ring-jetty-adapter "1.5.0"]
                  [com.taoensso/timbre "4.8.0"]
+                 [com.taoensso/faraday "1.9.0"]
                  [kixi/kixi.log "0.1.3"]
                  [kixi/kixi.metrics "0.4.0"]
                  [com.izettle/dropwizard-metrics-influxdb "1.1.6"
@@ -25,8 +24,8 @@
                  [metrics-clojure-jvm ~metrics-version]
                  [metrics-clojure-ring ~metrics-version]
                  [clj-time "0.12.0"]
-                 [joplin.core "0.3.9"]
-                 [joplin.cassandra "0.3.9"]
+                 [kixi/joplin.core "0.3.10-SNAPSHOT"]
+                 [kixi/joplin.dynamodb "0.3.10-SNAPSHOT"]
                  [cider/cider-nrepl "0.13.0"]
                  ;; these are dependencies around running the server in the repl
                  [org.clojure/tools.namespace    "0.2.11"]
@@ -57,8 +56,7 @@
                         [ring/ring-mock "0.3.0"]
                         [clj-http "3.4.1"]
                         [org.clojure/data.json "0.2.6"]]}}
-  :aliases {"seed" ["run" "-m" "joplin.alias/seed" "joplin.edn"],
-            ,"migrate" ["run" "-m" "joplin.alias/migrate" "joplin.edn"]}
+  :aliases {"seed" ["run" "-m" "user/seed" "joplin.edn"]}
   :release-tasks [["vcs" "assert-committed"]
                   ["change" "version"
                    "leiningen.release/bump-version" "release"]
