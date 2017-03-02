@@ -69,34 +69,10 @@
                                    :jenkins "test"
                                    :production ^:ref [:auth-conf :secrets :prod-passphrase]}}
 
- :metrics {:influx-reporter {:host #profile {:production "influxdb.sandpit-vpc.kixi"
-                                             :jenkins "influxdb.sandpit-vpc.kixi"
-                                             :development #or [#env INFLUXDB "localhost"]
-                                             :dev-docker #or [#env INFLUXDB "localhost"]
-                                             :test #or [#env INFLUXDB "localhost"]}
-                             :port 8086
-                                        ;                             :auth
-                             :connect-timeout 1500
-                             :read-timeout 1500
-                             :group-gauges true
-                                        ;                             :duration-unit
-                             :measurement-mappings {"jvm_threads" "jvm\\.thread.*"
-                                                    "jvm_gc" "jvm\\.gc\\..*"
-                                                    "jvm_memory" "jvm\\.memory\\..*"
-                                                    "resources" "resources\\..*"
-                                                    "log" "log\\..*"}
-                                        ;                             :excludes
-                             :prefix ^:ref [:service-name]
-                             :db-name "metrics"
-                             :fields {"meters" #{"m1_rate" "m5_rate" "m15_rate"}}
-                             :tags {"env" #or [#env ENVIRONMENT "development"]
-                                    "service" ^:ref [:service-name]
-                                    "taskid" #or [#env MESOS_TASK_ID #rand-uuid "rand"]}
-                             :seconds #profile {:production 60
-                                                :jenkins 60
-                                                :development 1
-                                                :dev-docker 1
-                                                :test 1}}}
+ :metrics {:json-reporter {:seconds #profile {:production 60
+                                              :development 1
+                                              :dev-docker 1                                                                                     :test 1
+                                              :jenkins 30}}}
  :logging {:level #profile {:production  :warn
                             :jenkins     :info
                             :test        :info

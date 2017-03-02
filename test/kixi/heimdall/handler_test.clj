@@ -31,11 +31,6 @@
   [request]
   (assoc request :auth-conf auth-config))
 
-(defn metrics-added
-  [request]
-  (assoc-in request [:components :metrics] {:insert-time-in-ctx identity
-                                            :record-ctx-metrics (fn [a _] a)}))
-
 (defrecord DummyCommunications []
   comms/Communications
   (send-event! [_ _ _ _]
@@ -72,8 +67,7 @@
   (-> request
       json-request
       auth-config-added
-      auth-info-added
-      metrics-added))
+      auth-info-added))
 
 (defn comms-app
   "comms-app either takes an atom to test which Communication functions were triggered or makes sure something is there to fake comms presence"

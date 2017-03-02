@@ -111,20 +111,6 @@
                                                                            (escape-html v)
                                                                            v)) %)))))
 
-(defn wrap-record-metric
-  [handler]
-  (fn [request]
-    (let [metrics (:metrics (:components request))
-          start-fn (:insert-time-in-ctx metrics)
-          record-fn (:record-ctx-metrics metrics)]
-      (let [metric-started-request (start-fn request)
-            response (try (handler metric-started-request)
-                          (catch Throwable t
-                            (do (record-fn request 500)
-                                (throw t))))]
-        (record-fn metric-started-request (:status response))
-        response))))
-
 (defn vec-if-not
   [x]
   (if (or (nil? x)
@@ -174,7 +160,6 @@
   (-> app-routes
       wrap-escape-html
       wrap-params
-      wrap-record-metric
       wrap-catch-exceptions
       wrap-keyword-params
       wrap-json-params
