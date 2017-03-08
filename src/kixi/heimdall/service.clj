@@ -133,8 +133,8 @@
 (defn add-self-group
   [db user]
   (let [self-group (group/add! db {:name (:name user)
-                                        :user-id (:id user)
-                                        :group-type "user"})]
+                                   :user-id (:id user)
+                                   :group-type "user"})]
     (member/add! db (:id user) (:group-id self-group))
     {:group-id self-group}))
 
@@ -242,7 +242,7 @@
            (clojure.set/rename-keys  (select-keys raw-group
                                                   [:id :name :created-by :created :group-type])
                                      {:id :kixi.group/id
-                                      :name :kixi.group/name
+                                      :group-name :kixi.group/name
                                       :group-type :kixi.group/type
                                       :created-by :kixi.group/created-by
                                       :created :kixi.group/created}))
