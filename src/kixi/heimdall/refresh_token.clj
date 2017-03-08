@@ -1,34 +1,43 @@
 (ns kixi.heimdall.refresh-token
-  (:require [kixi.heimdall.components.database :as db]
-            [qbits.alia.uuid :as uuid]))
+  (:require [kixi.heimdall.components.database :as db]))
+
+(def refresh-token-table "refresh-tokens")
+(def refresh-token-by-user-id "refresh-tokens-by-user-id")
 
 (defn add!
-  [session {:keys [valid] :as refresh-token}]
+  [db {:keys [valid] :as refresh-token}]
   (let [token-data (assoc refresh-token
-                          :id (uuid/random)
+                          :id (str (java.util.UUID/randomUUID))
                           :valid (or (nil? valid) valid))]
-    (db/insert! session :refresh_tokens token-data)
-    (db/insert! session :refresh_tokens_by_user_id_and_issued token-data)))
+    (db/put-item db
+                 refresh-token-table
+                 token-data
+                 {:return :none})))
 
 (defn find-by-user-and-issued
-  [session user-id issued]
-  (first (db/select* session :refresh_tokens_by_user_id_and_issued
-                     {:user_id user-id
-                      :issued issued})))
+  [db user-id issued]
+  (first (db/query db
+                   refresh-token-table
+                   {:user-id [:eq user-id]
+                    :issued [:eq issued]}
+                   {:index refresh-token-by-user-id
+                    :limit 1
+                    :return :all-attributes})))
 
 (defn find-by-id
-  [session id]
-  (first (db/select* session :refresh_tokens {:id id})))
+  [db id]
+  (db/get-item db
+               refresh-token-table
+               {:id id}
+               {:consistent? true}))
 
 (defn invalidate!
-  [session id]
-  (let [refresh-token (find-by-id session id)
+  [db id]
+  (let [refresh-token (find-by-id db id)
         user-id (:user_id refresh-token)
         issued (:issued refresh-token)]
-    (db/update! session :refresh_tokens
-                {:valid false}
-                {:id id})
-    (db/update! session :refresh_tokens_by_user_id_and_issued
-                {:valid false}
-                {:user_id user-id
-                 :issued issued})))
+    (db/update-item db
+                    refresh-token-table
+                    {:id id}
+                    {:update-expr "SET valid = :v"
+                     :expr-attr-vals {":v" false}})))

@@ -1,16 +1,19 @@
-(ns seeds.cassandra
-  (:require [qbits.alia                 :as alia]
-            [qbits.hayt                 :as hayt]
-            [joplin.cassandra.database :refer [get-connection]]
-            [kixi.heimdall.user :as user]
+(ns seeds.dynamodb
+  (:require [kixi.heimdall.user :as user]
             [kixi.heimdall.group :as group]
             [kixi.heimdall.service :as service]
-            [kixi.heimdall.components.database :as db]))
+            [kixi.heimdall.components.database :as db]
+            [kixi.heimdall.config :as config]
+            [kixi.heimdall.application :as app]
+            [taoensso.timbre :as log]))
+
+(defn get-db-config
+  []
+  (let [conf (config/config @app/profile)]
+    (:dynamodb conf)))
 
 (defn run-dev [target & args]
-  (let [conn (get-connection (-> target :db :hosts)
-                             (-> target :db :keyspace))
-        dc (db/->DirectConnection {:session conn})
+  (let [dc (db/new-session (get-db-config) @app/profile)
         ;; Add a test user
         test-user (user/add! dc {:username "test@mastodonc.com" :password "Secret123" :name "Test User"})
         _ (group/add! dc {:name "Test User"
@@ -49,15 +52,15 @@
    "Girls" [:elise :sam :sunny :eleonore :fran :lora]})
 
 (defn create-user!
-  [dc [k user-name]]
+  [db [k user-name]]
   (let [email (str (name k)"@mastodonc.com")
-        existing (user/find-by-username dc {:username email})]
+        existing (user/find-by-username db {:username email})]
     (if existing
       existing
-      (let [u (user/add! dc {:username email
+      (let [u (user/add! db {:username email
                              :password "Secret123"
                              :name user-name})]
-        (service/add-self-group dc u)
+        (service/add-self-group db u)
         u))))
 
 (defn create-group!
@@ -72,9 +75,7 @@
           (rest users))))
 
 (defn run-staging [target & args]
-  (let [conn (get-connection (-> target :db :hosts)
-                             (-> target :db :keyspace))
-        dc (db/->DirectConnection {:session conn})
+  (let [dc (db/new-session (get-db-config) @app/profile)
         ;; Add test users
         users (zipmap (keys staging-users)
                       (map (partial create-user! dc) staging-users))
@@ -82,7 +83,3 @@
         ;; Add test groups
         groups (zipmap (keys staging-groups)
                        (map (partial create-group! dc users) staging-groups))]))
-
-(defn run-prod [target & args]
-  (let [conn (get-connection (-> target :db :hosts)
-                             (-> target :db :keyspace))]))

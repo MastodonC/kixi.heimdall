@@ -1,8 +1,7 @@
-cassandra:
-        image: 'cassandra:2.2'
+dynamodb:
+        image: rajatvig/dynalite-alpine
         ports:
-          - "9042:9042"
-          - "9160:9160"
+          - '8000:8000'
 zookeeper:
         image: 'jplock/zookeeper:3.4.6'
         ports:

@@ -12,7 +12,6 @@
             [clojure.java.io :as io]
             [clojure.edn :as edn]
             [clojure.data.json :as json]
-            [qbits.alia.uuid :as uuid]
             [buddy.sign.util :as sign]
             [clj-time.core :as t]
             [kixi.heimdall.config :as config]
@@ -25,7 +24,7 @@
   (mock/content-type request "application/json"))
 
 (def auth-config
-  (config/auth-conf (config/config (keyword (env :system-profile "test")))))
+  (:auth-conf (config/config (keyword (env :system-profile "test")))))
 
 (defn auth-config-added
   [request]
@@ -94,13 +93,13 @@
       (with-redefs [user/find-by-username (fn [session m]
                                             {:username "user@boo.com"
                                              :password (hs/encrypt "foo12CCbb")
-                                             :id (uuid/random)})
+                                             :id (str (java.util.UUID/randomUUID))})
                     rt/add! (fn [session m] true)
                     member/retrieve-groups-ids (fn [session user-id]
                                                  '({:group-id "group-id-1"}
                                                    {:group-id "group-id-2"}))
                     group/find-user-group (fn [session user-id]
-                                            {:id (java.util.UUID/randomUUID)})]
+                                            {:id (str (java.util.UUID/randomUUID))})]
         (let [events (atom {})
               response (comms-app app (heimdall-request
                                        (mock/request :post "/create-auth-token"

@@ -1,32 +1,18 @@
 {:service-name "kixi.heimdall"
- :cassandra-session {:hosts #profile {:development #or [#env CASSANDRA "localhost"]
-                                      :test #or [#env CASSANDRA "localhost"]
-                                      :dev-docker #or [#env CASSANDRA "localhost"]
-                                      :jenkins ["node-0.cassandra.mesos"
-                                                "node-1.cassandra.mesos"
-                                                "node-2.cassandra.mesos"]
-                                      :production ["node-0.cassandra.mesos"
-                                                   "node-1.cassandra.mesos"
-                                                   "node-2.cassandra.mesos"]}
-                     :keyspace #profile {:development "heimdall"
-                                         :dev-docker "heimdall"
-                                         :test "heimdall_test"
-                                         :jenkins "heimdall_test"
-                                         :production "heimdall"}
-                     :replication-strategy #profile {:development {:class "SimpleStrategy"
-                                                                   :replication_factor 1}
-                                                     :dev-docker {:class "SimpleStrategy"
-                                                                  :replication_factor 1}
-                                                     :test {:class "SimpleStrategy"
-                                                            :replication_factor 1}
-                                                     :jenkins {:class  "SimpleStrategy"
-                                                               :replication_factor 2}
-                                                     :production {:class  "SimpleStrategy"
-                                                                  :replication_factor 2}}}
+ :dynamodb #profile {:development {:prefix "dev"
+                                   :db {:endpoint "http://localhost:8000"}}
+                     :dev-docker {:prefix "dev"
+                                  :db {:endpoint "http://localhost:8000"}}
+                     :test {:prefix "test"
+                            :db {:endpoint "http://localhost:8000"}}
+                     :jenkins {:prefix "jenkins"}
+                     :staging {:prefix "staging"}
+                     :production {:prefix "prod"}}
  :jetty-server {:port #profile {:development 3002
                                 :test 3003
                                 :dev-docker 3002
                                 :jenkins 3003
+                                :staging 3000
                                 :production 3000}}
  :communications {:kafka #profile {:development {:host #or [#env ZOOKEEPER "127.0.0.1"]
                                                  :port 2181
@@ -46,6 +32,10 @@
                                              :zk-path "/dcos-service-kafka/"
                                              :topics {:command "command-heimdall-testing"
                                                       :event "event-heimdall-testing"}}
+                                   :staging {:host "master.mesos"
+                                             :port 2181
+                                             :group-id "heimdall"
+                                             :zk-path "/dcos-service-kafka/"}
                                    :production {:host "master.mesos"
                                                 :port 2181
                                                 :group-id "heimdall"
@@ -54,26 +44,33 @@
                                 :dev-docker "/root/prod_privkey.pem"
                                 :test "test_privkey.pem"
                                 :jenkins "test_privkey.pem"
+                                :staging "/root/prod_privkey.pem"
                                 :production "/root/prod_privkey.pem"}
              :pubkey #profile {:development "auth_pubkey.pem"
                                :dev-docker "/root/prod_pubkey.pem"
                                :test "test_pubkey.pem"
                                :jenkins "test_pubkey.pem"
+                               :staging "/root/prod_pubkey.pem"
                                :production "/root/prod_pubkey.pem"}
              :secrets #profile {:development #include #join [#env HOME "/.secrets.edn"]
                                 :dev-docker #include "/root/.secrets.edn"
+                                :staging #include "/root/.secrets.edn"
                                 :production #include "/root/.secrets.edn"}
              :passphrase #profile {:development ^:ref [:auth-conf :secrets :dev-passphrase]
                                    :dev-docker ^:ref [:auth-conf :secrets :test-passphrase]
                                    :test "test"
                                    :jenkins "test"
+                                   :staging ^:ref [:auth-conf :secrets :prod-passphrase]
                                    :production ^:ref [:auth-conf :secrets :prod-passphrase]}}
 
  :metrics {:json-reporter {:seconds #profile {:production 60
-                                              :development 1
-                                              :dev-docker 1                                                                                     :test 1
+                                              :staging 60
+                                              :development 600
+                                              :dev-docker 600
+                                              :test 600
                                               :jenkins 30}}}
- :logging {:level #profile {:production  :warn
+ :logging {:level #profile {:staging  :warn
+                            :production  :warn
                             :jenkins     :info
                             :test        :info
                             :development :info

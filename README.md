@@ -99,35 +99,35 @@ Beforehand:
 
 To create a user (including sending an event):
 ```
-(s/new-user (:cassandra-session @kixi.heimdall.application/system)
+(s/new-user (:db @kixi.heimdall.application/system)
             (:communications @kixi.heimdall.application/system)
             {:username "moo@bar.com" :password "Local123" :name "john doe"})
 ```
 
 To create a group:
 ```
-(s/create-group-event (:cassandra-session @kixi.heimdall.application/system)
+(s/create-group-event (:db @kixi.heimdall.application/system)
                       (:communications @kixi.heimdall.application/system)
                       {:group {:group-name "the rebellion"} :user-id "<user id>"})
-(group/find-by-user (:cassandra-session @kixi.heimdall.application/system)
+(group/find-by-user (:db @kixi.heimdall.application/system)
                     "<user-id>")
 ```
 The last instruction may need to be repeated, and will show all the groups under the user, since `create-group-event` triggers the creation but the creation is asynchronous.
 
 Adding members and removing them
 ```
-(s/add-member-event (:cassandra-session @kixi.heimdall.application/system)
+(s/add-member-event (:db @kixi.heimdall.application/system)
                     (:communications @kixi.heimdall.application/system)
                     "user-id" "group-id")
 
-(s/remove-member-event (:cassandra-session @kixi.heimdall.application/system)
+(s/remove-member-event (:db @kixi.heimdall.application/system)
                        (:communications @kixi.heimdall.application/system)
                        "user-id" "group-id")
 ```
 
 Updating the group (name)/
 ```
-(s/update-group-event (:cassandra-session @kixi.heimdall.application/system)
+(s/update-group-event (:db @kixi.heimdall.application/system)
                       (:communications @kixi.heimdall.application/system)
                       "group-id" "new-name")
 ```

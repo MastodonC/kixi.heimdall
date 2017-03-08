@@ -1,29 +1,32 @@
 (ns kixi.heimdall.member
-  (:require [kixi.heimdall.components.database :as db]
-            [qbits.alia.uuid :as uuid]))
+  (:require [kixi.heimdall.components.database :as db]))
+
+(def members-table "members-groups")
 
 (defn retrieve-groups-ids
-  [session id]
-  (map :group-id (db/select session :members_by_user [:group-id] {:user-id id})))
+  [db id]
+  (map :group-id (db/query db
+                           members-table
+                           {:user-id [:eq id]}
+                           {;;:index members-table
+                            :return [:group-id :s]})))
 
 (defn add!
-  [session user-id group-id]
+  [db user-id group-id]
   {:pre [user-id group-id]}
-  (db/insert! session :members_by_group
-              {:id (uuid/random)
-               :user-id user-id
-               :group-id group-id})
-  (db/insert! session :members_by_user
-              {:id (uuid/random)
-               :user-id user-id
-               :group-id group-id}))
+  (db/put-item db
+               members-table
+               {:id (str (java.util.UUID/randomUUID))
+                :user-id user-id
+                :group-id group-id}
+               {:return :all-old})
+  )
 
 (defn remove-member
-  [session user-id group-id]
+  [db user-id group-id]
   {:pre [user-id group-id]}
-  (db/delete! session :members_by_group
-              {:group-id group-id
-               :user-id user-id})
-  (db/delete! session :members_by_user
-              {:user-id user-id
-               :group-id group-id})  )
+  (db/delete-item db
+                  members-table
+                  {:user-id user-id
+                   :group-id group-id}
+                  {:return :none}))
