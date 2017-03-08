@@ -5,9 +5,12 @@
                                   :db {:endpoint "http://localhost:8000"}}
                      :test {:prefix "test"
                             :db {:endpoint "http://localhost:8000"}}
-                     :jenkins {:prefix "jenkins"}
-                     :staging {:prefix "staging"}
-                     :production {:prefix "prod"}}
+                     :jenkins {:prefix "jenkins"
+                               :db {:endpoint "http://dynamodb.eu-central-1.amazonaws.com"}}
+                     :staging {:prefix "staging"
+                               :db {:endpoint "http://dynamodb.eu-central-1.amazonaws.com"}}
+                     :production {:prefix "prod"
+                                  :db {:endpoint "http://dynamodb.eu-central-1.amazonaws.com"}}}
  :jetty-server {:port #profile {:development 3002
                                 :test 3003
                                 :dev-docker 3002
