@@ -3,7 +3,7 @@
                                    :db {:endpoint "http://localhost:8000"}}
                      :dev-docker {:prefix "dev"
                                   :db {:endpoint "http://localhost:8000"}}
-                     :test {:prefix "tst"
+                     :test {:prefix "test"
                             :db {:endpoint "http://localhost:8000"}}
                      :jenkins {:prefix "jenkins"}
                      :staging {:prefix "staging"}
