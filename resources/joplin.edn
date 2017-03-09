@@ -4,6 +4,9 @@
  :databases    {:db-dev  {:type :dynamo
                           :endpoint "http://localhost:8000"
                           :migration-table "heimdall-dev-migrations"}
+                :db-dev-docker  {:type :dynamo
+                                 :endpoint "http://dynamodb:8000"
+                                 :migration-table "heimdall-dev-docker-migrations"}
                 :db-test  {:type :dynamo
                            :endpoint "http://localhost:8000"
                            :migration-table "heimdall-tst-migrations"}
@@ -17,7 +20,7 @@
                           :endpoint "http://dynamodb.eu-central-1.amazonaws.com"
                           :migration-table "heimdall-prod-migrations"}}
  :environments {:development [{:db :db-dev, :migrator :db-mig, :seed :db-seed-dev}]
-                :dev-docker [{:db :db-dev, :migrator :db-mig, :seed :db-seed-dev}]
+                :dev-docker [{:db :db-dev-docker, :migrator :db-mig, :seed :db-seed-dev}]
                 :jenkins [{:db :db-jenkins, :migrator :db-mig, :seed :db-seed-staging}]
                 :production [{:db :db-prod, :migrator :db-mig}]
                 :staging [{:db :db-staging, :migrator :db-mig, :seed :db-seed-staging}]
