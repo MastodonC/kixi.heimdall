@@ -240,7 +240,7 @@
   [db group-ids]
   (keep #(when-let [raw-group (group/find-by-id db %)]
            (clojure.set/rename-keys  (select-keys raw-group
-                                                  [:id :name :created-by :created :group-type])
+                                                  [:id :group-name :created-by :created :group-type])
                                      {:id :kixi.group/id
                                       :group-name :kixi.group/name
                                       :group-type :kixi.group/type
