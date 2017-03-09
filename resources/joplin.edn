@@ -6,7 +6,7 @@
                           :migration-table "heimdall-dev-migrations"}
                 :db-dev-docker  {:type :dynamo
                                  :endpoint "http://dynamodb:8000"
-                                 :migration-table "heimdall-dev-docker-migrations"}
+                                 :migration-table "heimdall-dev-migrations"}
                 :db-test  {:type :dynamo
                            :endpoint "http://localhost:8000"
                            :migration-table "heimdall-tst-migrations"}
