@@ -1,16 +1,16 @@
 {:service-name "kixi.heimdall"
  :dynamodb #profile {:development {:prefix "dev"
-                                   :db {:endpoint "http://localhost:8000"}}
+                                   :db {:endpoint #or [#env DYNAMODB_ENDPOINT "http://localhost:8000"]}}
                      :dev-docker {:prefix "dev"
-                                  :db {:endpoint "http://localhost:8000"}}
+                                  :db {:endpoint #or [#env DYNAMODB_ENDPOINT "http://dynamodb:8000"]}}
                      :test {:prefix "test"
-                            :db {:endpoint "http://localhost:8000"}}
+                            :db {:endpoint #or [#env DYNAMODB_ENDPOINT "http://localhost:8000"]}}
                      :jenkins {:prefix "jenkins"
-                               :db {:endpoint "http://dynamodb.eu-central-1.amazonaws.com"}}
+                               :db {:endpoint #or [#env DYNAMODB_ENDPOINT "http://dynamodb.eu-central-1.amazonaws.com"]}}
                      :staging {:prefix "staging"
-                               :db {:endpoint "http://dynamodb.eu-central-1.amazonaws.com"}}
+                               :db {:endpoint #or [#env DYNAMODB_ENDPOINT "http://dynamodb.eu-central-1.amazonaws.com"]}}
                      :production {:prefix "prod"
-                                  :db {:endpoint "http://dynamodb.eu-central-1.amazonaws.com"}}}
+                                  :db {:endpoint #or [#env DYNAMODB_ENDPOINT "http://dynamodb.eu-central-1.amazonaws.com"]}}}
  :jetty-server {:port #profile {:development 3002
                                 :test 3003
                                 :dev-docker 3002
