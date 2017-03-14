@@ -4,8 +4,8 @@
             [taoensso.timbre :as log]))
 
 (def system (atom nil))
-(def wait-tries (Integer/parseInt (env :wait-tries "80")))
-(def wait-per-try (Integer/parseInt (env :wait-per-try "100")))
+(def wait-tries (Integer/parseInt (env :wait-tries "300")))
+(def wait-per-try (Integer/parseInt (env :wait-per-try "200")))
 
 (defn cycle-system
   [all-tests]
