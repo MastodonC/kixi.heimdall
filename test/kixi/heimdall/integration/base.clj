@@ -1,18 +1,37 @@
 (ns kixi.heimdall.integration.base
   (:require [environ.core :refer [env]]
             [kixi.heimdall.integration.repl :as repl]
-            [taoensso.timbre :as log]))
+            [kixi.comms.components.kinesis :as kinesis]
+            [taoensso.timbre :as log]
+            [kixi.comms.components.kinesis :as kinesis]
+            [amazonica.aws.dynamodbv2 :as ddb]
+            [kixi.heimdall.config :as config]))
 
 (def system (atom nil))
 (def wait-tries (Integer/parseInt (env :wait-tries "300")))
 (def wait-per-try (Integer/parseInt (env :wait-per-try "200")))
+
+(defn table-exists?
+  [endpoint table]
+  (try
+    (ddb/describe-table {:endpoint endpoint} table)
+    (catch Exception e false)))
 
 (defn cycle-system
   [all-tests]
   (repl/start)
   (try
     (all-tests)
-    (finally (repl/stop))))
+    (finally
+      (let [conf (config/config (keyword (env :system-profile "test")))
+            kinesis-endpoint (get-in conf [:communications :kinesis-endpoint])
+            kinesis-streams (get-in conf [:communications :stream-names])]
+        (repl/stop)
+
+        (log/info "Deleting streams...")
+        (kinesis/delete-streams! kinesis-endpoint (vals kinesis-streams))
+
+        (log/info "Finished")))))
 
 (def comms (atom nil))
 
