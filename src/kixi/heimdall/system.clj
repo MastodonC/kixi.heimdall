@@ -18,7 +18,10 @@
         _ (reset! app/profile profile)]
     (log/set-config! {:level (keyword (env :log-level (get-in config [:logging :level])))
                       :timestamp-opts kixi-log/default-timestamp-opts
-                      :appenders {:direct-json (kixi-log/timbre-appender-logstash)}})
+                      :appenders (if (or (= profile :production)
+                                         (= profile :staging))
+                                   {:direct-json (kixi-log/timbre-appender-logstash)}
+                                   {:println (log/println-appender)})})
     (log/info "System with" profile)
     (-> (component/system-map
          :metrics (metrics/map->Metrics (:metrics config))
