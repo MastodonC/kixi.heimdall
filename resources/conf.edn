@@ -45,14 +45,14 @@
                                                :kinesis-endpoint "kinesis.eu-central-1.amazonaws.com"
                                                :dynamodb-endpoint "dynamodb.eu-central-1.amazonaws.com"
                                                :region "eu-central-1"
-                                               :stream-names {:command "heimdall-staging-command"
-                                                              :event "heimdall-staging-event"}}
+                                               :stream-names {:command "witan-staging-command"
+                                                              :event "witan-staging-event"}}
                                      :production {:profile "production"
                                                   :kinesis-endpoint "kinesis.eu-central-1.amazonaws.com"
                                                   :dynamodb-endpoint "dynamodb.eu-central-1.amazonaws.com"
                                                   :region "eu-central-1"
-                                                  :stream-names {:command "heimdall-prod-command"
-                                                                 :event "heimdall-prod-event"}}}}
+                                                  :stream-names {:command "witan-prod-command"
+                                                                 :event "witan-prod-event"}}}}
  :auth-conf {:privkey #profile {:development "auth_privkey.pem"
                                 :dev-docker "/root/prod_privkey.pem"
                                 :test "test_privkey.pem"
