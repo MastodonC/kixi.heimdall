@@ -18,20 +18,20 @@
                                 :staging 3000
                                 :production 3000}}
  :communications {:kinesis #profile {:development {:profile "dev"
-                                                   :kinesis-endpoint "http://localhost:4567"
+                                                   :kinesis-endpoint "kinesis.eu-central-1.amazonaws.com"
                                                    :dynamodb-endpoint "http://localhost:8000"
                                                    :region "eu-central-1"
                                                    :stream-names {:command "heimdall-dev-command"
                                                                   :event "heimdall-dev-event"}}
                                      :dev-docker {:profile "dev"
-                                                  :kinesis-endpoint "http://localhost:4567"
+                                                  :kinesis-endpoint "kinesis.eu-central-1.amazonaws.com"
                                                   :dynamodb-endpoint "http://localhost:8000"
                                                   :region "eu-central-1"
                                                   :stream-names {:command "heimdall-dev-command"
                                                                  :event "heimdall-dev-event"}}
                                      :test {:profile "test"
                                             :kinesis-endpoint "kinesis.eu-central-1.amazonaws.com"
-                                            :dynamodb-endpoint "dynamodb.eu-central-1.amazonaws.com"
+                                            :dynamodb-endpoint "http://localhost:8000"
                                             :region "eu-central-1"
                                             :stream-names {:command "heimdall-test-command"
                                                            :event "heimdall-test-event"}}
