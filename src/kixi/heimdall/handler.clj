@@ -146,7 +146,7 @@
 (defroutes app-routes
   public-routes
   (wrap-routes secured-routes wrap-insert-auth-info)
-  (route/not-found "Not Found")  )
+  (route/not-found "Not Found"))
 
 (defn wrap-catch-exceptions [handler]
   (fn [request]

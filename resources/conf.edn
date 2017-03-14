@@ -17,32 +17,42 @@
                                 :jenkins 3003
                                 :staging 3000
                                 :production 3000}}
- :communications {:kafka #profile {:development {:host #or [#env ZOOKEEPER "127.0.0.1"]
-                                                 :port 2181
-                                                 :group-id "heimdall"
-                                                 :zk-path "/"}
-                                   :dev-docker {:host #or [#env ZOOKEEPER "127.0.0.1"]
-                                                :port 2181
-                                                :group-id "heimdall"
-                                                :zk-path "/"}
-                                   :test {:host #or [#env ZOOKEEPER "127.0.0.1"]
-                                          :port 2181
-                                          :group-id "heimdall"
-                                          :zk-path "/"}
-                                   :jenkins {:host "master.mesos"
-                                             :port 2181
-                                             :group-id "heimdall_test"
-                                             :zk-path "/dcos-service-kafka/"
-                                             :topics {:command "command-heimdall-testing"
-                                                      :event "event-heimdall-testing"}}
-                                   :staging {:host "master.mesos"
-                                             :port 2181
-                                             :group-id "heimdall"
-                                             :zk-path "/dcos-service-kafka/"}
-                                   :production {:host "master.mesos"
-                                                :port 2181
-                                                :group-id "heimdall"
-                                                :zk-path "/dcos-service-kafka/"}}}
+ :communications {:kinesis #profile {:development {:profile "dev"
+                                                   :kinesis-endpoint "http://localhost:4567"
+                                                   :dynamodb-endpoint "http://localhost:8000"
+                                                   :region "eu-central-1"
+                                                   :stream-names {:command "heimdall-dev-command"
+                                                                  :event "heimdall-dev-event"}}
+                                     :dev-docker {:profile "dev"
+                                                  :kinesis-endpoint "http://localhost:4567"
+                                                  :dynamodb-endpoint "http://localhost:8000"
+                                                  :region "eu-central-1"
+                                                  :stream-names {:command "heimdall-dev-command"
+                                                                 :event "heimdall-dev-event"}}
+                                     :test {:profile "test"
+                                            :kinesis-endpoint "http://localhost:4567"
+                                            :dynamodb-endpoint "http://localhost:8000"
+                                            :region "eu-central-1"
+                                            :stream-names {:command "heimdall-test-command"
+                                                           :event "heimdall-test-event"}}
+                                     :jenkins {:profile "jenkins"
+                                               :kinesis-endpoint "http://kinesis.eu-central-1.amazonaws.com"
+                                               :dynamodb-endpoint "http://dynamodb.eu-central-1.amazonaws.com"
+                                               :region "eu-central-1"
+                                               :stream-names {:command "heimdall-test-command"
+                                                              :event "heimdall-test-event"}}
+                                     :staging {:profile "staging"
+                                               :kinesis-endpoint "http://kinesis.eu-central-1.amazonaws.com"
+                                               :dynamodb-endpoint "http://dynamodb.eu-central-1.amazonaws.com"
+                                               :region "eu-central-1"
+                                               :stream-names {:command "heimdall-staging-command"
+                                                              :event "heimdall-staging-event"}}
+                                     :production {:profile "production"
+                                                  :kinesis-endpoint "http://kinesis.eu-central-1.amazonaws.com"
+                                                  :dynamodb-endpoint "http://dynamodb.eu-central-1.amazonaws.com"
+                                                  :region "eu-central-1"
+                                                  :stream-names {:command "heimdall-prod-command"
+                                                                 :event "heimdall-prod-event"}}}}
  :auth-conf {:privkey #profile {:development "auth_privkey.pem"
                                 :dev-docker "/root/prod_privkey.pem"
                                 :test "test_privkey.pem"

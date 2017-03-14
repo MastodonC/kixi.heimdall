@@ -5,7 +5,8 @@
             [taoensso.timbre :as log]
             [clojure.string :as str]
             [metrics.timers :refer [time! timer]]
-            [kixi.heimdall.config :as config])
+            [kixi.heimdall.config :as config]
+            [kixi.heimdall.handler :as handler])
   (:import [java.util.concurrent TimeUnit]))
 
 (defn wrap-key-value
@@ -53,4 +54,4 @@
 
 (defn new-http-server
   [api-port auth-conf]
-  (->JettyServer #'kixi.heimdall.handler/app api-port auth-conf))
+  (->JettyServer handler/app api-port auth-conf))

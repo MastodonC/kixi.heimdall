@@ -1,8 +1,7 @@
 (ns kixi.heimdall.integration.base
-  (:require [kixi.heimdall.integration.repl :as repl]
-            [environ.core :refer [env]]
-            [kixi.heimdall.config :as config :refer [config]]
-            [taoensso.timbre :as log :refer [debug]]))
+  (:require [environ.core :refer [env]]
+            [kixi.heimdall.integration.repl :as repl]
+            [taoensso.timbre :as log]))
 
 (def system (atom nil))
 (def wait-tries (Integer/parseInt (env :wait-tries "80")))
