@@ -37,8 +37,8 @@
                                                   :failover-time-millis 200
                                                   :idle-time-between-reads-in-millis 200
                                                   :max-records 1
-                                                  :streams {:command "heimdall-dev-command"
-                                                            :event "heimdall-dev-event"}}
+                                                  :streams {:command "witan-dev-command"
+                                                            :event "witan-dev-event"}}
                                      :test {:profile "test"
                                             :app ^:ref [:service-name]
                                             :endpoint "kinesis.eu-central-1.amazonaws.com"
