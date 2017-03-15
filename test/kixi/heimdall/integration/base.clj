@@ -17,19 +17,33 @@
     (ddb/describe-table {:endpoint endpoint} table)
     (catch Exception e false)))
 
+(defn clear-tables
+  [endpoint table-names]
+  (doseq [sub-table-names (partition-all 10 table-names)]
+    (doseq [table-name sub-table-names]
+      (ddb/delete-table {:endpoint endpoint} :table-name table-name))
+    (loop [tables sub-table-names]
+      (when (not-empty tables)
+        (recur (doall (filter (partial table-exists? endpoint) tables)))))))
+
 (defn cycle-system
   [all-tests]
+  (kixi.comms/set-verbose-logging! true)
   (repl/start)
   (try
     (all-tests)
     (finally
-      (let [conf (config/config (keyword (env :system-profile "test")))
-            kinesis-endpoint (get-in conf [:communications :kinesis-endpoint])
-            kinesis-streams (get-in conf [:communications :stream-names])]
+      (let [{:keys [endpoint dynamodb-endpoint streams app profile]}
+            (get-in (config/config (keyword (env :system-profile "test"))) [:communications :kinesis])
+            _ (log/info app profile)]
         (repl/stop)
 
+        (log/info "Deleting dynamo tables ...")
+        (clear-tables dynamodb-endpoint [(kinesis/event-worker-app-name app profile)
+                                         (kinesis/command-worker-app-name app profile)])
+
         (log/info "Deleting streams...")
-        (kinesis/delete-streams! kinesis-endpoint (vals kinesis-streams))
+        (kinesis/delete-streams! endpoint (vals streams))
 
         (log/info "Finished")))))
 
