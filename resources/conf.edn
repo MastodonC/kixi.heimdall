@@ -21,38 +21,38 @@
                                                    :kinesis-endpoint "kinesis.eu-central-1.amazonaws.com"
                                                    :dynamodb-endpoint "http://localhost:8000"
                                                    :region "eu-central-1"
-                                                   :stream-names {:command "heimdall-dev-command"
-                                                                  :event "heimdall-dev-event"}}
+                                                   :streams {:command "heimdall-dev-command"
+                                                             :event "heimdall-dev-event"}}
                                      :dev-docker {:profile "dev"
                                                   :kinesis-endpoint "kinesis.eu-central-1.amazonaws.com"
                                                   :dynamodb-endpoint "http://localhost:8000"
                                                   :region "eu-central-1"
-                                                  :stream-names {:command "heimdall-dev-command"
-                                                                 :event "heimdall-dev-event"}}
+                                                  :streams {:command "heimdall-dev-command"
+                                                            :event "heimdall-dev-event"}}
                                      :test {:profile "test"
                                             :kinesis-endpoint "kinesis.eu-central-1.amazonaws.com"
                                             :dynamodb-endpoint "http://localhost:8000"
                                             :region "eu-central-1"
-                                            :stream-names {:command "heimdall-test-command"
-                                                           :event "heimdall-test-event"}}
+                                            :streams {:command "heimdall-test-command"
+                                                      :event "heimdall-test-event"}}
                                      :jenkins {:profile "jenkins"
                                                :kinesis-endpoint "kinesis.eu-central-1.amazonaws.com"
                                                :dynamodb-endpoint "dynamodb.eu-central-1.amazonaws.com"
                                                :region "eu-central-1"
-                                               :stream-names {:command "heimdall-test-command"
-                                                              :event "heimdall-test-event"}}
+                                               :streams {:command "heimdall-test-command"
+                                                         :event "heimdall-test-event"}}
                                      :staging {:profile "staging"
                                                :kinesis-endpoint "kinesis.eu-central-1.amazonaws.com"
                                                :dynamodb-endpoint "dynamodb.eu-central-1.amazonaws.com"
                                                :region "eu-central-1"
-                                               :stream-names {:command "witan-staging-command"
-                                                              :event "witan-staging-event"}}
+                                               :streams {:command "witan-staging-command"
+                                                         :event "witan-staging-event"}}
                                      :production {:profile "production"
                                                   :kinesis-endpoint "kinesis.eu-central-1.amazonaws.com"
                                                   :dynamodb-endpoint "dynamodb.eu-central-1.amazonaws.com"
                                                   :region "eu-central-1"
-                                                  :stream-names {:command "witan-prod-command"
-                                                                 :event "witan-prod-event"}}}}
+                                                  :streams {:command "witan-prod-command"
+                                                            :event "witan-prod-event"}}}}
  :auth-conf {:privkey #profile {:development "auth_privkey.pem"
                                 :dev-docker "/root/prod_privkey.pem"
                                 :test "test_privkey.pem"
