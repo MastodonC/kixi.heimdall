@@ -7,19 +7,14 @@
   :dependencies [[org.clojure/clojure "1.9.0-alpha13"]
                  [compojure "1.5.1"]
                  [ring/ring-defaults "0.2.1"]
-                 [ring/ring-json "0.4.0"]
+                 [ring/ring-json "0.4.0" :exclusions [com.fasterxml.jackson.dataformat/jackson-dataformat-cbor]]
                  [kixi/buddy "1.2.1" :exclusions [cheshire]]
                  [com.stuartsierra/component "0.3.1"]
                  [ring/ring-jetty-adapter "1.5.0"]
                  [com.taoensso/timbre "4.8.0"]
-                 [com.taoensso/faraday "1.9.0"]
+                 [com.taoensso/faraday "1.9.0" :exclusions [com.amazonaws/aws-java-sdk-dynamodb]]
                  [kixi/kixi.log "0.1.3"]
                  [kixi/kixi.metrics "0.4.0"]
-                 [com.izettle/dropwizard-metrics-influxdb "1.1.6"
-                  :exclusions [ch.qos.logback/logback-classic
-                               org.eclipse.jetty/jetty-util
-                               com.fasterxml.jackson.core/jackson-core
-                               org.apache.commons/commons-lang3]]
                  [metrics-clojure ~metrics-version]
                  [metrics-clojure-jvm ~metrics-version]
                  [metrics-clojure-ring ~metrics-version]
@@ -33,7 +28,7 @@
                  [org.clojure/tools.cli "0.3.5"]
                  [environ "1.1.0"]
                  [aero "1.0.0"]
-                 [kixi/kixi.comms "0.1.27"]
+                 [kixi/kixi.comms "0.2.1"]
                  [org.clojure/tools.analyzer "0.6.9"]
                  ;; not really dependency, dep collision https://groups.google.com/forum/#!topic/clojure/D_s9Drua6D4
                  ]
