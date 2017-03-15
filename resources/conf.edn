@@ -18,39 +18,61 @@
                                 :staging 3000
                                 :production 3000}}
  :communications {:kinesis #profile {:development {:profile "dev"
-                                                   :kinesis-endpoint "kinesis.eu-central-1.amazonaws.com"
+                                                   :app ^:ref [:service-name]
+                                                   :endpoint "kinesis.eu-central-1.amazonaws.com"
                                                    :dynamodb-endpoint "http://localhost:8000"
-                                                   :region "eu-central-1"
+                                                   :region-name "eu-central-1"
+                                                   :metric-level :NONE
+                                                   :failover-time-millis 200
+                                                   :idle-time-between-reads-in-millis 200
+                                                   :max-records 1
                                                    :streams {:command "heimdall-dev-command"
                                                              :event "heimdall-dev-event"}}
                                      :dev-docker {:profile "dev"
-                                                  :kinesis-endpoint "kinesis.eu-central-1.amazonaws.com"
+                                                  :app ^:ref [:service-name]
+                                                  :endpoint "kinesis.eu-central-1.amazonaws.com"
                                                   :dynamodb-endpoint "http://localhost:8000"
-                                                  :region "eu-central-1"
+                                                  :region-name "eu-central-1"
+                                                  :metric-level :NONE
+                                                  :failover-time-millis 200
+                                                  :idle-time-between-reads-in-millis 200
+                                                  :max-records 1
                                                   :streams {:command "heimdall-dev-command"
                                                             :event "heimdall-dev-event"}}
                                      :test {:profile "test"
-                                            :kinesis-endpoint "kinesis.eu-central-1.amazonaws.com"
+                                            :app ^:ref [:service-name]
+                                            :endpoint "kinesis.eu-central-1.amazonaws.com"
                                             :dynamodb-endpoint "http://localhost:8000"
-                                            :region "eu-central-1"
+                                            :region-name "eu-central-1"
+                                            :metric-level :NONE
+                                            :failover-time-millis 200
+                                            :idle-time-between-reads-in-millis 200
+                                            :max-records 1
                                             :streams {:command "heimdall-test-command"
                                                       :event "heimdall-test-event"}}
                                      :jenkins {:profile "jenkins"
-                                               :kinesis-endpoint "kinesis.eu-central-1.amazonaws.com"
+                                               :app ^:ref [:service-name]
+                                               :endpoint "kinesis.eu-central-1.amazonaws.com"
                                                :dynamodb-endpoint "dynamodb.eu-central-1.amazonaws.com"
-                                               :region "eu-central-1"
+                                               :region-name "eu-central-1"
+                                               :metric-level :NONE
+                                               :failover-time-millis 200
+                                               :idle-time-between-reads-in-millis 200
+                                               :max-records 1
                                                :streams {:command "heimdall-test-command"
                                                          :event "heimdall-test-event"}}
                                      :staging {:profile "staging"
-                                               :kinesis-endpoint "kinesis.eu-central-1.amazonaws.com"
+                                               :app ^:ref [:service-name]
+                                               :endpoint "kinesis.eu-central-1.amazonaws.com"
                                                :dynamodb-endpoint "dynamodb.eu-central-1.amazonaws.com"
-                                               :region "eu-central-1"
+                                               :region-name "eu-central-1"
                                                :streams {:command "witan-staging-command"
                                                          :event "witan-staging-event"}}
                                      :production {:profile "production"
-                                                  :kinesis-endpoint "kinesis.eu-central-1.amazonaws.com"
+                                                  :app ^:ref [:service-name]
+                                                  :endpoint "kinesis.eu-central-1.amazonaws.com"
                                                   :dynamodb-endpoint "dynamodb.eu-central-1.amazonaws.com"
-                                                  :region "eu-central-1"
+                                                  :region-name "eu-central-1"
                                                   :streams {:command "witan-prod-command"
                                                             :event "witan-prod-event"}}}}
  :auth-conf {:privkey #profile {:development "auth_privkey.pem"
