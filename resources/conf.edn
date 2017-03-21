@@ -23,8 +23,7 @@
                                                    :dynamodb-endpoint "http://localhost:8000"
                                                    :region-name "eu-central-1"
                                                    :metric-level :NONE
-                                                   :failover-time-millis 200
-                                                   :idle-time-between-reads-in-millis 200
+                                                   :idle-time-between-reads-in-millis 100
                                                    :max-records 1
                                                    :streams {:command "heimdall-dev-command"
                                                              :event "heimdall-dev-event"}}
@@ -34,8 +33,7 @@
                                                   :dynamodb-endpoint "http://dynamodb:8000"
                                                   :region-name "eu-central-1"
                                                   :metric-level :NONE
-                                                  :failover-time-millis 200
-                                                  :idle-time-between-reads-in-millis 200
+                                                  :idle-time-between-reads-in-millis 100
                                                   :max-records 1
                                                   :streams {:command "witan-dev-command"
                                                             :event "witan-dev-event"}}
@@ -45,8 +43,7 @@
                                             :dynamodb-endpoint "http://localhost:8000"
                                             :region-name "eu-central-1"
                                             :metric-level :NONE
-                                            :failover-time-millis 200
-                                            :idle-time-between-reads-in-millis 200
+                                            :idle-time-between-reads-in-millis 100
                                             :max-records 1
                                             :streams {:command "heimdall-test-command"
                                                       :event "heimdall-test-event"}}
@@ -56,8 +53,7 @@
                                                :dynamodb-endpoint "dynamodb.eu-central-1.amazonaws.com"
                                                :region-name "eu-central-1"
                                                :metric-level :NONE
-                                               :failover-time-millis 200
-                                               :idle-time-between-reads-in-millis 200
+                                               :idle-time-between-reads-in-millis 100
                                                :max-records 1
                                                :streams {:command "heimdall-test-command"
                                                          :event "heimdall-test-event"}}
@@ -66,6 +62,7 @@
                                                :endpoint "kinesis.eu-central-1.amazonaws.com"
                                                :dynamodb-endpoint "dynamodb.eu-central-1.amazonaws.com"
                                                :region-name "eu-central-1"
+                                               :idle-time-between-reads-in-millis 200
                                                :streams {:command "witan-staging-command"
                                                          :event "witan-staging-event"}}
                                      :production {:profile "production"
@@ -73,6 +70,7 @@
                                                   :endpoint "kinesis.eu-central-1.amazonaws.com"
                                                   :dynamodb-endpoint "dynamodb.eu-central-1.amazonaws.com"
                                                   :region-name "eu-central-1"
+                                                  :idle-time-between-reads-in-millis 200
                                                   :streams {:command "witan-prod-command"
                                                             :event "witan-prod-event"}}}}
  :auth-conf {:privkey #profile {:development "auth_privkey.pem"
