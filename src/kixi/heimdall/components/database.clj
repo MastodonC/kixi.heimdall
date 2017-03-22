@@ -6,7 +6,8 @@
             [kixi.heimdall.util :as util]
             [kixi.heimdall.config :as config]
             [kixi.heimdall.application :as app]
-            [taoensso.faraday :as far]))
+            [taoensso.faraday :as far]
+            [amazonica.aws.cloudwatch :as cloudwatch]))
 
 
 (def app "heimdall")
@@ -19,9 +20,17 @@
   [conf]
   (:prefix (:db-conf conf)))
 
+(defn alerts
+  [conf]
+  (:alerts (:db-conf conf)))
+
 (defn db
   [conf]
   (or (:db (:db-conf conf)) {}))
+
+(defn sns
+  [conf]
+  (:sns (:aws conf)))
 
 (defprotocol Database
   (create-table [this table index opts])
@@ -33,13 +42,60 @@
   (delete-item [this table where opts])
   (scan [this table]))
 
+(def threshold 0.9)
+(def alarm-period 60)
+(def evaluation-period 1)
+
+(defn put-dynamo-table-alarm
+  [{:keys [metric
+           table-name
+           sns
+           description]}]
+  (cloudwatch/put-metric-alarm {:endpoint "eu-central-1"}
+                               :alarm-name (str metric "-" table-name)
+                               :alarm-description description
+                               :namespace "AWS/DynamoDB"
+                               :metric-name metric
+                               ;;                   :dimensions ["Tablename" table-name] ;;(str "name=TableName,value=" table-name)
+                               :statistic "Sum"
+                               :threshold threshold
+                               :comparison-operator "GreaterThanOrEqualToThreshold"
+                               :period alarm-period
+                               :evaluation-periods 1
+                               :alarm-actions [sns]))
+
+(defn read-dynamo-alarm
+  [{:keys [table-name
+           sns]}]
+  (put-dynamo-table-alarm {:metric "ConsumedReadCapacityUnits"
+                           :table-name table-name
+                           :sns sns
+                           :description (str "Alarm: read capacity almost at provisioned read capacity for " table-name)}))
+
+(defn write-dynamo-alarm
+  [{:keys [table-name
+           sns]}]
+  (put-dynamo-table-alarm {:metric "ConsumedWriteCapacityUnits"
+                           :table-name table-name
+                           :sns sns
+                           :description (str "Alarm: write capacity almost at provisioned write capacity for " table-name)}))
+
+(defn table-dynamo-alarms
+  [table-name
+   sns]
+  (read-dynamo-alarm {:table-name table-name :sns sns})
+  (write-dynamo-alarm {:table-name table-name :sns sns}))
+
 (defrecord DynamoDB [db-conf profile]
   Database
   (create-table [this table index opts]
-    (far/create-table (db this)
-                      (decorated-table table (prefix this))
-                      index
-                      opts))
+    (let [table-name (decorated-table table (prefix this)) ]
+      (far/create-table (db this)
+                        table-name
+                        index
+                        opts)
+      (when (alerts this)
+        (table-dynamo-alarms table-name (sns this)))))
   (delete-table [this table]
     (far/delete-table (db this)
                       (decorated-table table (prefix this))))
