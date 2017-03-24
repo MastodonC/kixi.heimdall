@@ -23,9 +23,6 @@
                                                    :dynamodb-endpoint "http://localhost:8000"
                                                    :region-name "eu-central-1"
                                                    :metric-level :NONE
-                                                   :failover-time-millis 200
-                                                   :idle-time-between-reads-in-millis 200
-                                                   :max-records 1
                                                    :streams {:command "heimdall-dev-command"
                                                              :event "heimdall-dev-event"}}
                                      :dev-docker {:profile "dev"
@@ -34,9 +31,6 @@
                                                   :dynamodb-endpoint "http://dynamodb:8000"
                                                   :region-name "eu-central-1"
                                                   :metric-level :NONE
-                                                  :failover-time-millis 200
-                                                  :idle-time-between-reads-in-millis 200
-                                                  :max-records 1
                                                   :streams {:command "witan-dev-command"
                                                             :event "witan-dev-event"}}
                                      :test {:profile "test"
@@ -45,9 +39,6 @@
                                             :dynamodb-endpoint "http://localhost:8000"
                                             :region-name "eu-central-1"
                                             :metric-level :NONE
-                                            :failover-time-millis 200
-                                            :idle-time-between-reads-in-millis 200
-                                            :max-records 1
                                             :streams {:command "heimdall-test-command"
                                                       :event "heimdall-test-event"}}
                                      :jenkins {:profile "jenkins"
@@ -56,9 +47,6 @@
                                                :dynamodb-endpoint "dynamodb.eu-central-1.amazonaws.com"
                                                :region-name "eu-central-1"
                                                :metric-level :NONE
-                                               :failover-time-millis 200
-                                               :idle-time-between-reads-in-millis 200
-                                               :max-records 1
                                                :streams {:command "heimdall-test-command"
                                                          :event "heimdall-test-event"}}
                                      :staging {:profile "staging"
