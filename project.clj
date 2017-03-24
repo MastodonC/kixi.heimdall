@@ -13,7 +13,7 @@
                  [ring/ring-jetty-adapter "1.5.0"]
                  [com.taoensso/timbre "4.8.0"]
                  [com.taoensso/faraday "1.9.0" :exclusions [com.amazonaws/aws-java-sdk-dynamodb]]
-                 [kixi/kixi.log "0.1.3"]
+                 [kixi/kixi.log "0.1.4"]
                  [kixi/kixi.metrics "0.4.0"]
                  [metrics-clojure ~metrics-version]
                  [metrics-clojure-jvm ~metrics-version]
