@@ -5,7 +5,7 @@
        :kinesis-endpoint "kinesis.eu-central-1.amazonaws.com"}
  :dynamodb #profile {:development {:prefix "dev"
                                    :db {:endpoint #or [#env DYNAMODB_ENDPOINT "http://localhost:8000"]}
-                                   :alerts true}
+                                   :alerts {:sns ^:ref [:aws :sns]} }
                      :dev-docker {:prefix "dev"
                                   :db {:endpoint #or [#env DYNAMODB_ENDPOINT "http://dynamodb:8000"]}
                                   :alerts false}
@@ -17,10 +17,10 @@
                                :alerts false}
                      :staging {:prefix "staging"
                                :db {:endpoint #or [#env DYNAMODB_ENDPOINT ^:ref [:aws :dynamo-endpoint]]}
-                               :alerts true}
+                               :alerts {:sns ^:ref [:aws :sns]}}
                      :production {:prefix "prod"
                                   :db {:endpoint #or [#env DYNAMODB_ENDPOINT ^:ref [:aws :dynamo-endpoint]]}}
-                     :alerts true}
+                     :alerts {:sns ^:ref [:aws :sns]}}
  :jetty-server {:port #profile {:development 3002
                                 :test 3003
                                 :dev-docker 3002

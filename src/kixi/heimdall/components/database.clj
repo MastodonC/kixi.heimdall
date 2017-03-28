@@ -30,7 +30,7 @@
 
 (defn sns
   [conf]
-  (:sns (:aws conf)))
+  (get-in db-conf [:db-conf :alerts :sns]))
 
 (defprotocol Database
   (create-table [this table index opts])
@@ -95,7 +95,10 @@
                         index
                         opts)
       (when (alerts this)
-        (table-dynamo-alarms table-name (sns this)))))
+        (try
+          (table-dynamo-alarms table-name (sns this))
+          (catch Exception e
+            (log/error e "failed to create cloudwatch alarm with:"))))))
   (delete-table [this table]
     (far/delete-table (db this)
                       (decorated-table table (prefix this))))
