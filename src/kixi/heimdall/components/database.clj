@@ -50,9 +50,9 @@
   [{:keys [metric
            table-name
            sns
-           description]}]
+           description] :as params}]
   (cloudwatch/put-metric-alarm {:endpoint "eu-central-1"}
-                               :alarm-name (str metric "-" table-name)
+                               :alarm-name (str (name table-name) "-" metric)
                                :alarm-description description
                                :namespace "AWS/DynamoDB"
                                :metric-name metric
@@ -71,6 +71,7 @@
                            :table-name table-name
                            :sns sns
                            :description (str "Alarm: read capacity almost at provisioned read capacity for " table-name)}))
+
 
 (defn write-dynamo-alarm
   [{:keys [table-name
