@@ -26,7 +26,7 @@
       (when (not-empty tables)
         (recur (doall (filter (partial table-exists? endpoint) tables)))))))
 
-(defn tear-down-kinesis!
+(defn teardown-kinesis!
   [{:keys [endpoint dynamodb-endpoint streams app profile]}]
   (log/info "Deleting dynamo tables ...")
   (clear-tables dynamodb-endpoint [(kinesis/event-worker-app-name app profile)
@@ -42,10 +42,12 @@
   (try
     (all-tests)
     (finally
-      (let [{:keys [endpoint dynamodb-endpoint streams app profile]}
+      (let [{:keys [endpoint dynamodb-endpoint streams app profile] :as args}
             (get-in (config/config (keyword (env :system-profile "test"))) [:communications :kinesis])
             _ (log/info app profile)]
         (repl/stop)
+
+        (teardown-kinesis! args)
 
         (log/info "Finished")))))
 
