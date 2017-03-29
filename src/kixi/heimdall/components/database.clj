@@ -43,7 +43,7 @@
 
 (defrecord DynamoDB [db-conf profile]
   Database
-  (create-table [this table index opts]
+  (create-table [this table index {:keys [throughput] :as opts}]
     (let [table-name (decorated-table table (prefix this)) ]
       (far/create-table (db this)
                         table-name
@@ -51,7 +51,9 @@
                         opts)
       (when (alerts this)
         (try
-          (table-dynamo-alarms table-name (alert-conf this))
+          (table-dynamo-alarms table-name (assoc (alert-conf this)
+                                                 :read-provisioned (:read throughput)
+                                                 :write-provisioned (:write throughput)))
           (catch Exception e
             (log/error e "failed to create cloudwatch alarm with:"))))))
   (delete-table [this table]

@@ -16,25 +16,25 @@
     (db/create-table conn
                      "users"
                      [:id :s]
-                     {:throughput {:read 1 :write 1}
+                     {:throughput {:read 10 :write 10}
                       :gsindexes [{:name "users-by-username"
                                    :hash-keydef [:username :s]
                                    :projection :all
-                                   :throughput {:read 1 :write 1}}]
+                                   :throughput {:read 10 :write 10}}]
                       :block? true})
 
     (db/create-table conn
                      "groups"
                      [:id :s]
-                     {:throughput {:read 1 :write 1}
+                     {:throughput {:read 10 :write 10}
                       :gsindexes [{:name "groups-by-created-by-and-type"
                                    :hash-keydef [:created-by :s]
                                    :range-keydef [:group-type :s]
-                                   :throughput {:read 1 :write 1}
+                                   :throughput {:read 10 :write 10}
                                    :projection :all}
                                   {:name "groups-by-name"
                                    :hash-keydef [:name :s]
-                                   :throughput {:read 1 :write 1}
+                                   :throughput {:read 10 :write 10}
                                    :projection :all}]
                       :block? true})
 
@@ -42,21 +42,21 @@
                      "members-groups"
                      [:user-id :s]
                      {:range-keydef [:group-id :s]
-                      :throughput {:read 1 :write 1}
+                      :throughput {:read 10 :write 10}
                       :gsindexes [{:name "groups-members"
                                    :hash-keydef [:group-id :s]
                                    :range-keydef [:user-id :s]
-                                   :throughput {:read 1 :write 1}}]
+                                   :throughput {:read 10 :write 10}}]
                       :block? true})
 
     (db/create-table conn
                      "refresh-tokens"
                      [:id :s]
-                     {:throughput {:read 1 :write 1}
+                     {:throughput {:read 10 :write 10}
                       :gsindexes [{:name "refresh-tokens-by-user-id"
                                    :hash-keydef [:user-id :s]
                                    :range-keydef [:issued :n]
-                                   :throughput {:read 1 :write 1}}]
+                                   :throughput {:read 10 :write 10}}]
                       :block? true})))
 
 (defn down
