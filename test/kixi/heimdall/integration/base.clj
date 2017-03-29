@@ -27,7 +27,7 @@
         (recur (doall (filter (partial table-exists? endpoint) tables)))))))
 
 (defn tear-down-kinesis!
-  []
+  [{:keys [endpoint dynamodb-endpoint streams app profile]}]
   (log/info "Deleting dynamo tables ...")
   (clear-tables dynamodb-endpoint [(kinesis/event-worker-app-name app profile)
                                    (kinesis/command-worker-app-name app profile)])
