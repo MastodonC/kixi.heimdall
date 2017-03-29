@@ -26,6 +26,15 @@
       (when (not-empty tables)
         (recur (doall (filter (partial table-exists? endpoint) tables)))))))
 
+(defn teardown-kinesis!
+  [{:keys [endpoint dynamodb-endpoint streams app profile]}]
+  (log/info "Deleting dynamo tables ...")
+  (clear-tables dynamodb-endpoint [(kinesis/event-worker-app-name app profile)
+                                   (kinesis/command-worker-app-name app profile)])
+
+  (log/info "Deleting streams...")
+  (kinesis/delete-streams! endpoint (vals streams)))
+
 (defn cycle-system
   [all-tests]
   (kixi.comms/set-verbose-logging! true)
@@ -33,17 +42,12 @@
   (try
     (all-tests)
     (finally
-      (let [{:keys [endpoint dynamodb-endpoint streams app profile]}
+      (let [{:keys [endpoint dynamodb-endpoint streams app profile] :as args}
             (get-in (config/config (keyword (env :system-profile "test"))) [:communications :kinesis])
             _ (log/info app profile)]
         (repl/stop)
 
-        (log/info "Deleting dynamo tables ...")
-        (clear-tables dynamodb-endpoint [(kinesis/event-worker-app-name app profile)
-                                         (kinesis/command-worker-app-name app profile)])
-
-        (log/info "Deleting streams...")
-        (kinesis/delete-streams! endpoint (vals streams))
+        (teardown-kinesis! args)
 
         (log/info "Finished")))))
 
