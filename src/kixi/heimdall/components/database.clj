@@ -27,9 +27,9 @@
   [conf]
   (or (:db (:db-conf conf)) {}))
 
-(defn sns
+(defn alert-conf
   [conf]
-  (get-in conf [:db-conf :alerts :sns]))
+  (get-in conf [:db-conf :alerts]))
 
 (defprotocol Database
   (create-table [this table index opts])
@@ -51,7 +51,7 @@
                         opts)
       (when (alerts this)
         (try
-          (table-dynamo-alarms table-name (sns this))
+          (table-dynamo-alarms table-name (alert-conf this))
           (catch Exception e
             (log/error e "failed to create cloudwatch alarm with:"))))))
   (delete-table [this table]

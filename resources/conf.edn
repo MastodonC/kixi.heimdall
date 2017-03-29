@@ -4,23 +4,23 @@
        :dynamo-endpoint "dynamodb.eu-central-1.amazonaws.com"
        :kinesis-endpoint "kinesis.eu-central-1.amazonaws.com"}
  :dynamodb #profile {:development {:prefix "dev"
-                                   :db {:endpoint #or [#env DYNAMODB_ENDPOINT "http://localhost:8000"]}
-                                   :alerts {:sns ^:ref [:aws :sns]} }
+                                   :db {:endpoint #or [#env DYNAMODB_ENDPOINT "http://localhost:8000"]}}
                      :dev-docker {:prefix "dev"
-                                  :db {:endpoint #or [#env DYNAMODB_ENDPOINT "http://dynamodb:8000"]}
-                                  :alerts false}
+                                  :db {:endpoint #or [#env DYNAMODB_ENDPOINT "http://dynamodb:8000"]}}
                      :test {:prefix "test"
                             :db {:endpoint #or [#env DYNAMODB_ENDPOINT "http://localhost:8000"]}
                             :alerts false}
                      :jenkins {:prefix "jenkins"
-                               :db {:endpoint #or [#env DYNAMODB_ENDPOINT ^:ref [:aws :dynamo-endpoint]]}
-                               :alerts false}
+                               :db {:endpoint #or [#env DYNAMODB_ENDPOINT ^:ref [:aws :dynamo-endpoint]]}}
                      :staging {:prefix "staging"
                                :db {:endpoint #or [#env DYNAMODB_ENDPOINT ^:ref [:aws :dynamo-endpoint]]}
-                               :alerts {:sns ^:ref [:aws :sns]}}
+                               :alerts {:sns ^:ref [:aws :sns]
+                                        :region ^:ref [:aws :region]}}
                      :production {:prefix "prod"
-                                  :db {:endpoint #or [#env DYNAMODB_ENDPOINT ^:ref [:aws :dynamo-endpoint]]}}
-                     :alerts {:sns ^:ref [:aws :sns]}}
+                                  :db {:endpoint #or [#env DYNAMODB_ENDPOINT ^:ref [:aws :dynamo-endpoint]]}
+                                  :alerts {:sns ^:ref [:aws :sns]
+                                           :region ^:ref [:aws :region]}}
+                     }
  :jetty-server {:port #profile {:development 3002
                                 :test 3003
                                 :dev-docker 3002
