@@ -6,8 +6,8 @@
             [kixi.heimdall.util :as util]
             [kixi.heimdall.config :as config]
             [kixi.heimdall.application :as app]
-            [taoensso.faraday :as far]
-            [kixi.heimdall.cloudwatch :refer [table-dynamo-alarms]]            ))
+            [taoensso.faraday :as far]))
+
 
 (def app "heimdall")
 
@@ -19,17 +19,9 @@
   [conf]
   (:prefix (:db-conf conf)))
 
-(defn alerts
-  [conf]
-  (:alerts (:db-conf conf)))
-
 (defn db
   [conf]
   (or (:db (:db-conf conf)) {}))
-
-(defn alert-conf
-  [conf]
-  (get-in conf [:db-conf :alerts]))
 
 (defprotocol Database
   (create-table [this table index opts])
@@ -44,16 +36,10 @@
 (defrecord DynamoDB [db-conf profile]
   Database
   (create-table [this table index opts]
-    (let [table-name (decorated-table table (prefix this)) ]
-      (far/create-table (db this)
-                        table-name
-                        index
-                        opts)
-      (when (alerts this)
-        (try
-          (table-dynamo-alarms table-name (alert-conf this))
-          (catch Exception e
-            (log/error e "failed to create cloudwatch alarm with:"))))))
+    (far/create-table (db this)
+                      (decorated-table table (prefix this))
+                      index
+                      opts))
   (delete-table [this table]
     (far/delete-table (db this)
                       (decorated-table table (prefix this))))
