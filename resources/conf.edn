@@ -1,26 +1,16 @@
 {:service-name "kixi.heimdall"
- :aws {:region "eu-central-1"
-       :sns  "arn:aws:sns:eu-central-1:165664414043:witan-to-slack"
-       :dynamo-endpoint "dynamodb.eu-central-1.amazonaws.com"
-       :kinesis-endpoint "kinesis.eu-central-1.amazonaws.com"}
  :dynamodb #profile {:development {:prefix "dev"
                                    :db {:endpoint #or [#env DYNAMODB_ENDPOINT "http://localhost:8000"]}}
                      :dev-docker {:prefix "dev"
                                   :db {:endpoint #or [#env DYNAMODB_ENDPOINT "http://dynamodb:8000"]}}
                      :test {:prefix "test"
-                            :db {:endpoint #or [#env DYNAMODB_ENDPOINT "http://localhost:8000"]}
-                            :alerts false}
+                            :db {:endpoint #or [#env DYNAMODB_ENDPOINT "http://localhost:8000"]}}
                      :jenkins {:prefix "jenkins"
-                               :db {:endpoint #or [#env DYNAMODB_ENDPOINT ^:ref [:aws :dynamo-endpoint]]}}
+                               :db {:endpoint #or [#env DYNAMODB_ENDPOINT "http://dynamodb.eu-central-1.amazonaws.com"]}}
                      :staging {:prefix "staging"
-                               :db {:endpoint #or [#env DYNAMODB_ENDPOINT ^:ref [:aws :dynamo-endpoint]]}
-                               :alerts {:sns ^:ref [:aws :sns]
-                                        :region ^:ref [:aws :region]}}
+                               :db {:endpoint #or [#env DYNAMODB_ENDPOINT "http://dynamodb.eu-central-1.amazonaws.com"]}}
                      :production {:prefix "prod"
-                                  :db {:endpoint #or [#env DYNAMODB_ENDPOINT ^:ref [:aws :dynamo-endpoint]]}
-                                  :alerts {:sns ^:ref [:aws :sns]
-                                           :region ^:ref [:aws :region]}}
-                     }
+                                  :db {:endpoint #or [#env DYNAMODB_ENDPOINT "http://dynamodb.eu-central-1.amazonaws.com"]}}}
  :jetty-server {:port #profile {:development 3002
                                 :test 3003
                                 :dev-docker 3002
@@ -29,50 +19,48 @@
                                 :production 3000}}
  :communications {:kinesis #profile {:development {:profile "dev"
                                                    :app ^:ref [:service-name]
-                                                   :endpoint ^:ref [:aws :kinesis-endpoint]
+                                                   :endpoint "kinesis.eu-central-1.amazonaws.com"
                                                    :dynamodb-endpoint "http://localhost:8000"
-                                                   :region-name ^:ref [:aws :region]
+                                                   :region-name "eu-central-1"
                                                    :metric-level :NONE
                                                    :streams {:command "heimdall-dev-command"
                                                              :event "heimdall-dev-event"}}
                                      :dev-docker {:profile "dev"
                                                   :app ^:ref [:service-name]
-                                                  :endpoint ^:ref [:aws :kinesis-endpoint]
+                                                  :endpoint "kinesis.eu-central-1.amazonaws.com"
                                                   :dynamodb-endpoint "http://dynamodb:8000"
-                                                  :region-name ^:ref [:aws :region]
+                                                  :region-name "eu-central-1"
                                                   :metric-level :NONE
                                                   :streams {:command "witan-dev-command"
                                                             :event "witan-dev-event"}}
                                      :test {:profile "test"
                                             :app ^:ref [:service-name]
-                                            :endpoint ^:ref [:aws :kinesis-endpoint]
+                                            :endpoint "kinesis.eu-central-1.amazonaws.com"
                                             :dynamodb-endpoint "http://localhost:8000"
-                                            :region-name ^:ref [:aws :region]
+                                            :region-name "eu-central-1"
                                             :metric-level :NONE
                                             :streams {:command "heimdall-test-command"
                                                       :event "heimdall-test-event"}}
                                      :jenkins {:profile "jenkins"
                                                :app ^:ref [:service-name]
-                                               :endpoint ^:ref [:aws :kinesis-endpoint]
-                                               :dynamodb-endpoint ^:ref [:aws :dynamodb-endpoint]
-                                               :region-name ^:ref [:aws :region]
+                                               :endpoint "kinesis.eu-central-1.amazonaws.com"
+                                               :dynamodb-endpoint "dynamodb.eu-central-1.amazonaws.com"
+                                               :region-name "eu-central-1"
                                                :metric-level :NONE
                                                :streams {:command "heimdall-test-command"
                                                          :event "heimdall-test-event"}}
                                      :staging {:profile "staging"
                                                :app ^:ref [:service-name]
-                                               :endpoint ^:ref [:aws :kinesis-endpoint]
-                                               :dynamodb-endpoint ^:ref [:aws :dynamodb-endpoint]
-                                               :region-name ^:ref [:aws :region]
-                                               :idle-time-between-reads-in-millis 200
+                                               :endpoint "kinesis.eu-central-1.amazonaws.com"
+                                               :dynamodb-endpoint "dynamodb.eu-central-1.amazonaws.com"
+                                               :region-name "eu-central-1"
                                                :streams {:command "witan-staging-command"
                                                          :event "witan-staging-event"}}
                                      :production {:profile "production"
                                                   :app ^:ref [:service-name]
-                                                  :endpoint ^:ref [:aws :kinesis-endpoint]
-                                                  :dynamodb-endpoint ^:ref [:aws :dynamodb-endpoint]
-                                                  :region-name ^:ref [:aws :region]
-                                                  :idle-time-between-reads-in-millis 200
+                                                  :endpoint "kinesis.eu-central-1.amazonaws.com"
+                                                  :dynamodb-endpoint "dynamodb.eu-central-1.amazonaws.com"
+                                                  :region-name "eu-central-1"
                                                   :streams {:command "witan-prod-command"
                                                             :event "witan-prod-event"}}}}
  :auth-conf {:privkey #profile {:development "auth_privkey.pem"
