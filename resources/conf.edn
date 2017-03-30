@@ -33,46 +33,40 @@
                                                    :dynamodb-endpoint "http://localhost:8000"
                                                    :region-name ^:ref [:aws :region]
                                                    :metric-level :NONE
-                                                   :streams {:command "heimdall-dev-command"
-                                                             :event "heimdall-dev-event"}}
+                                                   :streams {:event "heimdall-dev-event"}}
                                      :dev-docker {:profile "dev"
                                                   :app ^:ref [:service-name]
                                                   :endpoint ^:ref [:aws :kinesis-endpoint]
                                                   :dynamodb-endpoint "http://dynamodb:8000"
                                                   :region-name ^:ref [:aws :region]
                                                   :metric-level :NONE
-                                                  :streams {:command "witan-dev-command"
-                                                            :event "witan-dev-event"}}
+                                                  :streams {:event "witan-dev-event"}}
                                      :test {:profile "test"
                                             :app ^:ref [:service-name]
                                             :endpoint ^:ref [:aws :kinesis-endpoint]
                                             :dynamodb-endpoint "http://localhost:8000"
                                             :region-name ^:ref [:aws :region]
                                             :metric-level :NONE
-                                            :streams {:command "heimdall-test-command"
-                                                      :event "heimdall-test-event"}}
+                                            :streams {:event "heimdall-test-event"}}
                                      :jenkins {:profile "jenkins"
                                                :app ^:ref [:service-name]
                                                :endpoint ^:ref [:aws :kinesis-endpoint]
                                                :dynamodb-endpoint ^:ref [:aws :dynamodb-endpoint]
                                                :region-name ^:ref [:aws :region]
                                                :metric-level :NONE
-                                               :streams {:command "heimdall-test-command"
-                                                         :event "heimdall-test-event"}}
+                                               :streams {:event "heimdall-test-event"}}
                                      :staging {:profile "staging"
                                                :app ^:ref [:service-name]
                                                :endpoint ^:ref [:aws :kinesis-endpoint]
                                                :dynamodb-endpoint ^:ref [:aws :dynamodb-endpoint]
                                                :region-name ^:ref [:aws :region]
-                                               :streams {:command "witan-staging-command"
-                                                         :event "witan-staging-event"}}
+                                               :streams {:event "witan-staging-event"}}
                                      :production {:profile "production"
                                                   :app ^:ref [:service-name]
                                                   :endpoint ^:ref [:aws :kinesis-endpoint]
                                                   :dynamodb-endpoint ^:ref [:aws :dynamodb-endpoint]
                                                   :region-name ^:ref [:aws :region]
-                                                  :streams {:command "witan-prod-command"
-                                                            :event "witan-prod-event"}}}}
+                                                  :streams {:event "witan-prod-event"}}}}
  :auth-conf {:privkey #profile {:development "auth_privkey.pem"
                                 :dev-docker "/root/prod_privkey.pem"
                                 :test "test_privkey.pem"
