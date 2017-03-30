@@ -137,7 +137,7 @@
   (GET "/groups" [] get-groups))
 
 (defroutes public-routes
-  (GET "/" [] "Hello World")
+  (GET "/healthcheck" [] "Hello World")
   (POST "/user" [] new-user)
   (POST "/create-auth-token" [] auth-token)
   (POST "/refresh-auth-token" [] refresh-auth-token)

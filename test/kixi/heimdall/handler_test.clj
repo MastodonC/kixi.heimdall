@@ -78,7 +78,7 @@
 
 (deftest unsecured-routes
   (testing "main route"
-    (let [response (comms-app app (heimdall-request (mock/request :get "/")))]
+    (let [response (comms-app app (heimdall-request (mock/request :get "/healthcheck")))]
       (is (= (:status response) 200))
       (is (= (:body response) "Hello World"))))
 
