@@ -9,11 +9,11 @@
             [taoensso.faraday :as far]
             [kixi.heimdall.cloudwatch :refer [table-dynamo-alarms]]            ))
 
-(def app "heimdall")
+(def app "kixi.heimdall")
 
 (defn decorated-table
   [table prefix]
-  (keyword (clojure.string/join "-" [app prefix table])))
+  (keyword (clojure.string/join "-" [prefix app table])))
 
 (defn prefix
   [conf]
