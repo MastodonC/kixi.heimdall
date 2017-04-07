@@ -10,7 +10,7 @@
                      :test {:prefix "test"
                             :db {:endpoint #or [#env DYNAMODB_ENDPOINT "http://localhost:8000"]}
                             :alerts false}
-                     :jenkins {:prefix "jenkins"
+                     :jenkins {:prefix "staging-jenkins"
                                :db {:endpoint #or [#env DYNAMODB_ENDPOINT ^:ref [:aws :dynamodb-endpoint]]}}
                      :staging {:prefix "staging"
                                :db {:endpoint #or [#env DYNAMODB_ENDPOINT ^:ref [:aws :dynamodb-endpoint]]}
