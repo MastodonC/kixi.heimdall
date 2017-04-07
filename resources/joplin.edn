@@ -12,7 +12,7 @@
                            :migration-table "heimdall-tst-migrations"}
                 :db-jenkins {:type :dynamo
                              :endpoint "http://dynamodb.eu-central-1.amazonaws.com"
-                             :migration-table "jenkins-kixi.heimdall-migrations"}
+                             :migration-table "staging-jenkins-kixi.heimdall-migrations"}
                 :db-staging {:type :dynamo
                              :endpoint "http://dynamodb.eu-central-1.amazonaws.com"
                              :migration-table "staging-kixi.heimdall-migrations"}
