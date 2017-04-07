@@ -54,7 +54,7 @@
                                                :dynamodb-endpoint ^:ref [:aws :dynamodb-endpoint]
                                                :region-name ^:ref [:aws :region]
                                                :metric-level :NONE
-                                               :streams {:event "heimdall-test-event"}}
+                                               :streams {:event "staging-jenkins-heimdall-event"}}
                                      :staging {:profile "staging"
                                                :app ^:ref [:service-name]
                                                :endpoint ^:ref [:aws :kinesis-endpoint]
