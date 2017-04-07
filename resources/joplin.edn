@@ -12,13 +12,13 @@
                            :migration-table "heimdall-tst-migrations"}
                 :db-jenkins {:type :dynamo
                              :endpoint "http://dynamodb.eu-central-1.amazonaws.com"
-                             :migration-table "heimdall-jenkins-migrations"}
+                             :migration-table "staging-jenkins-kixi.heimdall-migrations"}
                 :db-staging {:type :dynamo
                              :endpoint "http://dynamodb.eu-central-1.amazonaws.com"
-                             :migration-table "heimdall-staging-migrations"}
+                             :migration-table "staging-kixi.heimdall-migrations"}
                 :db-prod {:type :dynamo
                           :endpoint "http://dynamodb.eu-central-1.amazonaws.com"
-                          :migration-table "heimdall-prod-migrations"}}
+                          :migration-table "prod-kixi.heimdall-migrations"}}
  :environments {:development [{:db :db-dev, :migrator :db-mig, :seed :db-seed-dev}]
                 :dev-docker [{:db :db-dev-docker, :migrator :db-mig, :seed :db-seed-dev}]
                 :jenkins [{:db :db-jenkins, :migrator :db-mig, :seed :db-seed-staging}]
