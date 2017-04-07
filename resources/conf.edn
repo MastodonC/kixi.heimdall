@@ -27,6 +27,7 @@
                                 :jenkins 3003
                                 :staging 3000
                                 :production 3000}}
+
  :communications {:kinesis #profile {:development {:profile "dev"
                                                    :app ^:ref [:service-name]
                                                    :endpoint ^:ref [:aws :kinesis-endpoint]
@@ -60,13 +61,13 @@
                                                :endpoint ^:ref [:aws :kinesis-endpoint]
                                                :dynamodb-endpoint ^:ref [:aws :dynamodb-endpoint]
                                                :region-name ^:ref [:aws :region]
-                                               :streams {:event "witan-staging-event"}}
+                                               :streams {:event "staging-witan-event"}}
                                      :production {:profile "production"
                                                   :app ^:ref [:service-name]
                                                   :endpoint ^:ref [:aws :kinesis-endpoint]
                                                   :dynamodb-endpoint ^:ref [:aws :dynamodb-endpoint]
                                                   :region-name ^:ref [:aws :region]
-                                                  :streams {:event "witan-prod-event"}}}}
+                                                  :streams {:event "prod-witan-event"}}}}
  :auth-conf {:privkey #profile {:development "auth_privkey.pem"
                                 :dev-docker "/root/prod_privkey.pem"
                                 :test "test_privkey.pem"
