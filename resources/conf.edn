@@ -5,8 +5,8 @@
                       :kinesis-endpoint "kinesis.eu-central-1.amazonaws.com"}
        :eu-west-1 {:region "eu-west-1"
                    :sns "arn:aws:sns:eu-west-1:720433613167:prod-witan-to-slack"
-                   :dynamodb-endpoint "dynamodb.eu-central-1.amazonaws.com"
-                   :kinesis-endpoint "kinesis.eu-central-1.amazonaws.com"}}
+                   :dynamodb-endpoint "dynamodb.eu-west-1.amazonaws.com"
+                   :kinesis-endpoint "kinesis.eu-west-1.amazonaws.com"}}
  :dynamodb #profile {:development {:prefix "dev"
                                    :db {:endpoint #or [#env DYNAMODB_ENDPOINT "http://localhost:8000"]}}
                      :dev-docker {:prefix "dev"
