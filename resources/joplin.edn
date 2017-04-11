@@ -22,6 +22,6 @@
  :environments {:development [{:db :db-dev, :migrator :db-mig, :seed :db-seed-dev}]
                 :dev-docker [{:db :db-dev-docker, :migrator :db-mig, :seed :db-seed-dev}]
                 :jenkins [{:db :db-jenkins, :migrator :db-mig, :seed :db-seed-staging}]
-                :production [{:db :db-prod, :migrator :db-mig}]
+                :prod [{:db :db-prod, :migrator :db-mig}]
                 :staging [{:db :db-staging, :migrator :db-mig, :seed :db-seed-staging}]
                 :test [{:db :db-test, :migrator :db-mig, :seed :db-seed-dev}]}}
