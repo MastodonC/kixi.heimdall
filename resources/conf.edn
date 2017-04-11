@@ -16,17 +16,17 @@
                                :db {:endpoint #or [#env DYNAMODB_ENDPOINT ^:ref [:aws :dynamodb-endpoint]]}
                                :alerts {:sns ^:ref [:aws :sns]
                                         :region ^:ref [:aws :region]}}
-                     :production {:prefix "prod"
-                                  :db {:endpoint #or [#env DYNAMODB_ENDPOINT ^:ref [:aws :dynamodb-endpoint]]}
-                                  :alerts {:sns ^:ref [:aws :sns]
-                                           :region ^:ref [:aws :region]}}
+                     :prod {:prefix "prod"
+                            :db {:endpoint #or [#env DYNAMODB_ENDPOINT ^:ref [:aws :dynamodb-endpoint]]}
+                            :alerts {:sns ^:ref [:aws :sns]
+                                     :region ^:ref [:aws :region]}}
                      }
  :jetty-server {:port #profile {:development 3002
                                 :test 3003
                                 :dev-docker 3002
                                 :staging-jenkins 3003
                                 :staging 3000
-                                :production 3000}}
+                                :prod 3000}}
 
  :communications {:kinesis #profile {:development {:profile "dev"
                                                    :app ^:ref [:service-name]
@@ -62,47 +62,47 @@
                                                :dynamodb-endpoint ^:ref [:aws :dynamodb-endpoint]
                                                :region-name ^:ref [:aws :region]
                                                :streams {:event "staging-witan-event"}}
-                                     :production {:profile "production"
-                                                  :app ^:ref [:service-name]
-                                                  :endpoint ^:ref [:aws :kinesis-endpoint]
-                                                  :dynamodb-endpoint ^:ref [:aws :dynamodb-endpoint]
-                                                  :region-name ^:ref [:aws :region]
-                                                  :streams {:event "prod-witan-event"}}}}
+                                     :prod {:profile "prod"
+                                            :app ^:ref [:service-name]
+                                            :endpoint ^:ref [:aws :kinesis-endpoint]
+                                            :dynamodb-endpoint ^:ref [:aws :dynamodb-endpoint]
+                                            :region-name ^:ref [:aws :region]
+                                            :streams {:event "prod-witan-event"}}}}
  :auth-conf {:privkey #profile {:development "auth_privkey.pem"
                                 :dev-docker "/root/prod_privkey.pem"
                                 :test "test_privkey.pem"
                                 :staging-jenkins "test_privkey.pem"
                                 :staging "/root/prod_privkey.pem"
-                                :production "/root/prod_privkey.pem"}
+                                :prod "/root/prod_privkey.pem"}
              :pubkey #profile {:development "auth_pubkey.pem"
                                :dev-docker "/root/prod_pubkey.pem"
                                :test "test_pubkey.pem"
                                :staging-jenkins "test_pubkey.pem"
                                :staging "/root/prod_pubkey.pem"
-                               :production "/root/prod_pubkey.pem"}
+                               :prod "/root/prod_pubkey.pem"}
              :secrets #profile {:development #include #join [#env HOME "/.secrets.edn"]
                                 :dev-docker #include "/root/.secrets.edn"
                                 :staging #include "/root/.secrets.edn"
-                                :production #include "/root/.secrets.edn"}
+                                :prod #include "/root/.secrets.edn"}
              :passphrase #profile {:development ^:ref [:auth-conf :secrets :dev-passphrase]
                                    :dev-docker ^:ref [:auth-conf :secrets :test-passphrase]
                                    :test "test"
                                    :staging-jenkins "test"
                                    :staging ^:ref [:auth-conf :secrets :prod-passphrase]
-                                   :production ^:ref [:auth-conf :secrets :prod-passphrase]}}
+                                   :prod ^:ref [:auth-conf :secrets :prod-passphrase]}}
 
- :metrics {:json-reporter {:seconds #profile {:production 60
+ :metrics {:json-reporter {:seconds #profile {:prod 60
                                               :staging 60
                                               :development 600
                                               :dev-docker 600
                                               :test 600
                                               :staging-jenkins 30}}}
- :logging {:level #profile {:staging  :warn
-                            :production  :warn
-                            :staging-jenkins     :info
-                            :test        :info
+ :logging {:level #profile {:staging :warn
+                            :prod :warn
+                            :staging-jenkins :info
+                            :test :info
                             :development :info
-                            :dev-docker  :info} ; e/o #{:trace :debug :info :warn :error :fatal :report}
+                            :dev-docker :info} ; e/o #{:trace :debug :info :warn :error :fatal :report}
            ;; Control log filtering by namespaces/patterns. Useful for turning off
            ;; logging in noisy libraries, etc.:
            ;;:ns-whitelist  ["whiner.*"] #_["my-app.foo-ns"]
