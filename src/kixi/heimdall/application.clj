@@ -12,4 +12,4 @@
 ;;
 ;; See https://github.com/stuartsierra/component
 (def system (atom nil))
-(def profile (atom :production))
+(def profile (atom :staging))
