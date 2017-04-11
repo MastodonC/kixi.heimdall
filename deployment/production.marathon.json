@@ -2,7 +2,7 @@
   "container": {
     "type": "DOCKER",
     "docker": {
-      "image": "mastodonc/kixi.heimdall:@@TAG@@",
+      "image": "OVERRIDDEN_BY_JENKIN",
       "parameters": [
          {"key": "env", "value": "ENVIRONMENT=prod"},
          {"key": "env", "value": "JAVA_OPTS=-Xmx128m"},
@@ -27,7 +27,7 @@
       ]
     }
   },
-  "id": "heimdall",
+  "id": "OVERRIDDEN_BY_JENKIN",
   "cpus": 0.2,
   "mem": 512,
   "instances": 2,
