@@ -1,0 +1,44 @@
+{
+  "container": {
+    "type": "DOCKER",
+    "docker": {
+      "image": "mastodonc/kixi.heimdall:@@TAG@@",
+      "parameters": [
+         {"key": "env", "value": "ENVIRONMENT=prod"},
+         {"key": "env", "value": "JAVA_OPTS=-Xmx128m"},
+         {"key": "env", "value": "PROFILE=prod"},
+         {"key": "env", "value": "SECRETS_BUCKET=prod-witan-kixi-heimdall-vault"},
+         {"key": "env", "value": "AWS_REGION=eu-west-1"},
+         {"key": "label", "value": "cluster=prod"},
+         {"key": "label", "value": "application=heimdall"}
+      ],
+      "network": "BRIDGE",
+      "portMappings": [
+          {
+              "containerPort": 3000,
+              "hostPort": 10010,
+              "protocol": "tcp"
+          },
+          {
+              "containerPort": 5001,
+              "hostPort": 10011,
+              "protocol": "tcp"
+          }
+      ]
+    }
+  },
+  "id": "heimdall",
+  "cpus": 0.2,
+  "mem": 512,
+  "instances": 2,
+  "constraints": [["hostname", "UNIQUE"]],
+  "healthChecks": [{
+        "protocol": "TCP",
+        "path": "/healthcheck",
+        "gracePeriodSeconds": 600,
+        "intervalSeconds": 30,
+        "portIndex": 0,
+        "timeoutSeconds": 10,
+        "maxConsecutiveFailures": 3
+  }]
+}
