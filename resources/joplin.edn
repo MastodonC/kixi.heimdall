@@ -1,6 +1,7 @@
 {:migrators    {:db-mig "joplin/migrators/dynamodb"}
  :seeds        {:db-seed-dev "seeds.dynamodb/run-dev"
-                :db-seed-staging "seeds.dynamodb/run-staging"}
+                :db-seed-staging "seeds.dynamodb/run-staging"
+                :db-seed-staging "seeds.dynamodb/run-prod"}
  :databases    {:db-dev  {:type :dynamo
                           :endpoint "http://localhost:8000"
                           :migration-table "heimdall-dev-migrations"}
@@ -22,6 +23,6 @@
  :environments {:development [{:db :db-dev, :migrator :db-mig, :seed :db-seed-dev}]
                 :dev-docker [{:db :db-dev-docker, :migrator :db-mig, :seed :db-seed-dev}]
                 :jenkins [{:db :db-jenkins, :migrator :db-mig, :seed :db-seed-staging}]
-                :prod [{:db :db-prod, :migrator :db-mig}]
+                :prod [{:db :db-prod, :migrator :db-mig, :seed :db-seed-prod}]
                 :staging [{:db :db-staging, :migrator :db-mig, :seed :db-seed-staging}]
                 :test [{:db :db-test, :migrator :db-mig, :seed :db-seed-dev}]}}

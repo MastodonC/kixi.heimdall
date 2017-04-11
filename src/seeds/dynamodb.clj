@@ -51,6 +51,12 @@
    "Boys" [:antony :tom :bruce :seb :chris :jase]
    "Girls" [:elise :sam :sunny :eleonore :fran :lora]})
 
+(def prod-users
+  {:test "Test User"})
+
+(def prod-groups
+  {"Test Team" [:test]})
+
 (defn create-user!
   [db [k user-name]]
   (let [email (str (name k)"@mastodonc.com")
@@ -83,3 +89,14 @@
         ;; Add test groups
         groups (zipmap (keys staging-groups)
                        (map (partial create-group! dc users) staging-groups))]))
+
+
+(defn run-prod [target & args]
+  (let [dc (db/new-session (get-db-config) @app/profile)
+        ;; Add test users
+        users (zipmap (keys prod-users)
+                      (map (partial create-user! dc) prod-users))
+
+        ;; Add test groups
+        groups (zipmap (keys prod-groups)
+                       (map (partial create-group! dc users) prod-groups))]))
