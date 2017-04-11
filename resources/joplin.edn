@@ -1,7 +1,7 @@
 {:migrators    {:db-mig "joplin/migrators/dynamodb"}
  :seeds        {:db-seed-dev "seeds.dynamodb/run-dev"
                 :db-seed-staging "seeds.dynamodb/run-staging"
-                :db-seed-staging "seeds.dynamodb/run-prod"}
+                :db-seed-prod "seeds.dynamodb/run-prod"}
  :databases    {:db-dev  {:type :dynamo
                           :endpoint "http://localhost:8000"
                           :migration-table "heimdall-dev-migrations"}
