@@ -1,8 +1,12 @@
 {:service-name "kixi.heimdall"
- :aws {:region "eu-central-1"
-       :sns  "arn:aws:sns:eu-central-1:165664414043:witan-to-slack"
-       :dynamodb-endpoint "dynamodb.eu-central-1.amazonaws.com"
-       :kinesis-endpoint "kinesis.eu-central-1.amazonaws.com"}
+ :aws {:eu-central-1 {:region "eu-central-1"
+                      :sns  "arn:aws:sns:eu-central-1:165664414043:witan-to-slack"
+                      :dynamodb-endpoint "dynamodb.eu-central-1.amazonaws.com"
+                      :kinesis-endpoint "kinesis.eu-central-1.amazonaws.com"}
+       :eu-west-1 {:region "eu-west-1"
+                   :sns  "arn:aws:sns:eu-central-1:165664414043:witan-to-slack"
+                   :dynamodb-endpoint "dynamodb.eu-central-1.amazonaws.com"
+                   :kinesis-endpoint "kinesis.eu-central-1.amazonaws.com"}}
  :dynamodb #profile {:development {:prefix "dev"
                                    :db {:endpoint #or [#env DYNAMODB_ENDPOINT "http://localhost:8000"]}}
                      :dev-docker {:prefix "dev"
@@ -11,75 +15,69 @@
                             :db {:endpoint #or [#env DYNAMODB_ENDPOINT "http://localhost:8000"]}
                             :alerts false}
                      :staging-jenkins {:prefix "staging-jenkins"
-                                       :db {:endpoint #or [#env DYNAMODB_ENDPOINT ^:ref [:aws :dynamodb-endpoint]]}}
+                                       :db {:endpoint #or [#env DYNAMODB_ENDPOINT ^:ref [:aws :eu-central-1 :dynamodb-endpoint]]}}
                      :staging {:prefix "staging"
-                               :db {:endpoint #or [#env DYNAMODB_ENDPOINT ^:ref [:aws :dynamodb-endpoint]]}
-                               :alerts {:sns ^:ref [:aws :sns]
-                                        :region ^:ref [:aws :region]}}
+                               :db {:endpoint #or [#env DYNAMODB_ENDPOINT ^:ref [:aws :eu-central-1 :dynamodb-endpoint]]}
+                               :alerts {:sns ^:ref [:aws :eu-central-1 :sns]
+                                        :region ^:ref [:aws :eu-central-1 :region]}}
                      :prod {:prefix "prod"
-                            :db {:endpoint #or [#env DYNAMODB_ENDPOINT ^:ref [:aws :dynamodb-endpoint]]}
-                            :alerts {:sns ^:ref [:aws :sns]
-                                     :region ^:ref [:aws :region]}}
+                            :db {:endpoint #or [#env DYNAMODB_ENDPOINT ^:ref [:aws :eu-west-1 :dynamodb-endpoint]]}
+                            :alerts {:sns ^:ref [:aws :eu-west-1 :sns]
+                                     :region ^:ref [:aws :eu-west-1 :region]}}
                      }
- :jetty-server {:port #profile {:development 3002
-                                :test 3003
-                                :dev-docker 3002
+ :jetty-server {:port #profile {:default 3002
                                 :staging-jenkins 3003
                                 :staging 3000
                                 :prod 3000}}
 
  :communications {:kinesis #profile {:development {:profile "dev"
                                                    :app ^:ref [:service-name]
-                                                   :endpoint ^:ref [:aws :kinesis-endpoint]
+                                                   :endpoint ^:ref [:aws :eu-central-1 :kinesis-endpoint]
                                                    :dynamodb-endpoint "http://localhost:8000"
-                                                   :region-name ^:ref [:aws :region]
+                                                   :region-name ^:ref [:aws :eu-central-1 :region]
                                                    :metric-level :NONE
                                                    :streams {:event "heimdall-dev-event"}}
                                      :dev-docker {:profile "dev"
                                                   :app ^:ref [:service-name]
-                                                  :endpoint ^:ref [:aws :kinesis-endpoint]
+                                                  :endpoint ^:ref [:aws :eu-central-1 :kinesis-endpoint]
                                                   :dynamodb-endpoint "http://dynamodb:8000"
-                                                  :region-name ^:ref [:aws :region]
+                                                  :region-name ^:ref [:aws :eu-central-1 :region]
                                                   :metric-level :NONE
                                                   :streams {:event "witan-dev-event"}}
                                      :test {:profile "test"
                                             :app ^:ref [:service-name]
-                                            :endpoint ^:ref [:aws :kinesis-endpoint]
+                                            :endpoint ^:ref [:aws :eu-central-1 :kinesis-endpoint]
                                             :dynamodb-endpoint "http://localhost:8000"
-                                            :region-name ^:ref [:aws :region]
+                                            :region-name ^:ref [:aws :eu-central-1 :region]
                                             :metric-level :NONE
                                             :streams {:event "heimdall-test-event"}}
                                      :staging-jenkins {:profile "staging-jenkins"
                                                        :app ^:ref [:service-name]
-                                                       :endpoint ^:ref [:aws :kinesis-endpoint]
-                                                       :dynamodb-endpoint ^:ref [:aws :dynamodb-endpoint]
-                                                       :region-name ^:ref [:aws :region]
+                                                       :endpoint ^:ref [:aws :eu-central-1 :kinesis-endpoint]
+                                                       :dynamodb-endpoint ^:ref [:aws :eu-central-1 :dynamodb-endpoint]
+                                                       :region-name ^:ref [:aws :eu-central-1 :region]
                                                        :metric-level :NONE
                                                        :streams {:event "staging-jenkins-heimdall-event"}}
                                      :staging {:profile "staging"
                                                :app ^:ref [:service-name]
-                                               :endpoint ^:ref [:aws :kinesis-endpoint]
-                                               :dynamodb-endpoint ^:ref [:aws :dynamodb-endpoint]
-                                               :region-name ^:ref [:aws :region]
+                                               :endpoint ^:ref [:aws :eu-central-1 :kinesis-endpoint]
+                                               :dynamodb-endpoint ^:ref [:aws :eu-central-1 :dynamodb-endpoint]
+                                               :region-name ^:ref [:aws :eu-central-1 :region]
                                                :streams {:event "staging-witan-event"}}
                                      :prod {:profile "prod"
                                             :app ^:ref [:service-name]
-                                            :endpoint ^:ref [:aws :kinesis-endpoint]
-                                            :dynamodb-endpoint ^:ref [:aws :dynamodb-endpoint]
-                                            :region-name ^:ref [:aws :region]
+                                            :endpoint ^:ref [:aws :eu-west-1 :kinesis-endpoint]
+                                            :dynamodb-endpoint ^:ref [:aws :eu-west-1 :dynamodb-endpoint]
+                                            :region-name ^:ref [:aws :eu-west-1:region]
                                             :streams {:event "prod-witan-event"}}}}
- :auth-conf {:privkey #profile {:development "auth_privkey.pem"
-                                :dev-docker "/root/prod_privkey.pem"
+ :auth-conf {:privkey #profile {:default "/root/prod_privkey.pem"
+                                :development "auth_privkey.pem"
                                 :test "test_privkey.pem"
-                                :staging-jenkins "test_privkey.pem"
-                                :staging "/root/prod_privkey.pem"
-                                :prod "/root/prod_privkey.pem"}
-             :pubkey #profile {:development "auth_pubkey.pem"
-                               :dev-docker "/root/prod_pubkey.pem"
+                                :staging-jenkins "test_privkey.pem"}
+             :pubkey #profile {:default "/root/prod_pubkey.pem"
+                               :development "auth_pubkey.pem"
                                :test "test_pubkey.pem"
-                               :staging-jenkins "test_pubkey.pem"
-                               :staging "/root/prod_pubkey.pem"
-                               :prod "/root/prod_pubkey.pem"}
+                               :staging-jenkins "test_pubkey.pem"}
              :secrets #profile {:development #include #join [#env HOME "/.secrets.edn"]
                                 :dev-docker #include "/root/.secrets.edn"
                                 :staging #include "/root/.secrets.edn"
@@ -91,18 +89,12 @@
                                    :staging ^:ref [:auth-conf :secrets :prod-passphrase]
                                    :prod ^:ref [:auth-conf :secrets :prod-passphrase]}}
 
- :metrics {:json-reporter {:seconds #profile {:prod 60
-                                              :staging 60
-                                              :development 600
-                                              :dev-docker 600
-                                              :test 600
-                                              :staging-jenkins 30}}}
- :logging {:level #profile {:staging :warn
-                            :prod :warn
-                            :staging-jenkins :info
-                            :test :info
-                            :development :info
-                            :dev-docker :info} ; e/o #{:trace :debug :info :warn :error :fatal :report}
+ :metrics {:json-reporter {:seconds #profile {:default 600
+                                              :prod 60
+                                              :staging 60}}}
+ :logging {:level #profile {:default :info
+                            :staging :warn
+                            :prod :warn} ; e/o #{:trace :debug :info :warn :error :fatal :report}
            ;; Control log filtering by namespaces/patterns. Useful for turning off
            ;; logging in noisy libraries, etc.:
            ;;:ns-whitelist  ["whiner.*"] #_["my-app.foo-ns"]
