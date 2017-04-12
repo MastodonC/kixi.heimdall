@@ -27,14 +27,14 @@
       ]
     }
   },
-  "id": "heimdall",
+  "id": "kixi.heimdall",
   "cpus": @@CPUS@@,
   "mem": @@MEM@@,
   "instances": @@INSTANCES@@,
   "constraints": [["hostname", "UNIQUE"]],
   "healthChecks": [{
         "protocol": "TCP",
-        "path": "/healthcheck",        
+        "path": "/healthcheck",
         "gracePeriodSeconds": 600,
         "intervalSeconds": 30,
         "portIndex": 0,
