@@ -15,7 +15,7 @@
   (let [conn (db/new-session (get-db-config) @app/profile)]
     (db/create-table conn
                      "invites"
-                     [:code :s]
+                     [:username :s]
                      {:throughput {:read 1 :write 1}
                       :block? true})))
 

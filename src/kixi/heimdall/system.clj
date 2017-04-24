@@ -1,6 +1,7 @@
 (ns kixi.heimdall.system
   (:require [com.stuartsierra.component :as component]
             [environ.core :refer [env]]
+            [kixi.comms :as comms]
             [kixi.comms.components.kinesis :as kinesis]
             [kixi.heimdall
              [application :as app]
@@ -21,6 +22,9 @@
                       :appenders (if (#{:production :staging} profile)
                                    {:direct-json (kixi-log/timbre-appender-logstash)}
                                    {:println (log/println-appender)})})
+    (when (get-in config [:logging :kixi-comms-verbose-logging])
+      (log/info "Switching on Kixi Comms verbose logging...")
+      (comms/set-verbose-logging! true))
     (log/info "System with" profile)
     (-> (component/system-map
          :metrics (metrics/map->Metrics (:metrics config))

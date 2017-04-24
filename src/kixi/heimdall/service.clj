@@ -10,6 +10,7 @@
             [kixi.heimdall.user :as user]
             [kixi.heimdall.group :as group]
             [kixi.heimdall.member :as member]
+            [kixi.heimdall.invites :as invites]
             [kixi.heimdall.refresh-token :as refresh-token]
             [kixi.heimdall.util :as util]
             [clojure.spec :as spec]
@@ -247,3 +248,16 @@
                                       :created-by :kixi.group/created-by
                                       :created :kixi.group/created}))
         (vec-if-not group-ids)))
+
+(defn invite-user!
+  "Use this to invite a new user to the system."
+  [db communications user-email]
+  (let [{:keys [event/key
+                event/version
+                event/payload]} (invites/create-invite-event user-email)]
+    (comms/send-event! communications key version payload)))
+
+(defn save-invite
+  "Persist details of an invite"
+  [db {:keys [invite-code username]}]
+  (invites/save! db invite-code username))
