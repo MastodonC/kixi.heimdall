@@ -34,3 +34,15 @@
                {:username username
                 :invite-code invite-code}
                {:return :none}))
+
+(defn consume!
+  [db invite-code username]
+  (let [item (db/get-item db
+                          invites-table
+                          {:username username}
+                          {:consistent? true})]
+    (when (= invite-code (:invite-code item))
+      (nil? (db/delete-item db
+                            invites-table
+                            {:username username}
+                            {:consistent? true})))))
