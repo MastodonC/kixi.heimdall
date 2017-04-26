@@ -18,7 +18,7 @@
                              :endpoint "http://dynamodb.eu-central-1.amazonaws.com"
                              :migration-table "staging-kixi.heimdall-migrations"}
                 :db-prod {:type :dynamo
-                          :endpoint "http://dynamodb.eu-central-1.amazonaws.com"
+                          :endpoint "http://dynamodb.eu-west-1.amazonaws.com"
                           :migration-table "prod-kixi.heimdall-migrations"}}
  :environments {:development [{:db :db-dev, :migrator :db-mig, :seed :db-seed-dev}]
                 :dev-docker [{:db :db-dev-docker, :migrator :db-mig, :seed :db-seed-dev}]
