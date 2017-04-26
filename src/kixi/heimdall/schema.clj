@@ -3,16 +3,19 @@
 
 (defn uuid?
   [s]
-  (re-find #"^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$" s))
+  (when-not (clojure.string/blank? s)
+    (re-find #"^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$" s)))
 
 ;; regex from here http://www.lispcast.com/clojure.spec-vs-schema
 (defn email?
   [s]
-  (re-find #"^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,63}" s))
+  (when-not (clojure.string/blank? s)
+    (re-find #"^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,63}" s)))
 
 (defn password?
   [s]
-  (re-find #"(?=.*\d.*)(?=.*[a-z].*)(?=.*[A-Z].*).{8,}" s))
+  (when-not (clojure.string/blank? s)
+    (re-find #"(?=.*\d.*)(?=.*[a-z].*)(?=.*[A-Z].*).{8,}" s)))
 
 (spec/def ::group-name string?)
 (spec/def ::group-type #{"user" "group"})

@@ -1,7 +1,11 @@
 (ns kixi.heimdall.invites
-  (:require [kixi.heimdall.components.database :as db]
+  (:require [taoensso.timbre :as log]
+            [clojure.spec :as s]
+            [kixi.heimdall.components.database :as db]
             [kixi.heimdall.util :as util]
-            [taoensso.timbre :as log]))
+            [kixi.heimdall
+             [schema :as schema]
+             [util :as util]]))
 
 (def invites-table "invites")
 
@@ -20,12 +24,16 @@
 
 (defn create-invite-event
   [username]
-  (let [ic (create-invite-code)]
-    {:event/key :kixi.heimdall/invite-created
+  (if (s/valid? ::schema/username username)
+    (let [ic (create-invite-code)]
+      {:event/key :kixi.heimdall/invite-created
+       :event/version "1.0.0"
+       :event/payload {:username username
+                       :invite-code ic
+                       :url (invite-code->url ic)}})
+    {:event/key :kixi.heimdall/invite-failed
      :event/version "1.0.0"
-     :event/payload {:username username
-                     :invite-code ic
-                     :url (invite-code->url ic)}}))
+     :event/payload {:error (str "The provided username was not valid: " username)}}))
 
 (defn save!
   [db invite-code username]

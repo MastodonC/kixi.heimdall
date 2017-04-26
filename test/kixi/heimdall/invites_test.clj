@@ -20,3 +20,12 @@
       (is invite-code)
       (is url)
       (is (pos? (.indexOf url invite-code))))))
+
+(deftest invite-event-fail
+  (let [name "foo@bar"
+        event (create-invite-event name)]
+    (is event)
+    (is #{:event/key :event/version :event/payload}
+        (= (set (keys event))))
+    (let [{:keys [error]} (:event/payload event)]
+      (is error))))

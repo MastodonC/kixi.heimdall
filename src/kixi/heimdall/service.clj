@@ -269,11 +269,12 @@
 
 (defn invite-user!
   "Use this to invite a new user to the system."
-  [db communications user-email]
+  [db communications username]
   (let [{:keys [event/key
                 event/version
-                event/payload]} (invites/create-invite-event user-email)]
-    (comms/send-event! communications key version payload)))
+                event/payload]} (invites/create-invite-event username)]
+    (comms/send-event! communications key version payload)
+    payload))
 
 (defn save-invite
   "Persist details of an invite"
