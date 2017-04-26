@@ -50,12 +50,12 @@
       (return-error {:msg res :fn "auth-token"} :unauthenticated 401))))
 
 (defn new-user [req]
-  (let [[ok? res] (service/new-user (dynamodb req)
-                                    (communications req)
-                                    (:params req))]
+  (let [[ok? res] (service/new-user-with-invite (dynamodb req)
+                                                (communications req)
+                                                (:params req))]
     (if ok?
       {:status 201 :body res}
-      (return-error {:msg res :fn "new-user"} :user-creation-failed 500))))
+      (return-error {:msg res :fn "new-user"} :user-creation-failed 400))))
 
 (defn refresh-auth-token [req]
   (let [refresh-token (-> req :params :refresh-token)
@@ -73,7 +73,7 @@
                                                     refresh-token)]
     (if ok?
       {:status 200 :body res}
-      (return-error {:msg res :fn "invalidate-refresh-token"} :invalidation-failed 500))))
+      (return-error {:msg res :fn "invalidate-refresh-token"} :invalidation-failed 400))))
 
 (defn create-group [req]
   (let [ok? (and
@@ -83,7 +83,7 @@
                                          {:group (:params req) :user-id (:user-id req)}))]
     (if ok?
       {:status 201 :body "Group successfully created"}
-      (return-error {:msg "Please provide valid parameters (name for the group)" :fn "create-group"} :group-creation-failed 500))))
+      (return-error {:msg "Please provide valid parameters (name for the group)" :fn "create-group"} :group-creation-failed 400))))
 
 (defn get-users [req]
   {:status 200 :body {:type "users" :items (service/users (dynamodb req) (get (:params req) "id"))}})

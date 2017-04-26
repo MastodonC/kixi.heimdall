@@ -10,6 +10,7 @@
             [kixi.heimdall.user :as user]
             [kixi.heimdall.group :as group]
             [kixi.heimdall.member :as member]
+            [kixi.heimdall.invites :as invites]
             [kixi.heimdall.refresh-token :as refresh-token]
             [kixi.heimdall.util :as util]
             [clojure.spec :as spec]
@@ -154,6 +155,24 @@
           (success {:message "User successfully created!"})))
       (fail (str "Please match the required format: " res)))))
 
+(defn new-user-with-invite
+  [db communications params]
+  (let [credentials (select-keys params [:username :password :name])
+        [ok? res] (user/validate credentials)]
+    (if ok?
+      (if (user/find-by-username db {:username (:username credentials)})
+        (fail "There is already a user with this username.")
+        (if-not (invites/consume! db (:invite-code params) (:username credentials))
+          (fail "The invite code was invalid.")
+          (let [added-user (user/add! db credentials)
+                self-group (add-self-group db added-user)]
+
+            (log/warn "user id created for " (:username credentials) " : " (:id added-user)) ;; needed for REPL admin
+            (log/warn "self-group created: " (:group-id self-group))
+            (comms/send-event! communications :kixi.heimdall/user-created "1.0.0" (select-keys params [:username]))
+            (success {:message "User successfully created!"}))))
+      (fail (str "Please match the required format: " res)))))
+
 (defn- add-member
   [db {:keys [user-id group-id]}]
   (member/add! db user-id group-id))
@@ -247,3 +266,17 @@
                                       :created-by :kixi.group/created-by
                                       :created :kixi.group/created}))
         (vec-if-not group-ids)))
+
+(defn invite-user!
+  "Use this to invite a new user to the system."
+  [db communications username]
+  (let [{:keys [event/key
+                event/version
+                event/payload]} (invites/create-invite-event username)]
+    (comms/send-event! communications key version payload)
+    payload))
+
+(defn save-invite
+  "Persist details of an invite"
+  [db {:keys [invite-code username]}]
+  (invites/save! db invite-code username))

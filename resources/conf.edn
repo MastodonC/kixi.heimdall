@@ -98,4 +98,10 @@
            ;; Control log filtering by namespaces/patterns. Useful for turning off
            ;; logging in noisy libraries, etc.:
            ;;:ns-whitelist  ["whiner.*"] #_["my-app.foo-ns"]
-           :ns-blacklist ["org.eclipse.jetty"]}}
+           :ns-blacklist ["org.eclipse.jetty"]
+           :kixi-comms-verbose-logging #profile {:development true
+                                                 :dev-docker true
+                                                 :test true
+                                                 :staging-jenkins true
+                                                 :staging false
+                                                 :prod false}}}

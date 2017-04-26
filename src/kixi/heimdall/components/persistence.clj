@@ -28,7 +28,12 @@
                                     :kixi.heimdall/persistence-group-updated
                                     :kixi.heimdall/group-updated
                                     "1.0.0"
-                                    (comp (constantly nil) (partial #'service/update-group db) :kixi.comms.event/payload))]]
+                                    (comp (constantly nil) (partial #'service/update-group db) :kixi.comms.event/payload))
+           (c/attach-event-handler! communications
+                                    :kixi.heimdall/persistence-invite-create
+                                    :kixi.heimdall/invite-created
+                                    "1.0.0"
+                                    (comp (constantly nil) (partial #'service/save-invite db) :kixi.comms.event/payload))]]
       (assoc component :event-handlers event-handlers)))
   (stop [{:keys [communications event-handlers] :as component}]
     (doseq [handler event-handlers] (c/detach-handler! communications handler))
