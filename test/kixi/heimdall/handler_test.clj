@@ -8,6 +8,7 @@
             [kixi.heimdall.refresh-token :as rt]
             [kixi.heimdall.group :as group]
             [kixi.heimdall.member :as member]
+            [kixi.heimdall.invites :as invites]
             [buddy.hashers :as hs]
             [clojure.java.io :as io]
             [clojure.edn :as edn]
@@ -243,6 +244,7 @@
   (testing "new user can be added if password passes the validation"
     (with-redefs [user/add! (fn [_ _] {:user-id (java.util.UUID/randomUUID)})
                   user/find-by-username (fn [_ _] nil)
+                  invites/consume! (fn [_ _ _] true)
                   group/add! (fn [_ _] {:group-id (java.util.UUID/randomUUID)})
                   member/add! (fn [_ _ _] '())]
       (let [response (comms-app app (heimdall-request
@@ -267,6 +269,7 @@
   (testing "new user triggers a send-event!"
     (with-redefs [user/add! (fn [_ _] {:user-id (java.util.UUID/randomUUID)})
                   user/find-by-username (fn [_ _] nil)
+                  invites/consume! (fn [_ _ _] true)
                   group/add! (fn [_ _] {:group-id (java.util.UUID/randomUUID)})
                   member/add! (fn [_ _ _] '())]
       (let [events (atom {})

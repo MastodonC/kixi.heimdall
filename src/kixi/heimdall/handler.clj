@@ -50,9 +50,9 @@
       (return-error {:msg res :fn "auth-token"} :unauthenticated 401))))
 
 (defn new-user [req]
-  (let [[ok? res] (service/new-user (dynamodb req)
-                                    (communications req)
-                                    (:params req))]
+  (let [[ok? res] (service/new-user-with-invite (dynamodb req)
+                                                (communications req)
+                                                (:params req))]
     (if ok?
       {:status 201 :body res}
       (return-error {:msg res :fn "new-user"} :user-creation-failed 500))))
