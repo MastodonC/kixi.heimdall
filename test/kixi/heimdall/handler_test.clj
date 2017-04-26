@@ -207,7 +207,7 @@
   (testing "invalidate refresh token - token not valid signed"
     (let [response (comms-app app (heimdall-request (mock/request :post "/invalidate-refresh-token"
                                                                   (json/write-str {:refresh-token "abc"}))))]
-      (is (= (:status response) 500))
+      (is (= (:status response) 400))
       (is (= (:body response)
              "invalidation-failed"))))
   (testing "invalidate refresh token not found"
@@ -216,7 +216,7 @@
         (let [response (comms-app app (heimdall-request
                                        (mock/request :post "/invalidate-refresh-token"
                                                      (:json/write-str {:refresh-token refresh-token}))))]
-          (is (= (:status response) 500))
+          (is (= (:status response) 400))
           (is (= (:body response)
                  "invalidation-failed")))))))
 
@@ -263,7 +263,7 @@
                                                    (json/write-str {:username "user@boo.com"
                                                                     :password "foo"
                                                                     :name "Bob Marley"}))))]
-        (is (= (:status response) 500))
+        (is (= (:status response) 400))
         (is (= (:body response)
                "user-creation-failed")))))
   (testing "new user triggers a send-event!"
