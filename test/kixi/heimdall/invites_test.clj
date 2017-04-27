@@ -2,20 +2,13 @@
   (:require [kixi.heimdall.invites :refer :all]
             [clojure.test :refer :all]))
 
-(deftest invite-codes
-  (let [code-a (create-invite-code)
-        code-b (create-invite-code)]
-    (is code-a)
-    (is code-b)
-    (is (not= code-a code-b))))
-
 (deftest invite-event
   (let [name "foo@bar.com"
         event (create-invite-event name)]
     (is event)
-    (is #{:event/key :event/version :event/payload}
+    (is #{:kixi.comms.event/key :kixi.comms.event/version :kixi.comms.event/payload}
         (= (set (keys event))))
-    (let [{:keys [url username invite-code]} (:event/payload event)]
+    (let [{:keys [url username invite-code]} (:kixi.comms.event/payload event)]
       (is (= username name))
       (is invite-code)
       (is url)
@@ -25,7 +18,7 @@
   (let [name "foo@bar"
         event (create-invite-event name)]
     (is event)
-    (is #{:event/key :event/version :event/payload}
+    (is #{:kixi.comms.event/key :kixi.comms.event/version :kixi.comms.event/payload}
         (= (set (keys event))))
-    (let [{:keys [error]} (:event/payload event)]
+    (let [{:keys [error]} (:kixi.comms.event/payload event)]
       (is error))))

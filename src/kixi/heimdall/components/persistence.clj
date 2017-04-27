@@ -1,5 +1,6 @@
 (ns kixi.heimdall.components.persistence
   (:require [clojure.spec :as spec]
+            [taoensso.timbre :as log]
             [com.stuartsierra.component :as component]
             [kixi.heimdall.service :as service]
             [kixi.comms :as c]))
@@ -8,6 +9,7 @@
     []
   component/Lifecycle
   (start [{:keys [communications db] :as component}]
+    (log/info "Attaching event handlers...")
     (let [event-handlers
           [(c/attach-event-handler! communications
                                     :kixi.heimdall/persistence-group-created
@@ -33,8 +35,16 @@
                                     :kixi.heimdall/persistence-invite-create
                                     :kixi.heimdall/invite-created
                                     "1.0.0"
-                                    (comp (constantly nil) (partial #'service/save-invite db) :kixi.comms.event/payload))]]
+                                    (comp (constantly nil) (partial #'service/save-invite db) :kixi.comms.event/payload))
+           (c/attach-event-handler! communications
+                                    :kixi.heimdall/persistence-password-reset-request-create
+                                    :kixi.heimdall/password-reset-request-created
+                                    "1.0.0"
+                                    (comp (constantly nil)
+                                          (partial #'service/save-password-reset-request db communications)
+                                          :kixi.comms.event/payload))]]
       (assoc component :event-handlers event-handlers)))
   (stop [{:keys [communications event-handlers] :as component}]
+    (log/info "Detaching event handlers...")
     (doseq [handler event-handlers] (c/detach-handler! communications handler))
     (dissoc component :event-handlers)))

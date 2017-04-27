@@ -279,3 +279,19 @@
                                                                     :password "secret1Pass"})))
                                 events)]
         (is (= @events {:comms {:sent '({:event :kixi.heimdall/user-created :version "1.0.0" :payload {:username "user@boo.com"}})}}))))))
+
+(deftest reset-password-test
+  (testing "passwords can be reset"
+    (with-redefs [user/add! (fn [_ _] {:user-id (java.util.UUID/randomUUID)})
+                  user/find-by-username (fn [_ _] nil)
+                  invites/consume! (fn [_ _ _] true)
+                  group/add! (fn [_ _] {:group-id (java.util.UUID/randomUUID)})
+                  member/add! (fn [_ _ _] '())]
+      (let [response (comms-app app (heimdall-request
+                                     (mock/request :post "/user"
+                                                   (json/write-str {:username "user@boo.com"
+                                                                    :password "secret1Pass"
+                                                                    :name "Jane Doe"}))))]
+        (is (= (:status response) 201)
+            (when (= (:status response) 201)
+              (let [_ ()])))))))

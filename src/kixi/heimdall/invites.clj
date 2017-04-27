@@ -9,15 +9,6 @@
 
 (def invites-table "invites")
 
-(defn create-invite-code
-  []
-  (letfn [(gen-block [] (->> #(rand-nth (range 65 90))
-                             (repeatedly)
-                             (take 6)
-                             (map char)
-                             (apply str)))]
-    (clojure.string/join "-" (take 4 (repeatedly gen-block)))))
-
 (defn invite-code->url
   [ic]
   (str "/#/invite/" ic))
@@ -25,22 +16,23 @@
 (defn create-invite-event
   [username]
   (if (s/valid? ::schema/username username)
-    (let [ic (create-invite-code)]
-      {:event/key :kixi.heimdall/invite-created
-       :event/version "1.0.0"
-       :event/payload {:username username
-                       :invite-code ic
-                       :url (invite-code->url ic)}})
-    {:event/key :kixi.heimdall/invite-failed
-     :event/version "1.0.0"
-     :event/payload {:error (str "The provided username was not valid: " username)}}))
+    (let [ic (util/create-code)]
+      {:kixi.comms.event/key :kixi.heimdall/invite-created
+       :kixi.comms.event/version "1.0.0"
+       :kixi.comms.event/payload {:username username
+                                  :invite-code ic
+                                  :url (invite-code->url ic)}})
+    {:kixi.comms.event/key :kixi.heimdall/invite-failed
+     :kixi.comms.event/version "1.0.0"
+     :kixi.comms.event/payload {:error (str "The provided username was not valid: " username)}}))
 
 (defn save!
   [db invite-code username]
   (db/put-item db
                invites-table
                {:username username
-                :invite-code invite-code}
+                :invite-code invite-code
+                :created-at (util/db-now)}
                {:return :none}))
 
 (defn consume!

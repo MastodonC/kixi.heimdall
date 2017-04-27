@@ -29,7 +29,8 @@
 (defn teardown-kinesis!
   [{:keys [endpoint dynamodb-endpoint streams app profile]}]
   (log/info "Deleting dynamo tables ...")
-  (clear-tables dynamodb-endpoint [(kinesis/event-worker-app-name app profile)])
+  (clear-tables dynamodb-endpoint [(kinesis/event-worker-app-name app profile)
+                                   (kinesis/command-worker-app-name app profile)])
 
   (log/info "Deleting streams...")
   (kinesis/delete-streams! endpoint (vals streams)))

@@ -31,3 +31,12 @@
   [& path]
   (when (and (first path) (.exists (apply io/file path)))
     (apply io/file path)))
+
+(defn create-code
+  []
+  (letfn [(gen-block [] (->> #(rand-nth (range 65 90))
+                             (repeatedly)
+                             (take 6)
+                             (map char)
+                             (apply str)))]
+    (clojure.string/join "-" (take 4 (repeatedly gen-block)))))

@@ -30,6 +30,7 @@
                  [aero "1.0.0"]
                  [kixi/kixi.comms "0.2.13"]
                  [org.clojure/tools.analyzer "0.6.9"]
+                 [de.ubercode.clostache/clostache "1.4.0"]
                  ;; not really dependency, dep collision https://groups.google.com/forum/#!topic/clojure/D_s9Drua6D4
                  ]
   :plugins [[lein-ring "0.9.7"]]

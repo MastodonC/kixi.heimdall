@@ -32,7 +32,7 @@
 
 (defn return-error
   ([information error status]
-   (log/info information)
+   (log/info "Returning error" status information)
    {:status status
     :body (name error)})
 
@@ -94,6 +94,22 @@
 (defn get-all-groups [req]
   {:status 200 :body {:type "groups" :items (service/all-groups (dynamodb req))}})
 
+(defn reset-password
+  [req]
+  (let [username (:username (:params req))
+        password (:password (:params req))
+        reset-code (:reset-code (:params req))]
+    (if (and username password reset-code)
+      (let [[ok? res] (service/complete-password-reset! (dynamodb req)
+                                                        (communications req)
+                                                        username
+                                                        password
+                                                        reset-code)]
+        (if ok?
+          {:status 200 :body res}
+          (return-error {:msg res :fn "service/complete-password-reset!"} :password-reset-failed 400)))
+      {:status 400 :body "Missing fields"})))
+
 (defn escape-html
   "Change special characters into HTML character entities."
   [text]
@@ -141,7 +157,8 @@
   (POST "/user" [] new-user)
   (POST "/create-auth-token" [] auth-token)
   (POST "/refresh-auth-token" [] refresh-auth-token)
-  (POST "/invalidate-refresh-token" [] invalidate-refresh-token))
+  (POST "/invalidate-refresh-token" [] invalidate-refresh-token)
+  (POST "/reset-password" [] reset-password))
 
 (defroutes app-routes
   public-routes
