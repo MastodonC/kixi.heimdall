@@ -1,5 +1,5 @@
-(ns kixi.heimdall.pwd-resets-test
-  (:require [kixi.heimdall.pwd-resets :refer :all]
+(ns kixi.heimdall.password-resets-test
+  (:require [kixi.heimdall.password-resets :refer :all]
             [clojure.test :refer :all]))
 
 (deftest reset-event

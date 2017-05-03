@@ -1,4 +1,4 @@
-(ns migrators.dynamodb.20170427151300-pwd-resets
+(ns migrators.dynamodb.20170427151300-password-resets
   (:require [kixi.heimdall.components.database :as db]
             [kixi.heimdall.config :as config]
             [kixi.heimdall.application :as app]
@@ -14,7 +14,7 @@
   [db]
   (let [conn (db/new-session (get-db-config) @app/profile)]
     (db/create-table conn
-                     "pwd-resets"
+                     "password-resets"
                      [:username :s]
                      {:throughput {:read 1 :write 1}
                       :block? true})))
@@ -22,4 +22,4 @@
 (defn down
   [db]
   (let [conn (db/new-session (get-db-config) @app/profile)]
-    (db/delete-table conn "pwd-resets")))
+    (db/delete-table conn "password-resets")))

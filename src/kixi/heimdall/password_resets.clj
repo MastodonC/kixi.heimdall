@@ -1,4 +1,4 @@
-(ns kixi.heimdall.pwd-resets
+(ns kixi.heimdall.password-resets
   (:require [taoensso.timbre :as log]
             [clojure.spec :as s]
             [kixi.heimdall.components.database :as db]
@@ -7,7 +7,7 @@
              [schema :as schema]
              [util :as util]]))
 
-(def resets-table "pwd-resets")
+(def resets-table "password-resets")
 
 (defn reset-code->url
   [rc]

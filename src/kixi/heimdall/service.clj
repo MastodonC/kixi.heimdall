@@ -11,7 +11,7 @@
             [kixi.heimdall.group :as group]
             [kixi.heimdall.member :as member]
             [kixi.heimdall.invites :as invites]
-            [kixi.heimdall.pwd-resets :as pwd-resets]
+            [kixi.heimdall.password-resets :as password-resets]
             [kixi.heimdall.refresh-token :as refresh-token]
             [kixi.heimdall.util :as util]
             [kixi.heimdall.email :as email]
@@ -287,26 +287,26 @@
   [db communications {:keys [username]}]
   (let [user (user/find-by-username db {:username username})
         event-fn (if user
-                   (partial pwd-resets/create-reset-event user)
-                   (partial pwd-resets/reject-reset-event "No matching user found"))
+                   (partial password-resets/create-reset-event user)
+                   (partial password-resets/reject-reset-event "No matching user found"))
         result (event-fn username)]
     result))
 
 (defn save-password-reset-request
   "Persist details of a reset request if the user exists"
   [db communications {:keys [reset-code user url] :as payload}]
-  (pwd-resets/save! db reset-code user)
+  (password-resets/save! db reset-code user)
   (email/send-email! :password-reset-request communications {:user user :url url}))
 
 (defn complete-password-reset!
   [db communications username password reset-code]
   (let [[ok? res] (user/validate {:username username :password password})]
     (if ok?
-      (let [result (pwd-resets/consume! db reset-code username)]
+      (let [result (password-resets/consume! db reset-code username)]
         (if result
           (let [{:keys [kixi.comms.event/key
                         kixi.comms.event/version
-                        kixi.comms.event/payload]} (pwd-resets/create-reset-completed-event username)]
+                        kixi.comms.event/payload]} (password-resets/create-reset-completed-event username)]
             (user/change-password! db username password)
             (comms/send-event! communications key version payload)
             (success {:message "Password was reset"}))
