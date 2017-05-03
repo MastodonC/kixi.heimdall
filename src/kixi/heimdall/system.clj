@@ -10,7 +10,8 @@
              [database :as db]
              [jettyserver :as web]
              [metrics :as metrics]
-             [persistence :as persistence]]
+             [persistence :as persistence]
+             [commands :as commands]]
             [kixi.log :as kixi-log]
             [taoensso.timbre :as log]))
 
@@ -32,7 +33,9 @@
          :repl-server  (Object.) ; dummy - replaced when invoked via uberjar.
          :db (db/new-session (:dynamodb config) profile)
          :communications (kinesis/map->Kinesis (:kinesis (:communications config)))
-         :persistence (persistence/->Persistence))
+         :persistence (persistence/->Persistence)
+         :commands (commands/->Commands))
         (component/system-using
          {:web-server [:metrics :communications :db]
-          :persistence [:communications :db]}))))
+          :persistence [:communications :db]
+          :commands [:communications :db]}))))

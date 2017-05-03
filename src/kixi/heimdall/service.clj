@@ -11,8 +11,10 @@
             [kixi.heimdall.group :as group]
             [kixi.heimdall.member :as member]
             [kixi.heimdall.invites :as invites]
+            [kixi.heimdall.password-resets :as password-resets]
             [kixi.heimdall.refresh-token :as refresh-token]
             [kixi.heimdall.util :as util]
+            [kixi.heimdall.email :as email]
             [clojure.spec :as spec]
             [kixi.comms :refer [Communications] :as comms]))
 
@@ -269,10 +271,10 @@
 
 (defn invite-user!
   "Use this to invite a new user to the system."
-  [db communications username]
-  (let [{:keys [event/key
-                event/version
-                event/payload]} (invites/create-invite-event username)]
+  [communications username]
+  (let [{:keys [kixi.comms.event/key
+                kixi.comms.event/version
+                kixi.comms.event/payload]} (invites/create-invite-event username)]
     (comms/send-event! communications key version payload)
     payload))
 
@@ -280,3 +282,33 @@
   "Persist details of an invite"
   [db {:keys [invite-code username]}]
   (invites/save! db invite-code username))
+
+(defn reset-password!
+  [db communications {:keys [username]}]
+  (let [user (user/find-by-username db {:username username})
+        event-fn (if user
+                   (partial password-resets/create-reset-event user)
+                   (partial password-resets/reject-reset-event "No matching user found"))
+        result (event-fn username)]
+    result))
+
+(defn save-password-reset-request
+  "Persist details of a reset request if the user exists"
+  [db communications {:keys [reset-code user url] :as payload}]
+  (password-resets/save! db reset-code user)
+  (email/send-email! :password-reset-request communications {:user user :url url}))
+
+(defn complete-password-reset!
+  [db communications username password reset-code]
+  (let [[ok? res] (user/validate {:username username :password password})]
+    (if ok?
+      (let [result (password-resets/consume! db reset-code username)]
+        (if result
+          (let [{:keys [kixi.comms.event/key
+                        kixi.comms.event/version
+                        kixi.comms.event/payload]} (password-resets/create-reset-completed-event username)]
+            (user/change-password! db username password)
+            (comms/send-event! communications key version payload)
+            (success {:message "Password was reset"}))
+          (fail (str "No matching reset code - requested for " username))))
+      (fail (str "Please match the required format: " res)))))
