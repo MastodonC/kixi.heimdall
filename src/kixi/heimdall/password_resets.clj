@@ -10,8 +10,8 @@
 (def resets-table "password-resets")
 
 (defn reset-code->url
-  [rc]
-  (str "/#/reset/" rc))
+  [rc un]
+  (str "/#/reset?rc=" rc "&un=" un))
 
 (defn reject-reset-event
   [reason username]
@@ -30,7 +30,7 @@
      :kixi.comms.event/version "1.0.0"
      :kixi.comms.event/payload {:user (dissoc user :password)
                                 :reset-code rc
-                                :url (reset-code->url rc)}}))
+                                :url (reset-code->url rc (:username user))}}))
 
 (defn create-reset-completed-event
   [username]

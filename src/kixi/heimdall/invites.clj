@@ -10,8 +10,8 @@
 (def invites-table "invites")
 
 (defn invite-code->url
-  [ic]
-  (str "/#/invite/" ic))
+  [ic un]
+  (str "/#/invite?ic=" ic "&un=" un))
 
 (defn create-invite-event
   [username]
@@ -21,7 +21,7 @@
        :kixi.comms.event/version "1.0.0"
        :kixi.comms.event/payload {:username username
                                   :invite-code ic
-                                  :url (invite-code->url ic)}})
+                                  :url (invite-code->url ic username)}})
     {:kixi.comms.event/key :kixi.heimdall/invite-failed
      :kixi.comms.event/version "1.0.0"
      :kixi.comms.event/payload {:error (str "The provided username was not valid: " username)}}))
