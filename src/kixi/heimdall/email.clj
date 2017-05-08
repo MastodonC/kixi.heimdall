@@ -26,3 +26,12 @@
         subject "Witan For Cities - Password Reset Request"
         destination {:to-addresses [(get-in opts [:user :username])]}]
     (send-email-command! comms (:user opts) destination subject body-html body-txt)))
+
+(defmethod send-email!
+  :user-invite
+  [_ comms opts]
+  (let [body-html (mustache/render-resource "emails/invite.html" opts)
+        body-txt (mustache/render-resource "emails/invite.txt" opts)
+        subject "Witan For Cities - You have been invited!"
+        destination {:to-addresses [(get opts :username)]}]
+    (send-email-command! comms nil destination subject body-html body-txt)))

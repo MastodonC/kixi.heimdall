@@ -1,6 +1,7 @@
 (ns kixi.heimdall.integration.invites-test
   (:require [kixi.heimdall.invites :refer :all]
             [kixi.heimdall.util :as util]
+            [kixi.heimdall.user :as user]
             [kixi.heimdall.integration.base :refer :all]
             [clojure.test :refer :all]
             [kixi.heimdall.components.database :as db]
@@ -32,6 +33,18 @@
         code (util/create-code)]
     (is (not (consume! @db-session code name)))))
 
+(deftest invite-existing-user
+  "User is already signed up"
+  (let [username (str "test-" (java.util.UUID/randomUUID) "@test.com")
+        _ (service/new-user @db-session @comms {:username username
+                                                :password "Foobar123"
+                                                :name "Test Existing User"})
+        event (service/invite-user! @db-session @comms username)]
+    (is (= :kixi.heimdall/invite-failed (:kixi.comms.event/key event)))
+    (is (= {:reason (str "The user is already signed up: " username)
+            :username username}
+           (:kixi.comms.event/payload event)))))
+
 (deftest roundtrip-test
   "Invite a user and then have them sign up"
   (let [username (str "test-" (java.util.UUID/randomUUID) "@test.com")
@@ -39,7 +52,7 @@
                                          invites-table
                                          {:username username}
                                          {:consistent? true})]
-    (service/invite-user! @comms username)
+    (service/invite-user! @db-session @comms username)
     (wait-for get-invite-code-fn
               #(throw (Exception. "Invite code never arrived."))
               10)

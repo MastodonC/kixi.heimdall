@@ -1,0 +1,15 @@
+<<&env.default_header>>
+
+You have been invited to create an account on Witan For Cities.
+
+To sign-up now, please navigate to the following address (copy-and-paste into your browser):
+
+<<&env.base_url>>{{url}}
+
+If you experience any difficulty, please don't hesitate to contact us.
+
+Thanks,
+The Witan For Cities Team
+(Mastodon C)
+
+<<&env.default_footer>>

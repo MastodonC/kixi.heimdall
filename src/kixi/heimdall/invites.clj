@@ -1,8 +1,8 @@
 (ns kixi.heimdall.invites
   (:require [taoensso.timbre :as log]
-            [clojure.spec :as s]
             [kixi.heimdall.components.database :as db]
             [kixi.heimdall.util :as util]
+            [kixi.heimdall.user :as user]
             [kixi.heimdall
              [schema :as schema]
              [util :as util]]))
@@ -13,18 +13,21 @@
   [ic un]
   (str "/#/invite?ic=" ic "&un=" un))
 
+(defn create-invite-failed-event
+  [reason username]
+  {:kixi.comms.event/key :kixi.heimdall/invite-failed
+   :kixi.comms.event/version "1.0.0"
+   :kixi.comms.event/payload {:reason reason
+                              :username username}})
+
 (defn create-invite-event
   [username]
-  (if (s/valid? ::schema/username username)
-    (let [ic (util/create-code)]
-      {:kixi.comms.event/key :kixi.heimdall/invite-created
-       :kixi.comms.event/version "1.0.0"
-       :kixi.comms.event/payload {:username username
-                                  :invite-code ic
-                                  :url (invite-code->url ic username)}})
-    {:kixi.comms.event/key :kixi.heimdall/invite-failed
+  (let [ic (util/create-code)]
+    {:kixi.comms.event/key :kixi.heimdall/invite-created
      :kixi.comms.event/version "1.0.0"
-     :kixi.comms.event/payload {:error (str "The provided username was not valid: " username)}}))
+     :kixi.comms.event/payload {:username username
+                                :invite-code ic
+                                :url (invite-code->url ic username)}}))
 
 (defn save!
   [db invite-code username]
@@ -35,12 +38,16 @@
                 :created-at (util/db-now)}
                {:return :none}))
 
+(defn get-invite
+  [db username]
+  (db/get-item db
+               invites-table
+               {:username username}
+               {:consistent? true}))
+
 (defn consume!
   [db invite-code username]
-  (let [item (db/get-item db
-                          invites-table
-                          {:username username}
-                          {:consistent? true})]
+  (let [item (get-invite db username)]
     (when (= invite-code (:invite-code item))
       (nil? (db/delete-item db
                             invites-table

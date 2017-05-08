@@ -16,9 +16,9 @@
 
 (deftest invite-event-fail
   (let [name "foo@bar"
-        event (create-invite-event name)]
+        event (create-invite-failed-event "You failed" name)]
     (is event)
     (is #{:kixi.comms.event/key :kixi.comms.event/version :kixi.comms.event/payload}
         (= (set (keys event))))
-    (let [{:keys [error]} (:kixi.comms.event/payload event)]
-      (is error))))
+    (let [{:keys [reason]} (:kixi.comms.event/payload event)]
+      (is reason))))
