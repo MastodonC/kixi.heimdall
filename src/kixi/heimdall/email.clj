@@ -6,7 +6,6 @@
 (defn- send-email-command!
   [comms user destination subject body-html body-txt]
   (let [mail {:destination destination
-              :source "support@mastodonc.com"
               :message {:subject subject
                         :body {:text body-txt
                                :html body-html}}}]
