@@ -276,6 +276,8 @@
                 kixi.comms.event/version
                 kixi.comms.event/payload]} (invites/create-invite-event username)]
     (comms/send-event! communications key version payload)
+    (when-not (:error payload)
+      (email/send-email! :user-invite communications {:url (:url payload) :username username}))
     payload))
 
 (defn save-invite
