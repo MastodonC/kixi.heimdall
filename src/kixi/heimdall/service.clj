@@ -5,6 +5,7 @@
             [buddy.core.keys :as ks]
             [clj-time.core :as t]
             [clj-time.coerce :as c]
+            [clojure.spec :as s]
             [clojure.java.io :as io]
             [kixi.heimdall.components.database :as db]
             [kixi.heimdall.user :as user]
@@ -15,6 +16,7 @@
             [kixi.heimdall.refresh-token :as refresh-token]
             [kixi.heimdall.util :as util]
             [kixi.heimdall.email :as email]
+            [kixi.heimdall.schema :as schema]
             [clojure.spec :as spec]
             [kixi.comms :refer [Communications] :as comms]))
 
@@ -271,14 +273,24 @@
 
 (defn invite-user!
   "Use this to invite a new user to the system."
-  [communications username]
+  [db communications username]
   (let [{:keys [kixi.comms.event/key
                 kixi.comms.event/version
-                kixi.comms.event/payload]} (invites/create-invite-event username)]
+                kixi.comms.event/payload] :as event}
+        (cond
+          ;; Username invalid
+          (not (s/valid? ::schema/username username))
+          (invites/create-invite-failed-event (str "The provided username was not valid: " username) username)
+          ;; User already signed up
+          (user/find-by-username db {:username username})
+          (invites/create-invite-failed-event (str "The user is already signed up: " username) username)
+          ;;
+          :else
+          (invites/create-invite-event username))]
     (comms/send-event! communications key version payload)
     (when-not (:error payload)
       (email/send-email! :user-invite communications {:url (:url payload) :username username}))
-    payload))
+    event))
 
 (defn save-invite
   "Persist details of an invite"
