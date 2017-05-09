@@ -288,7 +288,7 @@
           :else
           (invites/create-invite-event username))]
     (comms/send-event! communications key version payload)
-    (when-not (:error payload)
+    (when (= :kixi.heimdall/invite-created key)
       (email/send-email! :user-invite communications {:url (:url payload) :username username}))
     event))
 
