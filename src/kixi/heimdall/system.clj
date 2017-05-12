@@ -20,7 +20,7 @@
         _ (reset! app/profile profile)]
     (log/set-config! {:level (keyword (env :log-level (get-in config [:logging :level])))
                       :timestamp-opts kixi-log/default-timestamp-opts
-                      :appenders (if (#{:production :staging} profile)
+                      :appenders (if (#{:prod :staging} profile)
                                    {:direct-json (kixi-log/timbre-appender-logstash)}
                                    {:println (log/println-appender)})})
     (when (get-in config [:logging :kixi-comms-verbose-logging])
