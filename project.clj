@@ -7,7 +7,6 @@
   :dependencies [[org.clojure/clojure "1.9.0-alpha13"]
                  [compojure "1.5.1"]
                  [ring/ring-defaults "0.2.1"]
-                 [ring/ring-json "0.4.0" :exclusions [com.fasterxml.jackson.dataformat/jackson-dataformat-cbor]]
                  [kixi/buddy "1.2.1" :exclusions [cheshire]]
                  [com.stuartsierra/component "0.3.1"]
                  [ring/ring-jetty-adapter "1.5.0"]
@@ -31,6 +30,7 @@
                  [kixi/kixi.comms "0.2.13"]
                  [org.clojure/tools.analyzer "0.6.9"]
                  [de.ubercode.clostache/clostache "1.4.0"]
+                 [ring-middleware-format "0.7.2"] ;; transit
                  ;; not really dependency, dep collision https://groups.google.com/forum/#!topic/clojure/D_s9Drua6D4
                  ]
   :plugins [[lein-ring "0.9.7"]]
@@ -51,7 +51,7 @@
          :dependencies [[javax.servlet/servlet-api "2.5"]
                         [ring/ring-mock "0.3.0"]
                         [clj-http "3.4.1"]
-                        [org.clojure/data.json "0.2.6"]]}}
+                        [com.cognitect/transit-clj "0.8.290"]]}}
   :aliases {"seed" ["run" "-m" "user/seed" "joplin.edn"]}
   :release-tasks [["vcs" "assert-committed"]
                   ["change" "version"

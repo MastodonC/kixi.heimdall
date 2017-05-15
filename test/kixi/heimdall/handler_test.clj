@@ -12,17 +12,37 @@
             [buddy.hashers :as hs]
             [clojure.java.io :as io]
             [clojure.edn :as edn]
-            [clojure.data.json :as json]
             [buddy.sign.util :as sign]
             [clj-time.core :as t]
             [kixi.heimdall.config :as config]
             [kixi.comms :as comms]
             [taoensso.timbre :as log]
-            [environ.core :refer [env]]))
+            [environ.core :refer [env]]
+            [cognitect.transit :as tr])
+  (:import [java.io ByteArrayInputStream ByteArrayOutputStream]
+           [org.httpkit.BytesInputStream]))
 
-(defn json-request
+(def transit-encoding-level :json-verbose) ;; DO NOT CHANGE
+(defn transit-decode-bytes [in]
+  (let [reader (tr/reader in transit-encoding-level)]
+    (tr/read reader)))
+(defn transit-decode [^String s]
+  (let [sbytes (.getBytes s)
+        in (ByteArrayInputStream. sbytes)
+        reader (tr/reader in transit-encoding-level)]
+    (tr/read reader)))
+(defn transit-decode-stream [in]
+  (let [reader (tr/reader in transit-encoding-level)]
+    (tr/read reader)))
+(defn transit-encode [s]
+  (let [out (ByteArrayOutputStream. 4096)
+        writer (tr/writer out transit-encoding-level)]
+    (tr/write writer s)
+    (.toString out)))
+
+(defn transit-json-request
   [request]
-  (mock/content-type request "application/json"))
+  (mock/content-type request "application/transit+json"))
 
 (def auth-config
   (:auth-conf (config/config (keyword (env :system-profile "test")))))
@@ -65,7 +85,7 @@
 (defn heimdall-request
   [request]
   (-> request
-      json-request
+      transit-json-request
       auth-config-added
       auth-info-added))
 
@@ -104,9 +124,9 @@
         (let [events (atom {})
               response (comms-app app (heimdall-request
                                        (mock/request :post "/create-auth-token"
-                                                     (json/write-str {:username "user@boo.com" :password "foo12CCbb"}))) events)]
+                                                     (transit-encode {:username "user@boo.com" :password "foo12CCbb"}))) events)]
           (is (= (:status response) 201))
-          (let [body-resp (json/read-str (:body response) :key-fn keyword)]
+          (let [body-resp (transit-decode-stream (:body response))]
             (is (:token-pair body-resp)))
           (is (= @events {:comms {:sent '({:event :kixi.heimdall/user-logged-in :version "1.0.0" :payload {:username "user@boo.com"}})}})))))
 
@@ -117,7 +137,7 @@
                     group/find-user-group (fn [session _] nil)]
         (let [response (comms-app app (heimdall-request
                                        (mock/request :post "/create-auth-token"
-                                                     (json/write-str {:username "user@boo.com" :password "foo12CCbb"}))))]
+                                                     (transit-encode {:username "user@boo.com" :password "foo12CCbb"}))))]
           (is (= (:status response) 401)))))
 
     (testing "authentication fails wrong pass"
@@ -128,7 +148,7 @@
                                                    {:group-id "group-id-2"}))]
         (let [response (comms-app app (heimdall-request
                                        (mock/request :post "/create-auth-token"
-                                                     (json/write-str {:username "user" :password "foo"}))))]
+                                                     (transit-encode {:username "user" :password "foo"}))))]
           (is (= (:status response) 401)))))))
 
 
@@ -161,8 +181,8 @@
                                                      :name "username@boo.com"})]
         (let [response (comms-app app (heimdall-request
                                        (mock/request :post "/refresh-auth-token"
-                                                     (json/write-str {:refresh-token refresh-token}))))
-              body (json/read-str (:body response) :key-fn keyword)]
+                                                     (transit-encode {:refresh-token refresh-token}))))
+              body (transit-decode-stream (:body response))]
           (is (= (:status response) 201))
           (is (:token-pair body))
           (is (not= (:refresh-token (:token-pair body))
@@ -176,7 +196,7 @@
                                                      :name "username@boo.com"})]
         (let [response (comms-app app (heimdall-request
                                        (mock/request :post "/refresh-auth-token"
-                                                     (json/write-str {:refresh-token refresh-token}))))]
+                                                     (transit-encode {:refresh-token refresh-token}))))]
           (is (= (:status response) 401))
           (is (= (:body response)
                  "unauthenticated"))))))
@@ -186,7 +206,7 @@
                   member/retrieve-groups-ids (fn [_ _] [])]
       (let [response (comms-app app (heimdall-request
                                      (mock/request :post "/refresh-auth-token"
-                                                   (json/write-str {:refresh-token "foo"}))))]
+                                                   (transit-encode {:refresh-token "foo"}))))]
         (is (= (:status response) 401))
         (is (= (:body response)
                "unauthenticated"))))))
@@ -198,15 +218,15 @@
                                                  (refresh-token-record refresh-token))
                     rt/invalidate! (fn [session id] '())]
         (let [response (comms-app app (heimdall-request (mock/request :post "/invalidate-refresh-token"
-                                                                      (json/write-str
+                                                                      (transit-encode
                                                                        {:refresh-token refresh-token}))))]
           (is (= (:status response) 200))
-          (is (= (:message (json/read-str (:body response) :key-fn keyword))
+          (is (= (:message (transit-decode-stream (:body response)))
                  "Invalidated successfully"))))))
 
   (testing "invalidate refresh token - token not valid signed"
     (let [response (comms-app app (heimdall-request (mock/request :post "/invalidate-refresh-token"
-                                                                  (json/write-str {:refresh-token "abc"}))))]
+                                                                  (transit-encode {:refresh-token "abc"}))))]
       (is (= (:status response) 400))
       (is (= (:body response)
              "invalidation-failed"))))
@@ -215,7 +235,7 @@
       (with-redefs [rt/find-by-user-and-issued (fn [session user-id issued] nil)]
         (let [response (comms-app app (heimdall-request
                                        (mock/request :post "/invalidate-refresh-token"
-                                                     (:json/write-str {:refresh-token refresh-token}))))]
+                                                     (:transit-encode {:refresh-token refresh-token}))))]
           (is (= (:status response) 400))
           (is (= (:body response)
                  "invalidation-failed")))))))
@@ -235,7 +255,7 @@
       (let [events (atom {})
             response (comms-app app (heimdall-request
                                      (mock/request :post "/group"
-                                                   (json/write-str {:group-name "test-grp"})))
+                                                   (transit-encode {:group-name "test-grp"})))
                                 events)]
         (is (= (:status response) 201))
         (is (= (:body response) "Group successfully created"))
@@ -250,7 +270,7 @@
                   member/add! (fn [_ _ _] '())]
       (let [response (comms-app app (heimdall-request
                                      (mock/request :post "/user"
-                                                   (json/write-str {:username "user@boo.com"
+                                                   (transit-encode {:username "user@boo.com"
                                                                     :password "secret1Pass"
                                                                     :name "Jane Doe"}))))]
         (is (= (:status response) 201)))))
@@ -261,7 +281,7 @@
                   member/add! (fn [_ _ _] '())]
       (let [response (comms-app app (heimdall-request
                                      (mock/request :post "/user"
-                                                   (json/write-str {:username "user@boo.com"
+                                                   (transit-encode {:username "user@boo.com"
                                                                     :password "foo"
                                                                     :name "Bob Marley"}))))]
         (is (= (:status response) 400))
@@ -276,7 +296,7 @@
       (let [events (atom {})
             response (comms-app app (heimdall-request
                                      (mock/request :post "/user"
-                                                   (json/write-str {:username "user@boo.com"
+                                                   (transit-encode {:username "user@boo.com"
                                                                     :password "secret1Pass"})))
                                 events)]
         (is (= @events {:comms {:sent '({:event :kixi.heimdall/user-created :version "1.0.0" :payload {:username "user@boo.com"}})}}))))))
@@ -290,7 +310,7 @@
                   member/add! (fn [_ _ _] '())]
       (let [response (comms-app app (heimdall-request
                                      (mock/request :post "/user"
-                                                   (json/write-str {:username "user@boo.com"
+                                                   (transit-encode {:username "user@boo.com"
                                                                     :password "secret1Pass"
                                                                     :name "Jane Doe"}))))]
         (is (= (:status response) 201)
