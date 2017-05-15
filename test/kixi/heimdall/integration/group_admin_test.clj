@@ -38,8 +38,9 @@
           user (u/add! @db-session {:username username :password "Local123" :name "booya"})
           creation-params {:group {:group-name "the avengers"} :user-id (str (:id user))}
           event-ok? (service/create-group-event @db-session @comms creation-params)]
-      (is event-ok?)
-      (wait-for #(first (member/retrieve-groups-ids @db-session (:id user))) #(is (= :group-not-created :group-created)))
+      (is (true? event-ok?))
+      (wait-for #(first (member/retrieve-groups-ids @db-session (:id user)))
+                #(is (= :group-not-created :group-created)))
       (is (== (count (member/retrieve-groups-ids @db-session (:id user))) 1)))))
 
 

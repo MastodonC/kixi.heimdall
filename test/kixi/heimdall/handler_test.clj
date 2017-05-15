@@ -229,6 +229,7 @@
 (deftest test-create-group
   (testing "the /create-route route works"
     (with-redefs [group/add! (fn [session _] {:group-id (java.util.UUID/randomUUID)})
+                  group/find-by-name (fn [session name] nil)
                   member/add! (fn [session user-id grp-id role]
                                 '())]
       (let [events (atom {})
