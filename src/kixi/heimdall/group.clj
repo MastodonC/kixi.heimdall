@@ -44,6 +44,14 @@
              {:index created-by-index
               :return :all-attributes})))
 
+(defn find-by-name
+  [db group-name]
+  (first (db/query db
+                   groups-table
+                   {:group-name [:eq group-name]}
+                   {:index groups-by-name-index
+                    :return :all-attributes})))
+
 (defn find-user-group
   [db user-id]
   (first (find-by-user db user-id "user")))

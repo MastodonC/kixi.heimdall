@@ -1,27 +1,27 @@
 {:service-name "kixi.heimdall"
  :aws {:eu-central-1 {:region "eu-central-1"
                       :sns  "arn:aws:sns:eu-central-1:165664414043:witan-to-slack"
-                      :dynamodb-endpoint "dynamodb.eu-central-1.amazonaws.com"
+                      :dynamodb-endpoint #or [#env DYNAMODB_ENDPOINT "dynamodb.eu-central-1.amazonaws.com"]
                       :kinesis-endpoint "kinesis.eu-central-1.amazonaws.com"}
        :eu-west-1 {:region "eu-west-1"
                    :sns "arn:aws:sns:eu-west-1:720433613167:prod-witan-to-slack"
-                   :dynamodb-endpoint "dynamodb.eu-west-1.amazonaws.com"
+                   :dynamodb-endpoint #or [#env DYNAMODB_ENDPOINT "dynamodb.eu-west-1.amazonaws.com"]
                    :kinesis-endpoint "kinesis.eu-west-1.amazonaws.com"}}
  :dynamodb #profile {:development {:prefix "dev"
-                                   :db {:endpoint #or [#env DYNAMODB_ENDPOINT "http://localhost:8000"]}}
+                                   :db {:endpoint ^:ref [:aws :eu-central-1 :dynamodb-endpoint]}}
                      :dev-docker {:prefix "dev"
-                                  :db {:endpoint #or [#env DYNAMODB_ENDPOINT "http://dynamodb:8000"]}}
+                                  :db {:endpoint ^:ref [:aws :eu-central-1 :dynamodb-endpoint]}}
                      :test {:prefix "test"
-                            :db {:endpoint #or [#env DYNAMODB_ENDPOINT "http://localhost:8000"]}
+                            :db {:endpoint ^:ref [:aws :eu-central-1 :dynamodb-endpoint]}
                             :alerts false}
                      :staging-jenkins {:prefix "staging-jenkins"
-                                       :db {:endpoint #or [#env DYNAMODB_ENDPOINT ^:ref [:aws :eu-central-1 :dynamodb-endpoint]]}}
+                                       :db {:endpoint ^:ref [:aws :eu-central-1 :dynamodb-endpoint]}}
                      :staging {:prefix "staging"
-                               :db {:endpoint #or [#env DYNAMODB_ENDPOINT ^:ref [:aws :eu-central-1 :dynamodb-endpoint]]}
+                               :db {:endpoint ^:ref [:aws :eu-central-1 :dynamodb-endpoint]}
                                :alerts {:sns ^:ref [:aws :eu-central-1 :sns]
                                         :region ^:ref [:aws :eu-central-1 :region]}}
                      :prod {:prefix "prod"
-                            :db {:endpoint #or [#env DYNAMODB_ENDPOINT ^:ref [:aws :eu-west-1 :dynamodb-endpoint]]}
+                            :db {:endpoint ^:ref [:aws :eu-west-1 :dynamodb-endpoint]}
                             :alerts {:sns ^:ref [:aws :eu-west-1 :sns]
                                      :region ^:ref [:aws :eu-west-1 :region]}}
                      }
@@ -33,7 +33,7 @@
  :communications {:kinesis #profile {:development {:profile "dev"
                                                    :app ^:ref [:service-name]
                                                    :endpoint ^:ref [:aws :eu-central-1 :kinesis-endpoint]
-                                                   :dynamodb-endpoint "http://localhost:8000"
+                                                   :dynamodb-endpoint ^:ref [:aws :eu-central-1 :dynamodb-endpoint]
                                                    :region-name ^:ref [:aws :eu-central-1 :region]
                                                    :metric-level :NONE
                                                    :streams {:event "heimdall-dev-event"
@@ -41,7 +41,7 @@
                                      :dev-docker {:profile "dev"
                                                   :app ^:ref [:service-name]
                                                   :endpoint ^:ref [:aws :eu-central-1 :kinesis-endpoint]
-                                                  :dynamodb-endpoint "http://dynamodb:8000"
+                                                  :dynamodb-endpoint ^:ref [:aws :eu-central-1 :dynamodb-endpoint]
                                                   :region-name ^:ref [:aws :eu-central-1 :region]
                                                   :metric-level :NONE
                                                   :streams {:event "witan-dev-event"
@@ -49,7 +49,7 @@
                                      :test {:profile "test"
                                             :app ^:ref [:service-name]
                                             :endpoint ^:ref [:aws :eu-central-1 :kinesis-endpoint]
-                                            :dynamodb-endpoint "http://localhost:8000"
+                                            :dynamodb-endpoint ^:ref [:aws :eu-central-1 :dynamodb-endpoint]
                                             :region-name ^:ref [:aws :eu-central-1 :region]
                                             :metric-level :NONE
                                             :streams {:event "heimdall-test-event"
