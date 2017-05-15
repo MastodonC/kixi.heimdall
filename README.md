@@ -67,7 +67,7 @@ Wait until the system has settled before proceeding.
 To start the application, run:
 
 ```
-lein run -m kixi.heimdall.bootstrap -p <development/production>
+lein run -m kixi.heimdall.bootstrap -p <development/prod>
 ```
 
 ## Development docker image
