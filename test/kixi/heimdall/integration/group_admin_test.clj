@@ -30,13 +30,13 @@
   (testing "the actual creation"
     (let [username (rand-username)
           user (u/add! @db-session {:username username :password "Local123" :name "anothername"})
-          group-created (#'service/create-group @db-session {:group {:group-name "fantastic four"} :user-id (str (:id user))})]
+          group-created (#'service/create-group @db-session {:group {:group-name (str "fantastic four " (java.util.UUID/randomUUID))} :user-id (str (:id user))})]
       (is (== (count (member/retrieve-groups-ids @db-session (:id user))) 1))))
 
   (testing "creation after sending an event"
     (let [username (rand-username)
           user (u/add! @db-session {:username username :password "Local123" :name "booya"})
-          creation-params {:group {:group-name "the avengers"} :user-id (str (:id user))}
+          creation-params {:group {:group-name (str "the avengers " (java.util.UUID/randomUUID))} :user-id (str (:id user))}
           event-ok? (service/create-group-event @db-session @comms creation-params)]
       (is (true? event-ok?))
       (wait-for #(first (member/retrieve-groups-ids @db-session (:id user)))
