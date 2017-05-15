@@ -5,7 +5,6 @@
             [kixi.heimdall.config :as config]
             [clj-http.client :as client]
             [environ.core :refer [env]]
-            [clojure.data.json :as json]
             [taoensso.timbre :as log :refer [debug]]
             [clojure.spec :as spec]))
 
@@ -13,10 +12,10 @@
 
 (defn post-to-auth [uri params]
   (client/post uri
-               {:content-type :json
-                :accept :json
+               {:content-type :transit+json
+                :accept :transit+json
                 :throw-exceptions false
-                :as :json
+                :as :transit+json
                 :form-params params}))
 
 (deftest auth-token
