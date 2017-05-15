@@ -1,7 +1,7 @@
 (ns kixi.heimdall.handler
   (:require [compojure.core :refer :all]
             [compojure.route :as route]
-            [ring.middleware.json :refer [wrap-json-response wrap-json-params]]
+            [ring.middleware.format :refer [wrap-restful-format]]
             [ring.middleware.keyword-params :refer [wrap-keyword-params]]
             [ring.middleware.params :refer [wrap-params]]
             [kixi.heimdall.application :as app]
@@ -178,5 +178,4 @@
       wrap-params
       wrap-catch-exceptions
       wrap-keyword-params
-      wrap-json-params
-      wrap-json-response))
+      (wrap-restful-format :formats [:transit-json])))
