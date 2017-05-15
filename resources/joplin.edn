@@ -3,14 +3,14 @@
                 :db-seed-staging "seeds.dynamodb/run-staging"
                 :db-seed-prod "seeds.dynamodb/run-prod"}
  :databases    {:db-dev  {:type :dynamo
-                          :endpoint "http://localhost:8000"
-                          :migration-table "heimdall-dev-migrations"}
+                          :endpoint "http://dynamodb.eu-central-1.amazonaws.com"
+                          :migration-table "dev-kixi.heimdall-migrations"}
                 :db-dev-docker  {:type :dynamo
-                                 :endpoint "http://dynamodb:8000"
-                                 :migration-table "heimdall-dev-migrations"}
+                                 :endpoint "http://dynamodb.eu-central-1.amazonaws.com"
+                                 :migration-table "dev-kixi.heimdall-migrations"}
                 :db-test  {:type :dynamo
-                           :endpoint "http://localhost:8000"
-                           :migration-table "heimdall-tst-migrations"}
+                           :endpoint "http://dynamodb.eu-central-1.amazonaws.com"
+                           :migration-table "test-kixi.heimdall-migrations"}
                 :db-jenkins {:type :dynamo
                              :endpoint "http://dynamodb.eu-central-1.amazonaws.com"
                              :migration-table "staging-jenkins-kixi.heimdall-migrations"}

@@ -121,11 +121,15 @@
 
 (defn create-group-event
   [db communications {:keys [group user-id] :as input}]
-  (let [group-ok? (spec/valid? :kixi.heimdall.schema/group-params group)
+  (let [group-ok? (and (spec/valid? :kixi.heimdall.schema/group-params group)
+                       (not (group/find-by-name db (:group-name group))))
         user-ok? (spec/valid? :kixi.heimdall.schema/id user-id)]
     (if (and user-ok? group-ok?)
-      (and (comms/send-event! communications :kixi.heimdall/group-created "1.0.0" input) true)
-      false)))
+      (do (comms/send-event! communications :kixi.heimdall/group-created "1.0.0" input) true)
+      (do (comms/send-event! communications :kixi.heimdall/create-group-failed "1.0.0" {:user-valid user-ok?
+                                                                                        :group-valid group-ok?
+                                                                                        :group group
+                                                                                        :user-id user-id}) false))))
 
 (defn- create-group
   [db {:keys [group user-id]}]
@@ -188,16 +192,18 @@
         group-ok? (and (spec/valid? :kixi.heimdall.schema/id group-id)
                        (group/find-by-id db group-id))]
     (if (and user-ok? group-ok?)
-      (and (comms/send-event! communications
-                              :kixi.heimdall/member-added
-                              "1.0.0"
-                              {:user-id user-id
-                               :group-id group-id}) true)
-      false)))
-
-(defn remove-member
-  [db {:keys [user-id group-id]}]
-  (member/remove-member db user-id group-id))
+      (do (comms/send-event! communications
+                             :kixi.heimdall/member-added
+                             "1.0.0"
+                             {:user-id user-id
+                              :group-id group-id}) true)
+      (do (comms/send-event! communications
+                             :kixi.heimdall/member-added-failed
+                             "1.0.0"
+                             {:user-valid user-ok?
+                              :group-valid group-ok?
+                              :group-id group-id
+                              :user-id user-id}) false))))
 
 (defn remove-member-event
   [db communications user-id group-id]
@@ -206,12 +212,22 @@
         group-ok? (and (spec/valid? :kixi.heimdall.schema/id group-id)
                        (group/find-by-id db group-id))]
     (if (and user-ok? group-ok?)
-      (and (comms/send-event! communications
-                              :kixi.heimdall/member-removed
-                              "1.0.0"
-                              {:user-id user-id
-                               :group-id group-id}) true)
-      false)))
+      (do (comms/send-event! communications
+                             :kixi.heimdall/member-removed
+                             "1.0.0"
+                             {:user-id user-id
+                              :group-id group-id}) true)
+      (do (comms/send-event! communications
+                             :kixi.heimdall/member-removed-failed
+                             "1.0.0"
+                             {:user-valid user-ok?
+                              :group-valid group-ok?
+                              :group-id group-id
+                              :user-id user-id}) false))))
+
+(defn remove-member
+  [db {:keys [user-id group-id]}]
+  (member/remove-member db user-id group-id))
 
 (defn update-group
   [db {:keys [group-id name]}]

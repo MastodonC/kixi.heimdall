@@ -34,6 +34,7 @@
 (defprotocol Database
   (create-table [this table index opts])
   (delete-table [this table])
+  (update-table [this table opts])
   (put-item [this table record opts])
   (get-item [this table where opts])
   (query [this table where opts])
@@ -59,6 +60,10 @@
   (delete-table [this table]
     (far/delete-table (db this)
                       (decorated-table table (prefix this))))
+  (update-table [this table opts]
+    (far/update-table (db this)
+                      (decorated-table table (prefix this))
+                      opts))
   (put-item [this table record opts]
     (far/put-item (db this)
                   (decorated-table table (prefix this))
