@@ -51,7 +51,6 @@
          :dependencies [[javax.servlet/servlet-api "2.5"]
                         [ring/ring-mock "0.3.0"]
                         [clj-http "3.4.1"]
-                        [org.clojure/data.json "0.2.6"]
                         [com.cognitect/transit-clj "0.8.290"]]}}
   :aliases {"seed" ["run" "-m" "user/seed" "joplin.edn"]}
   :release-tasks [["vcs" "assert-committed"]
