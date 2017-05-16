@@ -198,7 +198,7 @@
                                        (mock/request :post "/refresh-auth-token"
                                                      (transit-encode {:refresh-token refresh-token}))))]
           (is (= (:status response) 401))
-          (is (= (:body response)
+          (is (= (:error (transit-decode-stream (:body response)))
                  "unauthenticated"))))))
   (testing "Handles case when token to refresh wasn't signed properly"
     (with-redefs [rt/find-by-user-and-issued (fn [session user-id issued] nil)
@@ -208,7 +208,7 @@
                                      (mock/request :post "/refresh-auth-token"
                                                    (transit-encode {:refresh-token "foo"}))))]
         (is (= (:status response) 401))
-        (is (= (:body response)
+        (is (= (:error (transit-decode-stream (:body response)))
                "unauthenticated"))))))
 
 (deftest test-invalidate-refresh-token
@@ -228,7 +228,7 @@
     (let [response (comms-app app (heimdall-request (mock/request :post "/invalidate-refresh-token"
                                                                   (transit-encode {:refresh-token "abc"}))))]
       (is (= (:status response) 400))
-      (is (= (:body response)
+      (is (= (:error (transit-decode-stream (:body response)))
              "invalidation-failed"))))
   (testing "invalidate refresh token not found"
     (let [refresh-token (valid-refresh-token)]
@@ -237,7 +237,7 @@
                                        (mock/request :post "/invalidate-refresh-token"
                                                      (:transit-encode {:refresh-token refresh-token}))))]
           (is (= (:status response) 400))
-          (is (= (:body response)
+          (is (= (:error (transit-decode-stream (:body response)))
                  "invalidation-failed")))))))
 
 (defn valid-auth-token
@@ -285,7 +285,7 @@
                                                                     :password "foo"
                                                                     :name "Bob Marley"}))))]
         (is (= (:status response) 400))
-        (is (= (:body response)
+        (is (= (:error (transit-decode-stream (:body response)))
                "user-creation-failed")))))
   (testing "new user triggers a send-event!"
     (with-redefs [user/add! (fn [_ _] {:user-id (java.util.UUID/randomUUID)})

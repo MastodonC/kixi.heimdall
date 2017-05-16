@@ -34,7 +34,7 @@
   ([information error status]
    (log/info "Returning error" status information)
    {:status status
-    :body (name error)})
+    :body {:error (name error)}})
 
   ([ctx status error-key msg]
    (return-error ctx status {:kixi.heimdall.schema/error error-key
