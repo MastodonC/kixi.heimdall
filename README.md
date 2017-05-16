@@ -93,44 +93,28 @@ The public key to use in combination with this development setup is the test_pub
 Beforehand:
 
 ```
-(require '[kixi.heimdall.service :as s])
-(require '[kixi.heimdall.group :as group])
+(require '[kixi.heimdall.kaylee :as k])
 ```
 
-To create a user (including sending an event):
+**To invite a new user:**
 ```
-(s/new-user (:db @kixi.heimdall.application/system)
-            (:communications @kixi.heimdall.application/system)
-            {:username "moo@bar.com" :password "Local123" :name "john doe"})
+(k/invite-user! "foo@bar.com")
+```
+This will produce an 'invite code' which the user can then use to signup via the `/signup` route.
+
+**To create a group:**
+```
+(k/create-group! "New Group" "foo@bar.com")
+```
+This will create a group called 'New Group' and assign the 'foo@bar.com' user as the group *owner*.
+
+**To add and remove group members:**
+```
+(k/add-user-to-group! "New Group" "baz@bar.com")
+
+(k/remove-user-from-group! "New Group" "baz@bar.com")
 ```
 
-To create a group:
-```
-(s/create-group-event (:db @kixi.heimdall.application/system)
-                      (:communications @kixi.heimdall.application/system)
-                      {:group {:group-name "the rebellion"} :user-id "<user id>"})
-(group/find-by-user (:db @kixi.heimdall.application/system)
-                    "<user-id>")
-```
-The last instruction may need to be repeated, and will show all the groups under the user, since `create-group-event` triggers the creation but the creation is asynchronous.
-
-Adding members and removing them
-```
-(s/add-member-event (:db @kixi.heimdall.application/system)
-                    (:communications @kixi.heimdall.application/system)
-                    "user-id" "group-id")
-
-(s/remove-member-event (:db @kixi.heimdall.application/system)
-                       (:communications @kixi.heimdall.application/system)
-                       "user-id" "group-id")
-```
-
-Updating the group (name)/
-```
-(s/update-group-event (:db @kixi.heimdall.application/system)
-                      (:communications @kixi.heimdall.application/system)
-                      "group-id" "new-name")
-```
 *Note*: it's important to use the given functions so that an event gets fired off, especially when used in production.
 
 ## License
