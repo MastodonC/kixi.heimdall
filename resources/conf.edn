@@ -1,12 +1,12 @@
 {:service-name "kixi.heimdall"
  :aws {:eu-central-1 {:region "eu-central-1"
                       :sns  "arn:aws:sns:eu-central-1:165664414043:witan-to-slack"
-                      :dynamodb-endpoint #or [#env DYNAMODB_ENDPOINT "dynamodb.eu-central-1.amazonaws.com"]
-                      :kinesis-endpoint "kinesis.eu-central-1.amazonaws.com"}
+                      :dynamodb-endpoint #or [#env DYNAMODB_ENDPOINT "http://dynamodb.eu-central-1.amazonaws.com"]
+                      :kinesis-endpoint #or [#env KINESIS_ENDPOINT "https://kinesis.eu-central-1.amazonaws.com"] }
        :eu-west-1 {:region "eu-west-1"
                    :sns "arn:aws:sns:eu-west-1:720433613167:prod-witan-to-slack"
-                   :dynamodb-endpoint #or [#env DYNAMODB_ENDPOINT "dynamodb.eu-west-1.amazonaws.com"]
-                   :kinesis-endpoint "kinesis.eu-west-1.amazonaws.com"}}
+                   :dynamodb-endpoint #or [#env DYNAMODB_ENDPOINT "http://dynamodb.eu-west-1.amazonaws.com"]
+                   :kinesis-endpoint #or [#env KINESIS_ENDPOINT "https://kinesis.eu-west-1.amazonaws.com"]}}
  :dynamodb #profile {:development {:prefix "dev"
                                    :db {:endpoint ^:ref [:aws :eu-central-1 :dynamodb-endpoint]}}
                      :dev-docker {:prefix "dev"
