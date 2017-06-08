@@ -6,6 +6,8 @@
 
 ;; This namespace is for useful functions, designed too make ops a bunch easier
 
+(println "<<< THE CURRENT PROFILE IS:" @kixi.heimdall.application/profile ">>>")
+
 (defn db
   []
   (:db @kixi.heimdall.application/system))
