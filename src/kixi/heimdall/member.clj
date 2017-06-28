@@ -12,21 +12,23 @@
                             :return [:group-id :s]})))
 
 (defn add!
-  [db user-id group-id]
+  [db {:keys [user-id group-id]}]
   {:pre [user-id group-id]}
   (db/put-item db
                members-table
-               {:id (str (java.util.UUID/randomUUID))
-                :user-id user-id
+               {:user-id user-id
                 :group-id group-id}
-               {:return :all-old})
-  )
+               {:return :all-old}))
 
 (defn remove-member
-  [db user-id group-id]
+  [db {:keys [user-id group-id]}]
   {:pre [user-id group-id]}
   (db/delete-item db
                   members-table
                   {:user-id user-id
                    :group-id group-id}
                   {:return :none}))
+
+(defn all
+  [db]
+  (db/scan db members-table))

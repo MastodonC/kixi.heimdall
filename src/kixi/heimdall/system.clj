@@ -3,6 +3,7 @@
             [environ.core :refer [env]]
             [kixi.comms :as comms]
             [kixi.comms.components.kinesis :as kinesis]
+            [kixi.comms.components.coreasync :as coreasync]
             [kixi.heimdall
              [application :as app]
              [config :as config]]
@@ -32,7 +33,9 @@
          :web-server (web/new-http-server (config/webserver-port config) config)
          :repl-server  (Object.) ; dummy - replaced when invoked via uberjar.
          :db (db/new-session (:dynamodb config) profile)
-         :communications (kinesis/map->Kinesis (:kinesis (:communications config)))
+         :communications (case (first (keys (:communications config)))
+                           :kinesis (kinesis/map->Kinesis (:kinesis (:communications config)))
+                           :coreasync (coreasync/map->CoreAsync (:coreasync (:communications config))))
          :persistence (persistence/->Persistence)
          :commands (commands/->Commands))
         (component/system-using

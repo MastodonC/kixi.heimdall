@@ -120,48 +120,54 @@
     (fail "Invalid or expired refresh token provided")))
 
 (defn create-group-event
-  [db communications {:keys [group user-id] :as input}]
-  (let [group-ok? (and (spec/valid? :kixi.heimdall.schema/group-params group)
-                       (not (group/find-by-name db (:group-name group))))
-        user-ok? (spec/valid? :kixi.heimdall.schema/id user-id)]
+  [db communications {:keys [group-name group-id user-id] :as input}]
+  (let [group-ok? (and (spec/valid? :kixi.heimdall.schema/group-params input)
+                       (not (group/find-by-name db group-name)))
+        user-ok? (spec/valid? :kixi.heimdall.schema/id user-id)
+        input-dated (assoc input
+                           :created (str (util/db-now)))]
     (if (and user-ok? group-ok?)
-      (do (comms/send-event! communications :kixi.heimdall/group-created "1.0.0" input) true)
-      (do (comms/send-event! communications :kixi.heimdall/create-group-failed "1.0.0" {:user-valid user-ok?
+      (do (comms/send-event! communications :kixi.heimdall/group-created "2.0.0" input-dated) true)
+      (do (comms/send-event! communications :kixi.heimdall/create-group-failed "2.0.0" {:user-valid user-ok?
                                                                                         :group-valid group-ok?
-                                                                                        :group group
+                                                                                        :group-name group-name
+                                                                                        :group-id group-id
                                                                                         :user-id user-id}) false))))
 
 (defn- create-group
-  [db {:keys [group user-id]}]
-  (let [user-uuid user-id
-        group-id (:group-id (group/add! db {:name (:group-name group)
-                                            :user-id user-uuid}))]
-    (member/add! db user-uuid group-id)
-    {:group-id group-id}))
+  [db group]
+  (group/add! db group)
+  (member/add! db {:user-id (:user-id group)
+                   :group-id (:group-id group)}))
 
 (defn add-self-group
   [db user]
-  (let [self-group (group/add! db {:name (:name user)
+  (let [self-group (group/add! db {:group-name (:name user)
                                    :user-id (:id user)
+                                   :group-id (:group-id user)
                                    :group-type "user"})]
-    (member/add! db (:id user) (:group-id self-group))
+    (member/add! db {:user-id (:id user)
+                     :group-id (:group-id user)})
     {:group-id self-group}))
 
-(defn new-user
-  [db communications params]
-  (let [credentials (select-keys params [:username :password :name])
-        [ok? res] (user/validate credentials)]
-    (if ok?
-      (if (user/find-by-username db {:username (:username credentials)})
-        (fail "There is already a user with this username.")
-        (let [added-user (user/add! db credentials)
-              self-group (add-self-group db added-user)]
+(defn send-user-created-event!
+  [communications user]
+  (comms/send-event!
+   communications
+   :kixi.heimdall/user-created "2.0.0"
+   (dissoc user :password)))
 
-          (log/warn "user id created for " (:username credentials) " : " (:id added-user)) ;; needed for REPL admin
-          (log/warn "self-group created: " (:group-id self-group))
-          (comms/send-event! communications :kixi.heimdall/user-created "1.0.0" (select-keys params [:username]))
-          (success {:message "User successfully created!"})))
-      (fail (str "Please match the required format: " res)))))
+(defn- create-user
+  "Event consumer: we will attempt to add a user - it may already exist.
+  We generate a random password."
+  [db user]
+  (try
+    (->> (assoc user :password (str (java.util.UUID/randomUUID)))
+         (user/add! db)
+         (add-self-group db))
+    (catch com.amazonaws.services.dynamodbv2.model.ConditionalCheckFailedException e
+      (comment "This should only work on event replay, when the condition will succeed.")))
+  nil)
 
 (defn new-user-with-invite
   [db communications params]
@@ -172,18 +178,19 @@
         (fail "There is already a user with this username.")
         (if-not (invites/consume! db (:invite-code params) (:username credentials))
           (fail "The invite code was invalid.")
-          (let [added-user (user/add! db credentials)
-                self-group (add-self-group db added-user)]
-
-            (log/warn "user id created for " (:username credentials) " : " (:id added-user)) ;; needed for REPL admin
-            (log/warn "self-group created: " (:group-id self-group))
-            (comms/send-event! communications :kixi.heimdall/user-created "1.0.0" (select-keys params [:username]))
+          (let [credentials' (assoc credentials
+                                    :id (str (java.util.UUID/randomUUID))
+                                    :created (str (util/db-now)))
+                added-user (assoc (user/add! db credentials')
+                                  :group-id (str (java.util.UUID/randomUUID)))]
+            (add-self-group db added-user)
+            (send-user-created-event! communications added-user)
             (success {:message "User successfully created!"}))))
       (fail (str "Please match the required format: " res)))))
 
 (defn- add-member
-  [db {:keys [user-id group-id]}]
-  (member/add! db user-id group-id))
+  [db {:keys [user-id group-id] :as member}]
+  (member/add! db member))
 
 (defn add-member-event
   [db communications user-id group-id]
@@ -226,8 +233,8 @@
                               :user-id user-id}) false))))
 
 (defn remove-member
-  [db {:keys [user-id group-id]}]
-  (member/remove-member db user-id group-id))
+  [db {:keys [user-id group-id] :as member}]
+  (member/remove-member db member))
 
 (defn update-group
   [db {:keys [group-id name]}]

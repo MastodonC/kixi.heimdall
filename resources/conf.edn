@@ -30,46 +30,46 @@
                                 :staging 3000
                                 :prod 3000}}
 
- :communications {:kinesis #profile {:development {:profile "dev"
+ :communications #profile {:development {:kinesis {:profile "dev"
                                                    :app ^:ref [:service-name]
                                                    :endpoint ^:ref [:aws :eu-central-1 :kinesis-endpoint]
                                                    :dynamodb-endpoint ^:ref [:aws :eu-central-1 :dynamodb-endpoint]
                                                    :region-name ^:ref [:aws :eu-central-1 :region]
                                                    :metric-level :NONE
                                                    :streams {:event "heimdall-dev-event"
-                                                             :command "heimdall-dev-command"}}
-                                     :dev-docker {:profile "dev"
+                                                             :command "heimdall-dev-command"}}}
+                           :dev-docker {:kinesis {:profile "dev"
                                                   :app ^:ref [:service-name]
                                                   :endpoint ^:ref [:aws :eu-central-1 :kinesis-endpoint]
                                                   :dynamodb-endpoint ^:ref [:aws :eu-central-1 :dynamodb-endpoint]
                                                   :region-name ^:ref [:aws :eu-central-1 :region]
                                                   :metric-level :NONE
                                                   :streams {:event "witan-dev-event"
-                                                            :command "witan-dev-command"}}
-                                     :test {:profile "test"
-                                            :app ^:ref [:service-name]
-                                            :endpoint ^:ref [:aws :eu-central-1 :kinesis-endpoint]
-                                            :dynamodb-endpoint ^:ref [:aws :eu-central-1 :dynamodb-endpoint]
-                                            :region-name ^:ref [:aws :eu-central-1 :region]
-                                            :metric-level :NONE
-                                            :streams {:event "heimdall-test-event"
-                                                      :command "heimdall-test-command"}}
-                                     :staging-jenkins {:profile "staging-jenkins"
-                                                       :app ^:ref [:service-name]
-                                                       :endpoint ^:ref [:aws :eu-central-1 :kinesis-endpoint]
-                                                       :dynamodb-endpoint ^:ref [:aws :eu-central-1 :dynamodb-endpoint]
-                                                       :region-name ^:ref [:aws :eu-central-1 :region]
-                                                       :metric-level :NONE
-                                                       :streams {:event "staging-jenkins-heimdall-event"
-                                                                 :command "staging-jenkins-heimdall-command"}}
-                                     :staging {:profile "staging"
+                                                            :command "witan-dev-command"}}}
+                           :test {:coreasync {:profile "test"
+                                              :app ^:ref [:service-name]
+                                              :region-name ^:ref [:aws :eu-central-1 :region]
+                                              :metric-level :NONE}}
+                           :staging-jenkins {:coreasync {:profile "staging-jenkins"
+                                                         :app ^:ref [:service-name]
+                                                         :region-name ^:ref [:aws :eu-central-1 :region]
+                                                         :metric-level :NONE}
+                                             #_:kinesis #_{:profile "staging-jenkins"
+                                                           :app ^:ref [:service-name]
+                                                           :endpoint ^:ref [:aws :eu-central-1 :kinesis-endpoint]
+                                                           :dynamodb-endpoint ^:ref [:aws :eu-central-1 :dynamodb-endpoint]
+                                                           :region-name ^:ref [:aws :eu-central-1 :region]
+                                                           :metric-level :NONE
+                                                           :streams {:event "staging-jenkins-heimdall-event"
+                                                                     :command "staging-jenkins-heimdall-command"}}}
+                           :staging {:kinesis {:profile "staging"
                                                :app ^:ref [:service-name]
                                                :endpoint ^:ref [:aws :eu-central-1 :kinesis-endpoint]
                                                :dynamodb-endpoint ^:ref [:aws :eu-central-1 :dynamodb-endpoint]
                                                :region-name ^:ref [:aws :eu-central-1 :region]
                                                :streams {:event "staging-witan-event"
-                                                         :command "staging-witan-command"}}
-                                     :prod {:profile "prod"
+                                                         :command "staging-witan-command"}}}
+                           :prod {:kinesis {:profile "prod"
                                             :app ^:ref [:service-name]
                                             :endpoint ^:ref [:aws :eu-west-1 :kinesis-endpoint]
                                             :dynamodb-endpoint ^:ref [:aws :eu-west-1 :dynamodb-endpoint]

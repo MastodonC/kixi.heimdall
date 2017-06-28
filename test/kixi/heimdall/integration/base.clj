@@ -3,12 +3,17 @@
             [kixi.heimdall.integration.repl :as repl]
             [kixi.comms.components.kinesis :as kinesis]
             [taoensso.timbre :as log]
-            [kixi.comms.components.kinesis :as kinesis]
             [amazonica.aws.dynamodbv2 :as ddb]
-            [kixi.heimdall.config :as config]))
+            [kixi.heimdall.config :as config]
+            [kixi.heimdall.service :as service]
+            [kixi.heimdall.invites :refer [get-invite]]
+            [kixi.heimdall.user :as u :refer [find-by-username]]))
 
 (def system (atom nil))
-(def wait-tries (Integer/parseInt (env :wait-tries "300")))
+(def comms-mode (first (keys (:communications (config/config (keyword (env :system-profile "test")))))))
+(def wait-tries (Integer/parseInt (env :wait-tries (case comms-mode
+                                                     :coreasync "10"
+                                                     "300"))))
 (def wait-per-try (Integer/parseInt (env :wait-per-try "200")))
 
 (defn table-exists?
@@ -42,12 +47,15 @@
   (try
     (all-tests)
     (finally
-      (let [{:keys [endpoint dynamodb-endpoint streams app profile] :as args}
-            (get-in (config/config (keyword (env :system-profile "test"))) [:communications :kinesis])
+      (let [config (config/config (keyword (env :system-profile "test")))
+            {:keys [endpoint dynamodb-endpoint streams app profile] :as args}
+            (first (vals (:communications config)))
             _ (log/info app profile)]
         (repl/stop)
-
-        (teardown-kinesis! args)
+        
+        (when (= :kinesis
+                 (first (keys (:communications config))))
+          (teardown-kinesis! args))
 
         (log/info "Finished")))))
 
@@ -82,3 +90,25 @@
      (do
        (log/info "calling fail fn")
        (fail-fn)))))
+
+(defn create-user!
+  [{:keys [username] :as user}]
+  (let [{:keys [kixi.comms.event/payload]} (service/invite-user! @db-session @comms username)
+        {:keys [invite-code]} payload]
+    (wait-for #(get-invite @db-session username)
+              #(log/error "COULDN'T CREATE USER" username "1"))
+    (service/new-user-with-invite @db-session @comms (assoc user
+                                                            :invite-code invite-code))
+    (wait-for #(find-by-username @db-session user)
+              #(log/error "COULDN'T CREATE USER" username "2"))))
+
+(defn create-group!
+  [session owner-name group-name]
+  (let [_ (create-user! {:username owner-name :password "Local123" :name "randomName"})
+        group-id (str (java.util.UUID/randomUUID))
+        owner-id (:id (u/find-by-username session {:username owner-name}))
+        _ (#'service/create-group session {:group-id group-id
+                                                  :group-name group-name
+                                                  :user-id (str owner-id)})]
+    [owner-id group-id]))
+
