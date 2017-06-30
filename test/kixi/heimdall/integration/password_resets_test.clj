@@ -37,16 +37,15 @@
 (deftest roundtrip-test
   "Start by creating a user, then sending the reset password command,
    then receiving the code and finally performing the reset."
-  (let [username "test@test.com"
+  (let [username (str "password-resets-test-" (str (java.util.UUID/randomUUID)) "@test.com")
         get-user-fn #(u/find-by-username @db-session {:username username})
         get-reset-code-fn #(db/get-item @db-session
                                         resets-table
                                         {:username username}
                                         {:consistent? true})]
-    (service/new-user @db-session @comms {:username username :password "Foobar123"})
+    (create-user! {:name "Test User" :username username :password "Foobar123"})
     (wait-for get-user-fn
-              #(throw (Exception. "User never arrived."))
-              10)
+              #(throw (Exception. "User never arrived.")))
     (when-let [user (get-user-fn)]
       (kcomms/send-command! @comms
                             :kixi.heimdall/create-password-reset-request
@@ -54,8 +53,7 @@
                             nil
                             {:username username})
       (wait-for get-reset-code-fn
-                #(throw (Exception. "Reset code never arrived."))
-                10)
+                #(throw (Exception. "Reset code never arrived.")))
       (when-let [reset-code-item (get-reset-code-fn)]
         (let [[ok? _] (service/complete-password-reset! @db-session
                                                         @comms

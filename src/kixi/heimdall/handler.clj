@@ -76,11 +76,12 @@
       (return-error {:msg res :fn "invalidate-refresh-token"} :invalidation-failed 400))))
 
 (defn create-group [req]
-  (let [ok? (and
+  (let [{:keys [group-id group-name]} (:params req)
+        ok? (and
              (:user-id req)
              (service/create-group-event (dynamodb req)
                                          (communications req)
-                                         {:group (:params req) :user-id (:user-id req)}))]
+                                         {:group-name group-name :group-id group-id :user-id (:user-id req)}))]
     (if ok?
       {:status 201 :body "Group successfully created"}
       (return-error {:msg "Please provide valid parameters (name for the group)" :fn "create-group"} :group-creation-failed 400))))

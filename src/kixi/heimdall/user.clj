@@ -28,16 +28,13 @@
 
 (defn add!
   [db user]
-  (let [user-id (str (java.util.UUID/randomUUID))
-        user-data (-> user
-                      (update-in [:password] #(hs/encrypt %))
-                      (assoc :created (util/db-now)
-                             :id user-id))]
+  (let [user-data (update-in user [:password] #(hs/encrypt %))]
                                         ;add user-data spec
     (db/put-item db
                  user-table
                  user-data
-                 {:return :none})
+                 {:return :none
+                  :cond-expr "attribute_not_exists(id)"})
     user-data))
 
 (defn find-by-username

@@ -248,18 +248,20 @@
 
 (deftest test-create-group
   (testing "the /create-route route works"
-    (with-redefs [group/add! (fn [session _] {:group-id (java.util.UUID/randomUUID)})
-                  group/find-by-name (fn [session name] nil)
-                  member/add! (fn [session user-id grp-id role]
-                                '())]
-      (let [events (atom {})
-            response (comms-app app (heimdall-request
-                                     (mock/request :post "/group"
-                                                   (transit-encode {:group-name "test-grp"})))
-                                events)]
-        (is (= (:status response) 201))
-        (is (= (:body response) "Group successfully created"))
-        (is (= (:event (first (get-in @events [:comms :sent]))) :kixi.heimdall/group-created))))))
+    (let [group-id (str (java.util.UUID/randomUUID))]
+      (with-redefs [group/add! (fn [session _] {:group-id group-id})
+                    group/find-by-name (fn [session name] nil)
+                    member/add! (fn [_ _]
+                                  '())]
+        (let [events (atom {})
+              response (comms-app app (heimdall-request
+                                       (mock/request :post "/group"
+                                                     (transit-encode {:group-id group-id
+                                                                      :group-name "test-grp"})))
+                                  events)]
+          (is (= (:status response) 201))
+          (is (= (:body response) "Group successfully created"))
+          (is (= (:event (first (get-in @events [:comms :sent]))) :kixi.heimdall/group-created)))))))
 
 (deftest new-user-test
   (testing "new user can be added if password passes the validation"
@@ -267,7 +269,7 @@
                   user/find-by-username (fn [_ _] nil)
                   invites/consume! (fn [_ _ _] true)
                   group/add! (fn [_ _] {:group-id (java.util.UUID/randomUUID)})
-                  member/add! (fn [_ _ _] '())]
+                  member/add! (fn [_ _] '())]
       (let [response (comms-app app (heimdall-request
                                      (mock/request :post "/user"
                                                    (transit-encode {:username "user@boo.com"
@@ -286,20 +288,7 @@
                                                                     :name "Bob Marley"}))))]
         (is (= (:status response) 400))
         (is (= (:error (transit-decode-stream (:body response)))
-               "user-creation-failed")))))
-  (testing "new user triggers a send-event!"
-    (with-redefs [user/add! (fn [_ _] {:user-id (java.util.UUID/randomUUID)})
-                  user/find-by-username (fn [_ _] nil)
-                  invites/consume! (fn [_ _ _] true)
-                  group/add! (fn [_ _] {:group-id (java.util.UUID/randomUUID)})
-                  member/add! (fn [_ _ _] '())]
-      (let [events (atom {})
-            response (comms-app app (heimdall-request
-                                     (mock/request :post "/user"
-                                                   (transit-encode {:username "user@boo.com"
-                                                                    :password "secret1Pass"})))
-                                events)]
-        (is (= @events {:comms {:sent '({:event :kixi.heimdall/user-created :version "1.0.0" :payload {:username "user@boo.com"}})}}))))))
+               "user-creation-failed"))))))
 
 (deftest reset-password-test
   (testing "passwords can be reset"
@@ -307,7 +296,7 @@
                   user/find-by-username (fn [_ _] nil)
                   invites/consume! (fn [_ _ _] true)
                   group/add! (fn [_ _] {:group-id (java.util.UUID/randomUUID)})
-                  member/add! (fn [_ _ _] '())]
+                  member/add! (fn [_ _] '())]
       (let [response (comms-app app (heimdall-request
                                      (mock/request :post "/user"
                                                    (transit-encode {:username "user@boo.com"

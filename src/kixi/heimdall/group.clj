@@ -8,19 +8,16 @@
 (def groups-by-name-index "groups-by-name")
 
 (defn add!
-  [db {:keys [name user-id group-type] :as group}]
-  (let [group-id (str (java.util.UUID/randomUUID))
-        group-data {:id group-id
-                    :group-name name
+  [db {:keys [group-name user-id group-type group-id created] :as group}]
+  (let [group-data {:id group-id
+                    :group-name group-name
                     :group-type (or group-type "group")
                     :created-by user-id
-                    :created (str (util/db-now)) ;might need a epoch timestamp field as well if want ordering
-                    }]
+                    :created created}]
     (db/put-item db
                  groups-table
                  group-data
-                 {:return :none})
-    {:group-id group-id}))
+                 {:return :none})))
 
 (defn find-by-id
   [db id]

@@ -14,8 +14,13 @@
           [(c/attach-event-handler! communications
                                     :kixi.heimdall/persistence-group-created
                                     :kixi.heimdall/group-created
-                                    "1.0.0"
+                                    "2.0.0"
                                     (comp (constantly nil) (partial #'service/create-group db) :kixi.comms.event/payload))
+           (c/attach-event-handler! communications
+                                    :kixi.heimdall/persistence-user-created
+                                    :kixi.heimdall/user-created
+                                    "2.0.0"
+                                    (comp (constantly nil) (partial #'service/create-user db) :kixi.comms.event/payload))
            (c/attach-event-handler! communications
                                     :kixi.heimdall/persistence-member-added
                                     :kixi.heimdall/member-added
