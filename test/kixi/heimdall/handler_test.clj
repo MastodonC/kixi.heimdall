@@ -67,8 +67,8 @@
   (send-event! [_ event version payload]
     (log/info "send-event!")
     (swap! triggered update-in  [:comms :sent] concat [{:event event :version version :payload payload}]))
-  (send-event! [_ event version payload command-id]
-    (swap! triggered update-in [:comms :sent] concat [{:event event :version version :payload payload :command-id command-id}]))
+  (send-event! [_ event version payload opts]
+    (swap! triggered update-in [:comms :sent] concat [{:event event :version version :payload payload :opts opts}]))
   (send-command! [_ command version user payload]
     (swap! triggered update-in [:comms :command] concat [{:command command :user user :version version :payload payload}]))
   (attach-event-handler! [_ group-id event version handler]
@@ -128,7 +128,13 @@
           (is (= (:status response) 201))
           (let [body-resp (transit-decode-stream (:body response))]
             (is (:token-pair body-resp)))
-          (is (= @events {:comms {:sent '({:event :kixi.heimdall/user-logged-in :version "1.0.0" :payload {:username "user@boo.com"}})}})))))
+          (let [event (first (get-in @events [:comms :sent]))]
+            (is (= (dissoc event :opts)
+                   {:event :kixi.heimdall/user-logged-in
+                    :version "1.0.0"
+                    :payload {:username "user@boo.com"}}))
+            (is (= (keys (:opts event))
+                   '(:kixi.comms.event/partition-key)))))))
 
     (testing "authentication fails wrong user"
       (with-redefs [user/find-by-username (fn [session m] nil)

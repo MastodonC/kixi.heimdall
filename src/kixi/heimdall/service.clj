@@ -88,7 +88,11 @@
     (if ok?
       (let [token-info (token-data db (:user res))]
         (if-let [token-pair (make-token-pair! db auth-conf token-info)]
-          (do  (comms/send-event! communications :kixi.heimdall/user-logged-in "1.0.0" (select-keys credentials [:username]))
+          (do  (comms/send-event! communications
+                                  :kixi.heimdall/user-logged-in
+                                  "1.0.0"
+                                  (select-keys credentials [:username])
+                                  {:kixi.comms.event/partition-key (get-in res [:user :id])})
                (success token-pair))
           (fail "Invalid username or password")))
       (fail "Invalid username or password"))))
@@ -127,12 +131,20 @@
         input-dated (assoc input
                            :created (str (util/db-now)))]
     (if (and user-ok? group-ok?)
-      (do (comms/send-event! communications :kixi.heimdall/group-created "2.0.0" input-dated) true)
-      (do (comms/send-event! communications :kixi.heimdall/create-group-failed "2.0.0" {:user-valid user-ok?
-                                                                                        :group-valid group-ok?
-                                                                                        :group-name group-name
-                                                                                        :group-id group-id
-                                                                                        :user-id user-id}) false))))
+      (do (comms/send-event! communications
+                             :kixi.heimdall/group-created
+                             "2.0.0"
+                             input-dated
+                             {:kixi.comms.event/partition-key group-id}) true)
+      (do (comms/send-event! communications
+                             :kixi.heimdall/create-group-failed
+                             "2.0.0"
+                             {:user-valid user-ok?
+                              :group-valid group-ok?
+                              :group-name group-name
+                              :group-id group-id
+                              :user-id user-id}
+                             {:kixi.comms.event/partition-key group-id}) false))))
 
 (defn- create-group
   [db group]
@@ -152,10 +164,11 @@
 
 (defn send-user-created-event!
   [communications user]
-  (comms/send-event!
-   communications
-   :kixi.heimdall/user-created "2.0.0"
-   (dissoc user :password)))
+  (comms/send-event! communications
+                     :kixi.heimdall/user-created
+                     "2.0.0"
+                     (dissoc user :password)
+                     {:kixi.comms.event/partition-key (:id user)}))
 
 (defn- create-user
   "Event consumer: we will attempt to add a user - it may already exist.
@@ -203,14 +216,16 @@
                              :kixi.heimdall/member-added
                              "1.0.0"
                              {:user-id user-id
-                              :group-id group-id}) true)
+                              :group-id group-id}
+                             {:kixi.comms.event/partition-key group-id}) true)
       (do (comms/send-event! communications
                              :kixi.heimdall/member-added-failed
                              "1.0.0"
                              {:user-valid user-ok?
                               :group-valid group-ok?
                               :group-id group-id
-                              :user-id user-id}) false))))
+                              :user-id user-id}
+                             {:kixi.comms.event/partition-key group-id}) false))))
 
 (defn remove-member-event
   [db communications user-id group-id]
@@ -223,14 +238,16 @@
                              :kixi.heimdall/member-removed
                              "1.0.0"
                              {:user-id user-id
-                              :group-id group-id}) true)
+                              :group-id group-id}
+                             {:kixi.comms.event/partition-key group-id}) true)
       (do (comms/send-event! communications
                              :kixi.heimdall/member-removed-failed
                              "1.0.0"
                              {:user-valid user-ok?
                               :group-valid group-ok?
                               :group-id group-id
-                              :user-id user-id}) false))))
+                              :user-id user-id}
+                             {:kixi.comms.event/partition-key group-id}) false))))
 
 (defn remove-member
   [db {:keys [user-id group-id] :as member}]
@@ -250,7 +267,8 @@
                               :kixi.heimdall/group-updated
                               "1.0.0"
                               {:group-id group-id
-                               :name new-group-name})
+                               :name new-group-name}
+                              {:kixi.comms.event/partition-key group-id})
            true)
       false)))
 
@@ -310,7 +328,11 @@
           ;;
           :else
           (invites/create-invite-event username))]
-    (comms/send-event! communications key version payload)
+    (comms/send-event! communications
+                       key
+                       version
+                       payload
+                       {:kixi.comms.event/partition-key username})
     (when (= :kixi.heimdall/invite-created key)
       (email/send-email! :user-invite communications {:url (:url payload) :username username}))
     event))
@@ -345,7 +367,10 @@
                         kixi.comms.event/version
                         kixi.comms.event/payload]} (password-resets/create-reset-completed-event username)]
             (user/change-password! db username password)
-            (comms/send-event! communications key version payload)
+            (comms/send-event! communications
+                               key
+                               version
+                               payload)
             (success {:message "Password was reset"}))
           (fail (str "No matching reset code - requested for " username))))
       (fail (str "Please match the required format: " res)))))
