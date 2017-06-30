@@ -1,5 +1,6 @@
 (ns kixi.heimdall.patches.patch-20170629
-  (:require [kixi.heimdall.user :as user]
+  (:require [kixi.comms :as comms]
+            [kixi.heimdall.user :as user]
             [kixi.heimdall.group :as group]
             [kixi.heimdall.member :as member]
             [kixi.heimdall.service :as service]))
