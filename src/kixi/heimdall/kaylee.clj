@@ -23,6 +23,10 @@
    (comms)
    username))
 
+(defn change-user-password!
+  [username new-password]
+  (user/change-password! (db) username new-password))
+
 (defn create-group!
   [group-name owner-name]
   (if-let [user (user/find-by-username (db) {:username owner-name})]
