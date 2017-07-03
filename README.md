@@ -102,6 +102,11 @@ Beforehand:
 ```
 This will produce an 'invite code' which the user can then use to signup via the `/signup` route.
 
+**To change a user's password:**
+```
+(k/change-user-password! "foo@bar.com" "S3cr3t!123")
+```
+
 **To create a group:**
 ```
 (k/create-group! "New Group" "foo@bar.com")
