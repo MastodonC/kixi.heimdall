@@ -21,7 +21,7 @@
 (spec/def ::uuid #(instance? java.util.UUID %))
 (spec/def ::id uuid?)
 (spec/def ::username email?)
-(spec/def ::created #(try (util/date-time? %) (catch Exception e false)))
+(spec/def ::created util/date-time?)
 (spec/def ::exp integer?)
 
 (spec/def ::user-id uuid?)
