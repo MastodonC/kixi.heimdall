@@ -1,7 +1,8 @@
 (ns kixi.heimdall.group
   (:require [kixi.heimdall.components.database :as db]
             [kixi.heimdall.util :as util]
-            [taoensso.timbre :as log]))
+            [taoensso.timbre :as log]
+            [clojure.spec :as spec]))
 
 (def groups-table "groups")
 (def created-by-index "groups-by-created-by-and-type")
@@ -9,15 +10,17 @@
 
 (defn add!
   [db {:keys [group-name user-id group-type group-id created] :as group}]
-  (let [group-data {:id group-id
-                    :group-name group-name
-                    :group-type (or group-type "group")
-                    :created-by user-id
-                    :created created}]
-    (db/put-item db
-                 groups-table
-                 group-data
-                 {:return :none})))
+  (if-let [error (spec/explain-data :kixi.heimdall.schema/group-params group)]
+    (throw (Exception. (pr-str error)))
+    (let [group-data {:id group-id
+                      :group-name group-name
+                      :group-type (or group-type "group")
+                      :created-by user-id
+                      :created created}]
+      (db/put-item db
+                   groups-table
+                   group-data
+                   {:return :none}))))
 
 (defn find-by-id
   [db id]

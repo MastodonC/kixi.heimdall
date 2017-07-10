@@ -9,6 +9,7 @@
             [kixi.heimdall.group :as group]
             [kixi.heimdall.member :as member]
             [kixi.heimdall.invites :as invites]
+            [kixi.heimdall.util :as util]
             [buddy.hashers :as hs]
             [clojure.java.io :as io]
             [clojure.edn :as edn]
@@ -263,7 +264,8 @@
               response (comms-app app (heimdall-request
                                        (mock/request :post "/group"
                                                      (transit-encode {:group-id group-id
-                                                                      :group-name "test-grp"})))
+                                                                      :group-name "test-grp"
+                                                                      :created (util/db-now)})))
                                   events)]
           (is (= (:status response) 201))
           (is (= (:body response) "Group successfully created"))

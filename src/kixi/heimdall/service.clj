@@ -157,7 +157,8 @@
   (let [self-group (group/add! db {:group-name (:name user)
                                    :user-id (:id user)
                                    :group-id (:group-id user)
-                                   :group-type "user"})]
+                                   :group-type "user"
+                                   :created (:created user)})]
     (member/add! db {:user-id (:id user)
                      :group-id (:group-id user)})
     {:group-id self-group}))

@@ -8,6 +8,13 @@
   []
   (tf/unparse (tf/formatters :date-time) (t/now)))
 
+(defn date-time?
+  "attempt to parse dt"
+  [s]
+  (try
+    (tf/parse (tf/formatters :date-time) s)
+    (catch Exception e false)))
+
 (defn replacer
   "Calls  replacement function on different types"
   [rfn x]
