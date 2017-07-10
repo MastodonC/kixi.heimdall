@@ -5,6 +5,7 @@
             [taoensso.timbre :as log]
             [amazonica.aws.dynamodbv2 :as ddb]
             [kixi.heimdall.config :as config]
+            [kixi.heimdall.util :as util]
             [kixi.heimdall.service :as service]
             [kixi.heimdall.invites :refer [get-invite]]
             [kixi.heimdall.user :as u :refer [find-by-username]]))
@@ -52,7 +53,7 @@
             (first (vals (:communications config)))
             _ (log/info app profile)]
         (repl/stop)
-        
+
         (when (= :kinesis
                  (first (keys (:communications config))))
           (teardown-kinesis! args))
@@ -108,7 +109,7 @@
         group-id (str (java.util.UUID/randomUUID))
         owner-id (:id (u/find-by-username session {:username owner-name}))
         _ (#'service/create-group session {:group-id group-id
-                                                  :group-name group-name
-                                                  :user-id (str owner-id)})]
+                                           :created (util/db-now)
+                                           :group-name group-name
+                                           :user-id (str owner-id)})]
     [owner-id group-id]))
-
