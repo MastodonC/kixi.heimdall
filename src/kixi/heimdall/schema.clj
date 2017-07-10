@@ -17,19 +17,20 @@
   (when-not (clojure.string/blank? s)
     (re-find #"(?=.*\d.*)(?=.*[a-z].*)(?=.*[A-Z].*).{8,}" s)))
 
-(spec/def ::group-id uuid?)
-(spec/def ::group-name string?)
-(spec/def ::group-type #{"user" "group"})
-(spec/def ::group-params
-  (spec/keys :req-un [::group-name ::group-id]
-             :opts [::group-type]))
-
-
 (spec/def ::uuid #(instance? java.util.UUID %))
 (spec/def ::id uuid?)
 (spec/def ::username email?)
 (spec/def ::created string?)
 (spec/def ::exp integer?)
+
+(spec/def ::user-id uuid?)
+(spec/def ::group-id uuid?)
+(spec/def ::group-name string?)
+(spec/def ::group-type #{"user" "group"})
+(spec/def ::group-params
+  (spec/keys :req-un [::group-name ::group-id ::user-id ::created]
+             :opts [::group-type]))
+
 (spec/def ::groups (spec/coll-of ::uuid))
 (spec/def ::user-groups (spec/keys :req-un [::groups] :opts []))
 (spec/def ::user
