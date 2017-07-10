@@ -6,6 +6,7 @@
             [kixi.heimdall.config :as config]
             [kixi.heimdall.components.database :as db]
             [kixi.heimdall.user :as u]
+            [kixi.heimdall.util :as util]
             [kixi.heimdall.group :as group]
             [kixi.heimdall.member :as member]
             [taoensso.timbre :as log :refer [debug]]))
@@ -22,17 +23,19 @@
           user-id (str (java.util.UUID/randomUUID))
           user (u/add! @db-session {:id user-id :username username :password "Local123" :name "anothername"})
           group-created (#'service/create-group @db-session {:group-id (str (java.util.UUID/randomUUID))
-                                                             :group-name (str "fantastic four " (java.util.UUID/randomUUID)) 
-                                                             :user-id user-id})]
+                                                             :group-name (str "fantastic four " (java.util.UUID/randomUUID))
+                                                             :user-id user-id
+                                                             :created (util/db-now)})]
       (is (== (count (member/retrieve-groups-ids @db-session user-id)) 1))))
 
   (testing "creation after sending an event"
     (let [username (rand-username)
           user-id (str (java.util.UUID/randomUUID))
           user (u/add! @db-session {:id user-id :username username :password "Local123" :name "booya"})
-          creation-params {:group-id (str (java.util.UUID/randomUUID)) 
+          creation-params {:group-id (str (java.util.UUID/randomUUID))
                            :group-name (str "the avengers " (java.util.UUID/randomUUID))
-                           :user-id user-id}
+                           :user-id user-id
+                           :created (util/db-now)}
           event-ok? (service/create-group-event @db-session @comms creation-params)]
       (is (true? event-ok?))
       (wait-for #(first (member/retrieve-groups-ids @db-session user-id))
@@ -45,7 +48,7 @@
     (let [username1 (rand-username)
           username2 (rand-username)
           [_ group-id] (create-group! @db-session username1 "Specter")
-          member-id (str (java.util.UUID/randomUUID)) 
+          member-id (str (java.util.UUID/randomUUID))
           _ (u/add! @db-session {:id member-id :username username2 :password "Local123" :name "Jane"})
           _ (#'service/add-member @db-session {:user-id (str member-id)
                                                :group-id (str group-id)})]
@@ -54,7 +57,7 @@
     (let [username1 (rand-username)
           username2 (rand-username)
           [_ group-id] (create-group! @db-session "boss@bar.com" "Hydra")
-          member-id (str (java.util.UUID/randomUUID)) 
+          member-id (str (java.util.UUID/randomUUID))
           _ (u/add! @db-session {:id member-id :username "new@bar.com" :password "Local123" :name "Joe"})
           event-ok? (service/add-member-event @db-session @comms (str member-id) (str group-id))]
       (is event-ok?)
@@ -66,7 +69,7 @@
     (let [username1 (rand-username)
           username2 (rand-username)
           [_ group-id] (create-group! @db-session username1 "Specter")
-          member-id (str (java.util.UUID/randomUUID)) 
+          member-id (str (java.util.UUID/randomUUID))
           _ (u/add! @db-session {:id member-id :username username2 :password "Local123" :name "blob"})
           _ (#'service/add-member @db-session {:user-id (str member-id)
                                                :group-id (str group-id)})
@@ -78,7 +81,7 @@
     (let [username1 (rand-username)
           username2 (rand-username)
           [_ group-id] (create-group! @db-session username1 "Hydra")
-          member-id (str (java.util.UUID/randomUUID)) 
+          member-id (str (java.util.UUID/randomUUID))
           _ (u/add! @db-session {:id member-id :username username2 :password "Local123" :name "mob"})
           _ (#'service/add-member @db-session {:user-id (str member-id)
                                                :group-id (str group-id)})
