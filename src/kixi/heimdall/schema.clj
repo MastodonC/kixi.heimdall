@@ -1,5 +1,6 @@
 (ns kixi.heimdall.schema
-  (:require [clojure.spec :as spec]))
+  (:require [clojure.spec :as spec]
+            [kixi.heimdall.util :as util]))
 
 (defn uuid?
   [s]
@@ -20,7 +21,7 @@
 (spec/def ::uuid #(instance? java.util.UUID %))
 (spec/def ::id uuid?)
 (spec/def ::username email?)
-(spec/def ::created string?)
+(spec/def ::created util/date-time?)
 (spec/def ::exp integer?)
 
 (spec/def ::user-id uuid?)
