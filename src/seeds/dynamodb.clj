@@ -5,7 +5,12 @@
             [kixi.heimdall.components.database :as db]
             [kixi.heimdall.config :as config]
             [kixi.heimdall.application :as app]
+            [kixi.heimdall.util :as util]
             [taoensso.timbre :as log]))
+
+(defn uuid
+  []
+  (str (java.util.UUID/randomUUID)))
 
 (defn get-db-config
   []
@@ -15,14 +20,21 @@
 (defn run-dev [target & args]
   (let [dc (db/new-session (get-db-config) @app/profile)
         ;; Add a test user
-        test-user (user/add! dc {:username "test@mastodonc.com" :password "Secret123" :name "Test User"})
-        _ (group/add! dc {:name "Test User"
-                          :user-id (:id test-user)
-                          :group-type "user"})]
+        test-user (user/add! dc {:username "test@mastodonc.com"
+                                 :password "Secret123"
+                                 :name "Test User"
+                                 :id (uuid)})
+        _ (group/add! dc {:group-name "Test User"
+                          :user-id (str (:id test-user))
+                          :group-type "user"
+                          :group-id (uuid)
+                          :created (util/db-now)})]
     ;; Add a test group
     (#'service/create-group dc
-                            {:group {:group-name "Test Group"}
-                             :user-id (str (:id test-user))})))
+                            {:group-name "Test Group"
+                             :user-id (str (:id test-user))
+                             :group-id (uuid)
+                             :created (util/db-now)})))
 
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -65,7 +77,8 @@
       existing
       (let [u (user/add! db {:username email
                              :password "Secret123"
-                             :name user-name})]
+                             :name user-name
+                             :id (uuid)})]
         (service/add-self-group db u)
         u))))
 
@@ -73,7 +86,8 @@
   [dc all-users [group-name users]]
   (let [group (#'service/create-group dc
                                       {:group {:group-name group-name}
-                                       :user-id (str (:id (get all-users (first users))))})]
+                                       :user-id (str (:id (get all-users (first users))))
+                                       :group-id (uuid)})]
     (run! (fn [user]
             (#'service/add-member dc
                                   {:group-id (str (:group-id group))
