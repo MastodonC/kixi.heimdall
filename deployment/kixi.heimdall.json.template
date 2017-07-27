@@ -1,38 +1,38 @@
 {
-  "container": {
-    "type": "DOCKER",
-    "docker": {
-      "image": "@@IMAGE@@:@@TAG@@",
-      "parameters": [
-         {"key": "env", "value": "ENVIRONMENT=@@ENVIRONMENT@@"},
-         {"key": "env", "value": "JAVA_OPTS=@@JAVA_OPTS@@"},
-         {"key": "env", "value": "PROFILE=@@PROFILE@@"},
-         {"key": "env", "value": "SECRETS_BUCKET=@@SECRETS_BUCKET@@"},
-         {"key": "env", "value": "AWS_REGION=@@AWS_REGION@@"},
-         {"key": "label", "value": "cluster=@@ENVIRONMENT@@"},
-         {"key": "label", "value": "application=heimdall"}
-      ],
-      "network": "BRIDGE",
-      "portMappings": [
-          {
-              "containerPort": 3000,
-              "hostPort": 10010,
-              "protocol": "tcp"
-          },
-          {
-              "containerPort": 5001,
-              "hostPort": 10011,
-              "protocol": "tcp"
-          }
-      ]
-    }
-  },
-  "id": "kixi.heimdall",
-  "cpus": @@CPUS@@,
-  "mem": @@MEM@@,
-  "instances": @@INSTANCES@@,
-  "constraints": [["hostname", "UNIQUE"]],
-  "healthChecks": [{
+    "container": {
+        "type": "DOCKER",
+        "docker": {
+            "image": "@@IMAGE@@:@@TAG@@",
+            "parameters": [
+                {"key": "env", "value": "ENVIRONMENT=@@ENVIRONMENT@@"},
+                {"key": "env", "value": "JAVA_OPTS=@@JAVA_OPTS@@"},
+                {"key": "env", "value": "PROFILE=@@PROFILE@@"},
+                {"key": "env", "value": "SECRETS_BUCKET=@@SECRETS_BUCKET@@"},
+                {"key": "env", "value": "AWS_REGION=@@AWS_REGION@@"},
+                {"key": "label", "value": "cluster=@@ENVIRONMENT@@"},
+                {"key": "label", "value": "application=heimdall"}
+            ],
+            "network": "BRIDGE",
+            "portMappings": [
+                {
+                    "containerPort": 3000,
+                    "hostPort": 10010,
+                    "protocol": "tcp"
+                },
+                {
+                    "containerPort": 5001,
+                    "hostPort": 10011,
+                    "protocol": "tcp"
+                }
+            ]
+        }
+    },
+    "id": "kixi.heimdall",
+    "cpus": @@CPUS@@,
+    "mem": @@MEM@@,
+    "instances": @@INSTANCES@@,
+    "constraints": [["hostname", "UNIQUE"]],
+    "healthChecks": [{
         "protocol": "TCP",
         "path": "/healthcheck",
         "gracePeriodSeconds": 600,
@@ -40,5 +40,5 @@
         "portIndex": 0,
         "timeoutSeconds": 10,
         "maxConsecutiveFailures": 3
-  }]
+    }]
 }
