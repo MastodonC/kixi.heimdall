@@ -36,6 +36,8 @@
                                                    :dynamodb-endpoint ^:ref [:aws :eu-central-1 :dynamodb-endpoint]
                                                    :region-name ^:ref [:aws :eu-central-1 :region]
                                                    :metric-level :NONE
+                                                   :initial-lease-table-read-capacity 1
+                                                   :initial-lease-table-write-capacity 1 
                                                    :streams {:event "heimdall-dev-event"
                                                              :command "heimdall-dev-command"}}}
                            :dev-docker {:kinesis {:profile "dev"
@@ -44,6 +46,8 @@
                                                   :dynamodb-endpoint ^:ref [:aws :eu-central-1 :dynamodb-endpoint]
                                                   :region-name ^:ref [:aws :eu-central-1 :region]
                                                   :metric-level :NONE
+                                                  :initial-lease-table-read-capacity 1
+                                                  :initial-lease-table-write-capacity 1 
                                                   :streams {:event "witan-dev-event"
                                                             :command "witan-dev-command"}}}
                            :test {:coreasync {:profile "test"
@@ -59,7 +63,9 @@
                                                            :endpoint ^:ref [:aws :eu-central-1 :kinesis-endpoint]
                                                            :dynamodb-endpoint ^:ref [:aws :eu-central-1 :dynamodb-endpoint]
                                                            :region-name ^:ref [:aws :eu-central-1 :region]
-                                                           :metric-level :NONE
+                                                           :metric-level :NONE                                                            
+                                                           :initial-lease-table-read-capacity 1
+                                                           :initial-lease-table-write-capacity 1
                                                            :streams {:event "staging-jenkins-heimdall-event"
                                                                      :command "staging-jenkins-heimdall-command"}}}
                            :staging {:kinesis {:profile "staging"
@@ -67,6 +73,8 @@
                                                :endpoint ^:ref [:aws :eu-central-1 :kinesis-endpoint]
                                                :dynamodb-endpoint ^:ref [:aws :eu-central-1 :dynamodb-endpoint]
                                                :region-name ^:ref [:aws :eu-central-1 :region]
+                                               :initial-lease-table-read-capacity 1
+                                               :initial-lease-table-write-capacity 1
                                                :streams {:event "staging-witan-event"
                                                          :command "staging-witan-command"}}}
                            :prod {:kinesis {:profile "prod"
@@ -74,6 +82,8 @@
                                             :endpoint ^:ref [:aws :eu-west-1 :kinesis-endpoint]
                                             :dynamodb-endpoint ^:ref [:aws :eu-west-1 :dynamodb-endpoint]
                                             :region-name ^:ref [:aws :eu-west-1:region]
+                                            :initial-lease-table-read-capacity 2
+                                            :initial-lease-table-write-capacity 2
                                             :streams {:event "prod-witan-event"
                                                       :command "prod-witan-command"}}}}
  :auth-conf {:privkey #profile {:default "/root/prod_privkey.pem"
