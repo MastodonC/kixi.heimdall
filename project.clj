@@ -32,7 +32,7 @@
                  [de.ubercode.clostache/clostache "1.4.0"]
                  [ring-middleware-format "0.7.2"] ;; transit
                  ;; not really dependency, dep collision https://groups.google.com/forum/#!topic/clojure/D_s9Drua6D4
-                 ]
+                 [spootnik/signal "0.2.1"]]
   :plugins [[lein-ring "0.9.7"]]
   :pedantic? true
   :repl-options {:init-ns user}

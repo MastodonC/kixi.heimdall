@@ -37,9 +37,9 @@
                                                    :region-name ^:ref [:aws :eu-central-1 :region]
                                                    :metric-level :NONE
                                                    :initial-lease-table-read-capacity 1
-                                                   :initial-lease-table-write-capacity 1 
-                                                   :streams {:event "heimdall-dev-event"
-                                                             :command "heimdall-dev-command"}}}
+                                                   :initial-lease-table-write-capacity 1
+                                                   :streams {:event #or [#env EVENT_STREAM "heimdall-dev-event"]
+                                                             :command #or [#env COMMAND_STREAM "heimdall-dev-command"]}}}
                            :dev-docker {:kinesis {:profile "dev"
                                                   :app ^:ref [:service-name]
                                                   :endpoint ^:ref [:aws :eu-central-1 :kinesis-endpoint]
@@ -47,7 +47,7 @@
                                                   :region-name ^:ref [:aws :eu-central-1 :region]
                                                   :metric-level :NONE
                                                   :initial-lease-table-read-capacity 1
-                                                  :initial-lease-table-write-capacity 1 
+                                                  :initial-lease-table-write-capacity 1
                                                   :streams {:event "witan-dev-event"
                                                             :command "witan-dev-command"}}}
                            :test {:coreasync {:profile "test"
@@ -63,7 +63,7 @@
                                                            :endpoint ^:ref [:aws :eu-central-1 :kinesis-endpoint]
                                                            :dynamodb-endpoint ^:ref [:aws :eu-central-1 :dynamodb-endpoint]
                                                            :region-name ^:ref [:aws :eu-central-1 :region]
-                                                           :metric-level :NONE                                                            
+                                                           :metric-level :NONE
                                                            :initial-lease-table-read-capacity 1
                                                            :initial-lease-table-write-capacity 1
                                                            :streams {:event "staging-jenkins-heimdall-event"

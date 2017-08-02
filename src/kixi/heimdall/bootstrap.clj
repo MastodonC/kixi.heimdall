@@ -6,7 +6,8 @@
             [clojure.tools.cli :refer [cli]]
             [taoensso.timbre :as log]
             [clojure.tools.nrepl.server :as nrepl-server]
-            [com.stuartsierra.component :as component])
+            [com.stuartsierra.component :as component]
+            [signal.handler :refer [with-handler]])
   (:gen-class))
 
 (defrecord ReplServer [config]
@@ -48,4 +49,8 @@
     (try
       (reset! kixi.heimdall.application/system
               (component/start (build-application opts)))
-      (catch Throwable t (log/error t))))) ;; just to really be sure, should be caught elsewhere
+      (catch Throwable t (log/error t))) ;; just to really be sure, should be caught elsewhere
+
+    (with-handler :term
+      (log/info "SIGTERM was caught: shutting down...")
+      (component/stop @kixi.heimdall.application/system))))
