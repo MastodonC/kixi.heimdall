@@ -168,7 +168,9 @@
   (comms/send-event! communications
                      :kixi.heimdall/user-created
                      "2.0.0"
-                     (dissoc user :password)
+                     (-> user
+                         (dissoc :password)
+                         (update :username clojure.string/lower-case))
                      {:kixi.comms.event/partition-key (:id user)}))
 
 (defn- create-user
@@ -176,7 +178,9 @@
   We generate a random password."
   [db user]
   (try
-    (->> (assoc user :password (str (java.util.UUID/randomUUID)))
+    (->> (-> user
+             (assoc :password (str (java.util.UUID/randomUUID)))
+             (update :username clojure.string/lower-case))
          (user/add! db)
          (add-self-group db))
     (catch com.amazonaws.services.dynamodbv2.model.ConditionalCheckFailedException e
@@ -185,7 +189,9 @@
 
 (defn new-user-with-invite
   [db communications params]
-  (let [credentials (select-keys params [:username :password :name])
+  (let [credentials (-> params
+                        (select-keys [:username :password :name])
+                        (update :username clojure.string/lower-case))
         [ok? res] (user/validate credentials)]
     (if ok?
       (if (user/find-by-username db {:username (:username credentials)})
@@ -316,7 +322,8 @@
 (defn invite-user!
   "Use this to invite a new user to the system."
   [db communications username]
-  (let [{:keys [kixi.comms.event/key
+  (let [username (clojure.string/lower-case username)
+        {:keys [kixi.comms.event/key
                 kixi.comms.event/version
                 kixi.comms.event/payload] :as event}
         (cond
@@ -345,7 +352,8 @@
 
 (defn reset-password!
   [db communications {:keys [username]}]
-  (let [user (user/find-by-username db {:username username})
+  (let [username (clojure.string/lower-case username)
+        user (user/find-by-username db {:username username})
         event-fn (if user
                    (partial password-resets/create-reset-event user)
                    (partial password-resets/reject-reset-event "No matching user found"))
@@ -360,7 +368,8 @@
 
 (defn complete-password-reset!
   [db communications username password reset-code]
-  (let [[ok? res] (user/validate {:username username :password password})]
+  (let [username (clojure.string/lower-case username)
+        [ok? res] (user/validate {:username username :password password})]
     (if ok?
       (let [result (password-resets/consume! db reset-code username)]
         (if result

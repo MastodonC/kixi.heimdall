@@ -28,7 +28,9 @@
 
 (defn add!
   [db user]
-  (let [user-data (update-in user [:password] #(hs/encrypt %))]
+  (let [user-data (-> user
+                      (update :password hs/encrypt)
+                      (update :username clojure.string/lower-case))]
                                         ;add user-data spec
     (db/put-item db
                  user-table
@@ -42,7 +44,7 @@
   (first
    (db/query db
              user-table
-             {:username [:eq username]}
+             {:username [:eq (clojure.string/lower-case username)]}
              {:index users-by-username
               :limit 1
               :return :all-attributes})))

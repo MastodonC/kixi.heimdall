@@ -25,7 +25,7 @@
   (let [ic (util/create-code)]
     {:kixi.comms.event/key :kixi.heimdall/invite-created
      :kixi.comms.event/version "1.0.0"
-     :kixi.comms.event/payload {:username username
+     :kixi.comms.event/payload {:username (clojure.string/lower-case username)
                                 :invite-code ic
                                 :url (invite-code->url ic username)}}))
 
