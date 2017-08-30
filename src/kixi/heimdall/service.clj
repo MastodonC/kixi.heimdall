@@ -168,9 +168,7 @@
   (comms/send-event! communications
                      :kixi.heimdall/user-created
                      "2.0.0"
-                     (-> user
-                         (dissoc :password)
-                         (update :username clojure.string/lower-case))
+                     (dissoc user :password)
                      {:kixi.comms.event/partition-key (:id user)}))
 
 (defn- create-user
