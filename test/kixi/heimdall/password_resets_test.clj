@@ -1,34 +1,35 @@
 (ns kixi.heimdall.password-resets-test
   (:require [kixi.heimdall.password-resets :refer :all]
+            [kixi.heimdall.integration.base :refer [random-email]]
             [clojure.test :refer :all]))
 
 (deftest reset-event
-  (let [name "foo@bar.com"
-        event (create-reset-event {:kixi.user/username name} nil)]
+  (let [name (random-email)
+        event (create-reset-event {:username name} nil)]
     (is event)
     (is #{:kixi.comms.event/key :kixi.comms.event/version :kixi.comms.event/payload}
         (= (set (keys event))))
     (let [{:keys [url user reset-code] :as p} (:kixi.comms.event/payload event)]
-      (is (= (:kixi.user/username user) name) (str p))
+      (is (= (clojure.string/lower-case name) (:username user)) (str p))
       (is reset-code)
       (is url)
       (is (pos? (.indexOf url reset-code))))))
 
 (deftest reset-event-reject
-  (let [name "foo@bar.com"
+  (let [name (random-email)
         event (reject-reset-event "foo reason" name)]
     (is event)
     (is #{:kixi.comms.event/key :kixi.comms.event/version :kixi.comms.event/payload}
         (= (set (keys event))))
     (let [{:keys [reason username]} (:kixi.comms.event/payload event)]
-      (is (= username name))
+      (is (= (clojure.string/lower-case name) username))
       (is (= "foo reason" reason)))))
 
 (deftest reset-event-complete
-  (let [name "foo@bar.com"
+  (let [name (random-email)
         event (create-reset-completed-event name)]
     (is event)
     (is #{:kixi.comms.event/key :kixi.comms.event/version :kixi.comms.event/payload}
         (= (set (keys event))))
     (let [{:keys [username]} (:kixi.comms.event/payload event)]
-      (is (= username name)))))
+      (is (= (clojure.string/lower-case name) username)))))

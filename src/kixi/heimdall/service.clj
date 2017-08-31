@@ -176,9 +176,7 @@
   We generate a random password."
   [db user]
   (try
-    (->> (-> user
-             (assoc :password (str (java.util.UUID/randomUUID)))
-             (update :username clojure.string/lower-case))
+    (->> (assoc user :password (str (java.util.UUID/randomUUID)))
          (user/add! db)
          (add-self-group db))
     (catch com.amazonaws.services.dynamodbv2.model.ConditionalCheckFailedException e
@@ -350,8 +348,7 @@
 
 (defn reset-password!
   [db communications {:keys [username]}]
-  (let [username (clojure.string/lower-case username)
-        user (user/find-by-username db {:username username})
+  (let [user (user/find-by-username db {:username username})
         event-fn (if user
                    (partial password-resets/create-reset-event user)
                    (partial password-resets/reject-reset-event "No matching user found"))

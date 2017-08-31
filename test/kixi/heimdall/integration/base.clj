@@ -17,6 +17,20 @@
                                                      "300"))))
 (def wait-per-try (Integer/parseInt (env :wait-per-try "200")))
 
+(defn uuid
+  []
+  (str (java.util.UUID/randomUUID)))
+
+(defn rand-str
+  [len]
+  (apply str (take len (repeatedly #(if (zero? (rand-int 2)) (char (+ (rand 26) 65)) (char (+ (rand 26) 97)))))))
+
+(defn random-email
+  ([]
+   (random-email 10 10))
+  ([pl sl]
+   (apply str (rand-str pl) "@" (rand-str sl) "." (rand-str 3))))
+
 (defn table-exists?
   [endpoint table]
   (try
@@ -106,7 +120,7 @@
 (defn create-group!
   [session owner-name group-name]
   (let [_ (create-user! {:username owner-name :password "Local123" :name "randomName"})
-        group-id (str (java.util.UUID/randomUUID))
+        group-id (uuid)
         owner-id (:id (u/find-by-username session {:username owner-name}))
         _ (#'service/create-group session {:group-id group-id
                                            :created (util/db-now)

@@ -11,7 +11,7 @@
 (defn email?
   [s]
   (when-not (clojure.string/blank? s)
-    (re-find #"^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,63}" s)))
+    (re-find #"^[a-z0-9._%+-]+@[a-z0-9.-]+\.[a-z]{2,63}" s)))
 
 (defn password?
   [s]
