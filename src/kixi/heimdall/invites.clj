@@ -25,18 +25,19 @@
   (let [ic (util/create-code)]
     {:kixi.comms.event/key :kixi.heimdall/invite-created
      :kixi.comms.event/version "1.0.0"
-     :kixi.comms.event/payload {:username username
+     :kixi.comms.event/payload {:username (clojure.string/lower-case username)
                                 :invite-code ic
                                 :url (invite-code->url ic username)}}))
 
 (defn save!
-  [db invite-code username]
-  (db/put-item db
-               invites-table
-               {:username username
-                :invite-code invite-code
-                :created-at (util/db-now)}
-               {:return :none}))
+  [db invite-code username']
+  (let [username (clojure.string/lower-case username')]
+    (db/put-item db
+                 invites-table
+                 {:username username
+                  :invite-code invite-code
+                  :created-at (util/db-now)}
+                 {:return :none})))
 
 (defn get-invite
   [db username]
@@ -46,8 +47,9 @@
                {:consistent? true}))
 
 (defn consume!
-  [db invite-code username]
-  (let [item (get-invite db username)]
+  [db invite-code username']
+  (let [username (clojure.string/lower-case username')
+        item (get-invite db username)]
     (when (= invite-code (:invite-code item))
       (nil? (db/delete-item db
                             invites-table

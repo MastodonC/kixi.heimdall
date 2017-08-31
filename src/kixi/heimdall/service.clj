@@ -185,7 +185,9 @@
 
 (defn new-user-with-invite
   [db communications params]
-  (let [credentials (select-keys params [:username :password :name])
+  (let [credentials (-> params
+                        (select-keys [:username :password :name])
+                        (update :username clojure.string/lower-case))
         [ok? res] (user/validate credentials)]
     (if ok?
       (if (user/find-by-username db {:username (:username credentials)})
@@ -316,7 +318,8 @@
 (defn invite-user!
   "Use this to invite a new user to the system."
   [db communications username]
-  (let [{:keys [kixi.comms.event/key
+  (let [username (clojure.string/lower-case username)
+        {:keys [kixi.comms.event/key
                 kixi.comms.event/version
                 kixi.comms.event/payload] :as event}
         (cond
@@ -360,7 +363,8 @@
 
 (defn complete-password-reset!
   [db communications username password reset-code]
-  (let [[ok? res] (user/validate {:username username :password password})]
+  (let [username (clojure.string/lower-case username)
+        [ok? res] (user/validate {:username username :password password})]
     (if ok?
       (let [result (password-resets/consume! db reset-code username)]
         (if result

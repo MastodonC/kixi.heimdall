@@ -11,34 +11,34 @@
 (use-fixtures :once cycle-system extract-db-session extract-comms)
 
 (deftest save-test
-  (let [name "save-test-foo@bar.com"
+  (let [name (random-email)
         code (util/create-code)]
     (save! @db-session code name)
     (let [r (db/get-item
              @db-session
              invites-table
-             {:username name}
+             {:username (clojure.string/lower-case name)}
              {:consistent? true})]
       (is (= #{:invite-code :username :created-at} (set (keys r)))))))
 
 (deftest consume-test
-  (let [name "consume-test-foo@bar.com"
+  (let [name (random-email)
         code (util/create-code)]
     (save! @db-session code name)
     (is (consume! @db-session code name))
     (is (not (consume! @db-session code name)))))
 
 (deftest no-save-test
-  (let [name "no-save-test-foo@bar.com"
+  (let [name (random-email)
         code (util/create-code)]
     (is (not (consume! @db-session code name)))))
 
 (deftest roundtrip-test
   "Invite a user and then have them sign up"
-  (let [username (str "test-" (java.util.UUID/randomUUID) "@test.com")
+  (let [username (random-email)
         get-invite-code-fn #(db/get-item @db-session
                                          invites-table
-                                         {:username username}
+                                         {:username (clojure.string/lower-case username)}
                                          {:consistent? true})]
     (service/invite-user! @db-session @comms username)
     (wait-for get-invite-code-fn
