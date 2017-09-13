@@ -20,9 +20,13 @@
                 :as :transit+json
                 :form-params params}))
 
+(defn uid
+  []
+  (str (java.util.UUID/randomUUID)))
+
 (deftest auth-token
   (testing "auth token contains required fields"
-    (let [username (str "boo" (rand-int 1000) "@test.com")
+    (let [username (str "auth-" (uid) "@test.com")
           _ (create-user! {:username username
                            :password "Secret123"
                            :name "Bravo Charlie"})
@@ -34,8 +38,25 @@
       (let [unsigned (service/unsign-token (:auth-conf conf)
                                            (get-in body [:token-pair :auth-token]))]
         (is (spec/valid? :kixi.heimdall.schema/auth-token unsigned) (pr-str unsigned)))))
+  (testing "invited user can not sign in"
+    (let [username (str "not-sign-in-" (uid) "@test.com")
+          _ (invite-user! {:username username
+                           :password "Secret123"
+                           :name "Bravo Charlie"})
+          conf (config/config (keyword (env :system-profile "test")))
+          auth-fn (fn [pword] 
+                    (:body (post-to-auth (str "http://localhost:" (config/webserver-port conf) "/create-auth-token")
+                                         (merge {:username username}
+                                                (when pword
+                                                  {:password pword})))))]
+      (is (get-in (auth-fn "Secret123")
+                  [:error]))
+      (is (get-in (auth-fn "")
+                  [:error]))
+      (is (get-in (auth-fn nil)
+                  [:error]))))
   (testing "refreshed token contains required fields"
-    (let [username (str "boo" (rand-int 1000) "@test.com")
+    (let [username (str "refresh-" (uid) "@test.com")
           _ (create-user! {:username username
                            :password "Secret123"
                            :name "Bravo Charlie"})

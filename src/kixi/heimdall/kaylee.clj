@@ -17,33 +17,32 @@
   []
   (:communications @kixi.heimdall.application/system))
 
-(defn invite-user!
-  [username]
-  (service/invite-user!
-   (db)
-   (comms)
-   username))
-
 (defn change-user-password!
   [username new-password]
   (user/change-password! (db) username new-password))
 
+(defn wait-for
+  [f]
+  (loop []
+    (if-let [x (f)]
+      x
+      (do (Thread/sleep 10)
+          (recur)))))
+
 (defn create-group!
   [group-name owner-name]
   (if-let [user (user/find-by-username (db) {:username owner-name})]
-    (let [group-id (str (java.util.UUID/randomUUID))]
-      (if (service/create-group-event (db)
-                                      (comms)
-                                      {:group-name group-name
-                                       :group-id group-id
-                                       :created (util/db-now)
-                                       :user-id (:id user)})
-        (loop []
-          (if-let [group (group/find-by-name (db) group-name)]
-            group
-            (do (Thread/sleep 1000)
-                (recur))))
-        :failed-create-group))
+    (if-let [group (group/find-by-name (db) group-name)]
+      :failed-group-exists
+      (let [group-id (str (java.util.UUID/randomUUID))]
+        (if (service/create-group-event (db)
+                                        (comms)
+                                        {:group-name group-name
+                                         :group-id group-id
+                                         :created (util/db-now)
+                                         :user-id (:id user)})
+          (wait-for #(group/find-by-name (db) group-name))
+          :failed-create-group)))
     :failed-no-user))
 
 (defn add-user-to-group!
@@ -53,13 +52,26 @@
     (if (service/add-member-event (db)
                                   (comms)
                                   (:id user) (:id group))
-      (loop []
-        (let [groups (member/retrieve-groups-ids (db) (:id user))]
-          (if (contains? (set groups) (:id group))
-            true
-            (do (Thread/sleep 1000)
-                (recur)))))
+      (wait-for #(let [groups (member/retrieve-groups-ids (db) (:id user))]
+                   (contains? (set groups) (:id group))))
       :failed-add-user-to-group)))
+
+(defn invite-user!
+  ([username name]
+   (invite-user! username name []))
+  ([username name group-names]
+   (let [[ok? user] (service/invite-user!
+                     (db)
+                     (comms)
+                     {:username username
+                      :name name})]
+     (when ok?
+       (wait-for #(user/find-by-username (db) {:username username}))
+       (doseq [group-name group-names]
+         (let [group-result (create-group! group-name username)]
+           (when (= group-result
+                    :failed-group-exists)
+             (add-user-to-group! group-name username))))))))
 
 (defn remove-user-from-group!
   [group-name user-name]
@@ -68,10 +80,6 @@
     (if (service/remove-member-event (db)
                                      (comms)
                                      (:id user) (:id group))
-      (loop []
-        (let [groups (member/retrieve-groups-ids (db) (:id user))]
-          (if-not (contains? (set groups) (:id group))
-            true
-            (do (Thread/sleep 1000)
-                (recur)))))
+      (wait-for #(let [groups (member/retrieve-groups-ids (db) (:id user))]
+                   (contains? (set groups) (:id group))))
       :failed-remove-user-from-group)))

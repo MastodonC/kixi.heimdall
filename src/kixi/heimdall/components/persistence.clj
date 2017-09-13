@@ -39,7 +39,7 @@
            (c/attach-event-handler! communications
                                     :kixi.heimdall/persistence-invite-create
                                     :kixi.heimdall/invite-created
-                                    "1.0.0"
+                                    "2.0.0"
                                     (comp (constantly nil) (partial #'service/save-invite db) :kixi.comms.event/payload))
            (c/attach-event-handler! communications
                                     :kixi.heimdall/persistence-password-reset-request-create

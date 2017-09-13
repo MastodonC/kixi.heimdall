@@ -40,24 +40,24 @@
                                          invites-table
                                          {:username (clojure.string/lower-case username)}
                                          {:consistent? true})]
-    (service/invite-user! @db-session @comms username)
+    (service/invite-user! @db-session @comms {:username username :name "Invite Test"})
     (wait-for get-invite-code-fn
               #(throw (Exception. "Invite code never arrived.")))
     (when-let [invite-code-item (get-invite-code-fn)]
       (let [[username-fail? username-res]
-            (service/new-user-with-invite @db-session @comms {:username "wrong-email@foo.com"
-                                                              :name "Invite Test"
-                                                              :password "Foobar123"
-                                                              :invite-code (:invite-code invite-code-item)})
+            (service/signup-user! @db-session @comms {:username "wrong-email@foo.com"
+                                                      :name "Invite Test"
+                                                      :password "Foobar123"
+                                                      :invite-code (:invite-code invite-code-item)})
             [ic-fail? ic-res]
-            (service/new-user-with-invite @db-session @comms {:username username
-                                                              :name "Invite Test"
-                                                              :password "Foobar123"
-                                                              :invite-code "123456789"})
-            [ok? res] (service/new-user-with-invite @db-session @comms {:username username
-                                                                        :name "Invite Test"
-                                                                        :password "Foobar123"
-                                                                        :invite-code (:invite-code invite-code-item)})]
+            (service/signup-user! @db-session @comms {:username username
+                                                      :name "Invite Test"
+                                                      :password "Foobar123"
+                                                      :invite-code "123456789"})
+            [ok? res] (service/signup-user! @db-session @comms {:username username
+                                                                :name "Invite Test"
+                                                                :password "Foobar123"
+                                                                :invite-code (:invite-code invite-code-item)})]
         (is (not username-fail?))
         (is (not ic-fail?))
         (is ok? (str res))))))

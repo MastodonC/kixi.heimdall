@@ -4,7 +4,8 @@
             [kixi.heimdall
              [schema :as schema]
              [util :as util]]
-            [kixi.heimdall.components.database :as db]))
+            [kixi.heimdall.components.database :as db]
+            [taoensso.faraday :as far]))
 
 (def user-table "users")
 (def users-by-username "users-by-username")
@@ -23,20 +24,40 @@
                "password should have at least 8 letters, one uppercase and one lowercase letter, and one number"
                "username should have an email format")])))
 
-
 ;; data functions
 
 (defn add!
   [db user]
   (let [user-data (-> user
-                      (update :password hs/encrypt)
+                      (select-keys [:id :created :username :name :pre-signup :group-id])
                       (update :username clojure.string/lower-case))]
-                                        ;add user-data spec
     (db/put-item db
                  user-table
-                 user-data
+                 (update user-data :pre-signup far/freeze)
                  {:return :none
                   :cond-expr "attribute_not_exists(id)"})
+    user-data))
+
+(def frozen-true (far/freeze true))
+
+(defn signed-up!
+  [db user]
+  (let [user-data (update user :password hs/encrypt)]
+                                        ;add user-data spec
+    (db/update-item db
+                    user-table
+                    {:id (:id user-data)}
+                    {:update-expr (str "SET password = :p, "
+                                       "#ps = :ps, "
+                                       "#su = :su")
+                     :expr-attr-vals {":p" (:password user-data)
+                                      ":ps" (far/freeze (:pre-signup user-data))
+                                      ":su" (:signed-up user-data)
+                                      ":true" frozen-true}
+                     :expr-attr-names {"#ps" "pre-signup"
+                                       "#su" "signed-up"}
+                     :return :none
+                     :cond-expr "attribute_exists(id) AND #ps = :true"})
     user-data))
 
 (defn find-by-username
@@ -60,7 +81,8 @@
   [db {:keys [username password]}]
   (let [user (find-by-username db {:username username})
         unauthed [false {:message "Invalid username or password"}]]
-    (if user
+    (if (and user
+             (not (:pre-signup user)))
       (if (hs/check password (:password user))
         [true {:user (dissoc user :password)}]
         unauthed)

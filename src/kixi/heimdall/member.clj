@@ -18,7 +18,10 @@
                members-table
                {:user-id user-id
                 :group-id group-id}
-               {:return :all-old}))
+               {:return :all-old
+                :expr-attr-names {"#ui" "user-id"
+                                  "#gi" "group-id"}
+                :cond-expr "attribute_not_exists(#ui) AND attribute_not_exists(#gi)"}))
 
 (defn remove-member
   [db {:keys [user-id group-id]}]
