@@ -13,16 +13,22 @@
 
 (use-fixtures :once cycle-system extract-db-session extract-comms)
 
-(defn rand-username
+(defn uid
   []
-  (str "lemming" (rand-int 1000) "@bar.com"))
+  (str (java.util.UUID/randomUUID)))
+
+(defn rand-username
+  ([]
+   (rand-username "lemming"))
+  ([prefix]
+   (str prefix "-" (uid) "@bar.com")))
 
 (deftest creating-groups
   (testing "the actual creation"
     (let [username (rand-username)
-          user-id (str (java.util.UUID/randomUUID))
+          user-id (uid)
           user (u/add! @db-session {:id user-id :username username :password "Local123" :name "anothername"})
-          group-created (#'service/create-group @db-session {:group-id (str (java.util.UUID/randomUUID))
+          group-created (#'service/create-group @db-session {:group-id (uid)
                                                              :group-name (str "fantastic four " (java.util.UUID/randomUUID))
                                                              :user-id user-id
                                                              :created (util/db-now)})]
@@ -30,9 +36,9 @@
 
   (testing "creation after sending an event"
     (let [username (rand-username)
-          user-id (str (java.util.UUID/randomUUID))
+          user-id (uid)
           user (u/add! @db-session {:id user-id :username username :password "Local123" :name "booya"})
-          creation-params {:group-id (str (java.util.UUID/randomUUID))
+          creation-params {:group-id (uid)
                            :group-name (str "the avengers " (java.util.UUID/randomUUID))
                            :user-id user-id
                            :created (util/db-now)}
@@ -48,7 +54,7 @@
     (let [username1 (rand-username)
           username2 (rand-username)
           [_ group-id] (create-group! @db-session username1 "Specter")
-          member-id (str (java.util.UUID/randomUUID))
+          member-id (uid)
           _ (u/add! @db-session {:id member-id :username username2 :password "Local123" :name "Jane"})
           _ (#'service/add-member @db-session {:user-id (str member-id)
                                                :group-id (str group-id)})]
@@ -56,8 +62,8 @@
   (testing "adding a member via an event"
     (let [username1 (rand-username)
           username2 (rand-username)
-          [_ group-id] (create-group! @db-session "boss@bar.com" "Hydra")
-          member-id (str (java.util.UUID/randomUUID))
+          [_ group-id] (create-group! @db-session (rand-username "boss") "Hydra")
+          member-id (uid)
           _ (u/add! @db-session {:id member-id :username "new@bar.com" :password "Local123" :name "Joe"})
           event-ok? (service/add-member-event @db-session @comms (str member-id) (str group-id))]
       (is event-ok?)
@@ -69,7 +75,7 @@
     (let [username1 (rand-username)
           username2 (rand-username)
           [_ group-id] (create-group! @db-session username1 "Specter")
-          member-id (str (java.util.UUID/randomUUID))
+          member-id (uid)
           _ (u/add! @db-session {:id member-id :username username2 :password "Local123" :name "blob"})
           _ (#'service/add-member @db-session {:user-id (str member-id)
                                                :group-id (str group-id)})
@@ -81,7 +87,7 @@
     (let [username1 (rand-username)
           username2 (rand-username)
           [_ group-id] (create-group! @db-session username1 "Hydra")
-          member-id (str (java.util.UUID/randomUUID))
+          member-id (uid)
           _ (u/add! @db-session {:id member-id :username username2 :password "Local123" :name "mob"})
           _ (#'service/add-member @db-session {:user-id (str member-id)
                                                :group-id (str group-id)})
