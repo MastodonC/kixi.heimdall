@@ -60,6 +60,7 @@
   ([username name]
    (invite-user! username name []))
   ([username name group-names]
+   {:pre [(string? username) (string? name) (vector? group-names)]}
    (let [[ok? user] (service/invite-user!
                      (db)
                      (comms)
