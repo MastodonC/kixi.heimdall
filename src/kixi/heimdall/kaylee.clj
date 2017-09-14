@@ -81,5 +81,5 @@
                                      (comms)
                                      (:id user) (:id group))
       (wait-for #(let [groups (member/retrieve-groups-ids (db) (:id user))]
-                   (contains? (set groups) (:id group))))
+                   (not (contains? (set groups) (:id group)))))
       :failed-remove-user-from-group)))
