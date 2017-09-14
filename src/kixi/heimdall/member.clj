@@ -8,8 +8,9 @@
   (map :group-id (db/query db
                            members-table
                            {:user-id [:eq id]}
-                           {;;:index members-table
-                            :return [:group-id :s]})))
+                           { ;;:index members-table
+                            :return [:group-id :s]
+                            :consistent? true})))
 
 (defn add!
   [db {:keys [user-id group-id]}]

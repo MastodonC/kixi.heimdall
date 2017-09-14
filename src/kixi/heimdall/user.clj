@@ -60,22 +60,24 @@
                      :cond-expr "attribute_exists(id) AND #ps = :true"})
     user-data))
 
-(defn find-by-username
-  [db {:keys [username]}]
-  (first
-   (db/query db
-             user-table
-             {:username [:eq (clojure.string/lower-case username)]}
-             {:index users-by-username
-              :limit 1
-              :return :all-attributes})))
-
 (defn find-by-id
   [db id]
   (db/get-item db
                user-table
                {:id id}
                {:consistent? true}))
+
+(defn find-by-username
+  [db {:keys [username]}]
+  (some->> (db/query db
+                     user-table
+                     {:username [:eq (clojure.string/lower-case username)]}
+                     {:index users-by-username
+                      :limit 1
+                      :return [:id]})
+           first
+           :id
+           (find-by-id db)))
 
 (defn auth
   [db {:keys [username password]}]
