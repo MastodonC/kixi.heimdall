@@ -3,22 +3,25 @@
             [kixi.heimdall.invites :as invites]
             [kixi.heimdall.util :as util]
             [kixi.heimdall.user :as user]
+            [kixi.heimdall.group :as group]
             [kixi.heimdall.integration.base :refer :all]
             [clojure.test :refer :all]
             [kixi.heimdall.components.database :as db]
             [kixi.heimdall.service :as service]
-            [kixi.comms :as kcomms]))
+            [kixi.comms :as kcomms]
+            [kixi.heimdall.member :as member]))
 
 (use-fixtures :once cycle-system extract-db-session extract-comms)
 
 (deftest kaylee-fns
-  (let [username (str "kaylee-test-" (java.util.UUID/randomUUID) "@mastodonc.com")
+  (let [name (str "kaylee-test-" (java.util.UUID/randomUUID))
+        username (str name "@mastodonc.com")
         groupname (str "group-name-" (java.util.UUID/randomUUID))
         new-pass "Barfoo321"]
     (testing "Invite user and change pass"
       (with-redefs [k/db    (fn [] @db-session)
                     k/comms (fn [] @comms)]
-        (k/invite-user! username))
+        (k/invite-user! username name))
       (let [r (wait-for #(db/get-item @db-session
                                       invites/invites-table
                                       {:username username}
@@ -26,10 +29,10 @@
                         #(throw (Exception. "Invite code never arrived.")))]
         (is r)
         (when r
-          (service/new-user-with-invite @db-session @comms {:username username
-                                                            :name "Kaylee Invite Test"
-                                                            :password "Foobar123"
-                                                            :invite-code (:invite-code r)})
+          (service/signup-user! @db-session @comms {:username username
+                                                 :name "Kaylee Invite Test"
+                                                 :password "Foobar123"
+                                                 :invite-code (:invite-code r)})
           (with-redefs [k/db    (fn [] @db-session)
                         k/comms (fn [] @comms)]
             (k/change-user-password! username new-pass))
@@ -37,14 +40,83 @@
     (testing "Create group and add user"
       (with-redefs [k/db    (fn [] @db-session)
                     k/comms (fn [] @comms)]
-        (is (map? (k/create-group! groupname username)))))
-    (testing "Add user to group"
-      (with-redefs [k/db    (fn [] @db-session)
-                    k/comms (fn [] @comms)]
-        (let [r (k/add-user-to-group! groupname username)]
-          (is (not (keyword? r)) (pr-str r)))))
-    (testing "Remove user from group"
-      (with-redefs [k/db    (fn [] @db-session)
-                    k/comms (fn [] @comms)]
-        (let [r (k/remove-user-from-group! groupname username)]
-          (is (not (keyword? r)) (pr-str r)))))))
+        (is (map? (k/create-group! groupname username)))))))
+
+(defn wait-for-user-invite
+  [username]
+  (wait-for #(db/get-item @db-session
+                          invites/invites-table
+                          {:username username}
+                          {:consistent? true})
+            #(throw (Exception. "Invite code never arrived."))))
+
+(defn user-groups
+  [user]
+  (member/retrieve-groups-ids @db-session (:id user)))
+
+(deftest add-remove-user-from-group
+  (let [name (str "group-owner-" (java.util.UUID/randomUUID))
+        username (str name "@mastodonc.com")
+        unwanted-name (str "unwanted-group-member-" (java.util.UUID/randomUUID))
+        unwanted-username (str unwanted-name "@mastodonc.com")
+        groupname (str "remove-usergroup-name-" (java.util.UUID/randomUUID))
+        new-pass "Barfoo321"]
+    (with-redefs [k/db    (fn [] @db-session)
+                  k/comms (fn [] @comms)]
+      (k/invite-user! username name)
+      (k/invite-user! unwanted-username unwanted-name)
+      (let [owner-ic (wait-for-user-invite username)
+            unwanted-ic (wait-for-user-invite unwanted-username)]
+        (is owner-ic)
+        (is unwanted-ic)
+        (when (and owner-ic unwanted-ic)
+          (service/signup-user! @db-session @comms {:username username
+                                                    :name "Kaylee remove user test - owner"
+                                                    :password "Foobar123"
+                                                    :invite-code (:invite-code owner-ic)})
+          (service/signup-user! @db-session @comms {:username unwanted-username
+                                                    :name "Kaylee remove user test - unwanted"
+                                                    :password "Foobar123"
+                                                    :invite-code (:invite-code unwanted-ic)})
+          (is (map? (k/create-group! groupname username)))
+         
+          (let [unwanted-user (user/find-by-username @db-session {:username unwanted-username})
+                user (user/find-by-username @db-session {:username username})]
+            (is (= 2
+                   (count (user-groups user))))
+            (is (= 1
+                   (count (user-groups unwanted-user))))
+            (k/add-user-to-group! groupname unwanted-username)
+            (wait-for #(= 2
+                          (count (user-groups unwanted-user)))
+                      #(throw (Exception. "Unwanted user was never added to group")))
+            (k/remove-user-from-group! groupname unwanted-username)
+            (wait-for #(= 1
+                          (count (user-groups unwanted-user)))
+                      #(throw (Exception. "Unwanted user was never removed group")))
+            (is (= 1
+                   (count (group/find-by-user @db-session (:id unwanted-user)))))))))))
+
+(deftest invite-user-pre-group-new-group
+  (let [name (str "kaylee-test-" (java.util.UUID/randomUUID))
+        username (str name "@mastodonc.com")
+        groupname (str "pre-group-name-" (java.util.UUID/randomUUID))
+        new-pass "Barfoo321"]
+    (with-redefs [k/db    (fn [] @db-session)
+                  k/comms (fn [] @comms)]
+      (k/invite-user! username name [groupname]))
+    (let [r (wait-for #(db/get-item @db-session
+                                    invites/invites-table
+                                    {:username username}
+                                    {:consistent? true})
+                      #(throw (Exception. "Invite code never arrived.")))]
+      (is r)
+      (when r          
+        (let [user (user/find-by-username @db-session {:username username})
+              groups (group/find-by-user @db-session (:id user))]
+          (is (= 2
+                 (count groups)))
+          (is (= groupname
+                 (:group-name (first groups))))
+          (is (= name
+                 (:group-name (second groups)))))))))

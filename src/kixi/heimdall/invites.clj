@@ -13,21 +13,25 @@
   [ic un]
   (str "/#/invite?ic=" ic "&un=" un))
 
-(defn create-invite-failed-event
-  [reason username]
-  {:kixi.comms.event/key :kixi.heimdall/invite-failed
-   :kixi.comms.event/version "1.0.0"
-   :kixi.comms.event/payload {:reason reason
-                              :username username}})
+(defn failed-event
+  ([username reason]
+   (failed-event username reason nil))
+  ([username reason explain]
+   {:kixi.comms.event/key :kixi.heimdall/invite-failed
+    :kixi.comms.event/version "2.0.0"
+    :kixi.comms.event/payload (merge {:reason reason
+                                      :username username}
+                                     (when explain
+                                       {:explain explain}))}))
 
 (defn create-invite-event
-  [username]
+  [user]
   (let [ic (util/create-code)]
     {:kixi.comms.event/key :kixi.heimdall/invite-created
-     :kixi.comms.event/version "1.0.0"
-     :kixi.comms.event/payload {:username (clojure.string/lower-case username)
+     :kixi.comms.event/version "2.0.0"
+     :kixi.comms.event/payload {:user user
                                 :invite-code ic
-                                :url (invite-code->url ic username)}}))
+                                :url (invite-code->url ic (:username user))}}))
 
 (defn save!
   [db invite-code username']

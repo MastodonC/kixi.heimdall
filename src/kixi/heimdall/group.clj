@@ -20,7 +20,8 @@
       (db/put-item db
                    groups-table
                    group-data
-                   {:return :none}))))
+                   {:return :none
+                    :cond-expr "attribute_not_exists(id)"}))))
 
 (defn find-by-id
   [db id]

@@ -15,7 +15,7 @@
 (def wait-tries (Integer/parseInt (env :wait-tries (case comms-mode
                                                      :coreasync "10"
                                                      "300"))))
-(def wait-per-try (Integer/parseInt (env :wait-per-try "200")))
+(def wait-per-try (Integer/parseInt (env :wait-per-try "100")))
 
 (defn uuid
   []
@@ -106,14 +106,21 @@
        (log/info "calling fail fn")
        (fail-fn)))))
 
+(defn invite-user!
+  [{:keys [username name] :as user}]
+  (let [[_ {:keys [kixi.comms.event/payload]}] (service/invite-user! @db-session @comms {:username username :name name})
+        {:keys [invite-code]} payload]
+    (wait-for #(get-invite @db-session username)
+              #(log/error "COULDN'T CREATE USER" username "1"))))
+
 (defn create-user!
-  [{:keys [username] :as user}]
-  (let [{:keys [kixi.comms.event/payload]} (service/invite-user! @db-session @comms username)
+  [{:keys [username name] :as user}]
+  (let [[_ {:keys [kixi.comms.event/payload]}] (service/invite-user! @db-session @comms {:username username :name name})
         {:keys [invite-code]} payload]
     (wait-for #(get-invite @db-session username)
               #(log/error "COULDN'T CREATE USER" username "1"))
-    (service/new-user-with-invite @db-session @comms (assoc user
-                                                            :invite-code invite-code))
+    (service/signup-user! @db-session @comms (assoc user
+                                                    :invite-code invite-code))
     (wait-for #(find-by-username @db-session user)
               #(log/error "COULDN'T CREATE USER" username "2"))))
 

@@ -98,9 +98,14 @@ Beforehand:
 
 **To invite a new user:**
 ```
-(k/invite-user! "foo@bar.com")
+(k/invite-user! "foo@bar.com" "FooBar")
 ```
-This will produce an 'invite code' which the user can then use to signup via the `/signup` route.
+This will create the user, their self group, and produce an 'invite code' which the user can then use to signup via the `/signup` route.
+
+```
+(k/invite-user! "foo@bar.com" "FooBar" ["Group"])
+```
+This will create the user, their self group, ensure they are a member (creating as required) of "Group", and produce an 'invite code' which the user can then use to signup via the `/signup` route.
 
 **To change a user's password:**
 ```

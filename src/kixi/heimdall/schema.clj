@@ -23,6 +23,7 @@
 (spec/def ::username email?)
 (spec/def ::created util/date-time?)
 (spec/def ::exp integer?)
+(spec/def ::pre-signup boolean?)
 
 (spec/def ::user-id uuid?)
 (spec/def ::group-id uuid?)
@@ -36,13 +37,15 @@
 (spec/def ::user-groups (spec/keys :req-un [::groups] :opts []))
 (spec/def ::user
   (spec/keys :req-un [::id]
-             :opts [::username ::name ::created ::user-groups]))
+             :opts [::username ::name ::created ::user-groups ::pre-signup]))
 
 
 (spec/def ::password password?)
 (spec/def ::login
   (spec/keys :req-un [::username ::password]))
 
+(spec/def ::user-invite
+  (spec/keys :req-un [::username ::name]))
 
 (spec/def ::name string?)
 (spec/def ::self-group uuid?)

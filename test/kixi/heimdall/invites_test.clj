@@ -8,15 +8,15 @@
     (is event)
     (is #{:kixi.comms.event/key :kixi.comms.event/version :kixi.comms.event/payload}
         (= (set (keys event))))
-    (let [{:keys [url username invite-code]} (:kixi.comms.event/payload event)]
-      (is (= username name))
+    (let [{:keys [url user invite-code]} (:kixi.comms.event/payload event)]
+      (is (= user name))
       (is invite-code)
       (is url)
       (is (pos? (.indexOf url invite-code))))))
 
 (deftest invite-event-fail
   (let [name "foo@bar"
-        event (create-invite-failed-event "You failed" name)]
+        event (failed-event "You failed" name)]
     (is event)
     (is #{:kixi.comms.event/key :kixi.comms.event/version :kixi.comms.event/payload}
         (= (set (keys event))))

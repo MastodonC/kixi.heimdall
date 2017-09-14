@@ -7,7 +7,6 @@
             [clj-time.coerce :as c]
             [clojure.spec :as s]
             [clojure.java.io :as io]
-            [kixi.heimdall.components.database :as db]
             [kixi.heimdall.user :as user]
             [kixi.heimdall.group :as group]
             [kixi.heimdall.member :as member]
@@ -19,7 +18,6 @@
             [kixi.heimdall.schema :as schema]
             [clojure.spec :as spec]
             [kixi.comms :refer [Communications] :as comms]))
-
 
 (defn fail
   [message]
@@ -125,9 +123,9 @@
 
 (defn create-group-event
   [db communications {:keys [group-name group-id user-id] :as input}]
-  (let [group-ok? (and (spec/valid? :kixi.heimdall.schema/group-params input)
+  (let [group-ok? (and (spec/valid? ::schema/group-params input)
                        (not (group/find-by-name db group-name)))
-        user-ok? (spec/valid? :kixi.heimdall.schema/id user-id)
+        user-ok? (spec/valid? ::schema/id user-id)
         input-dated (assoc input
                            :created (str (util/db-now)))]
     (if (and user-ok? group-ok?)
@@ -172,37 +170,72 @@
                      {:kixi.comms.event/partition-key (:id user)}))
 
 (defn- create-user
-  "Event consumer: we will attempt to add a user - it may already exist.
-  We generate a random password."
+  "Event consumer: we will attempt to add a user - it may already exist."
   [db user]
   (try
-    (->> (assoc user :password (str (java.util.UUID/randomUUID)))
+    (->> user
          (user/add! db)
          (add-self-group db))
     (catch com.amazonaws.services.dynamodbv2.model.ConditionalCheckFailedException e
       (comment "This should only work on event replay, when the condition will succeed.")))
   nil)
 
-(defn new-user-with-invite
+(defn signup-user!
   [db communications params]
-  (let [credentials (-> params
-                        (select-keys [:username :password :name])
-                        (update :username clojure.string/lower-case))
-        [ok? res] (user/validate credentials)]
-    (if ok?
-      (if (user/find-by-username db {:username (:username credentials)})
-        (fail "There is already a user with this username.")
-        (if-not (invites/consume! db (:invite-code params) (:username credentials))
-          (fail "The invite code was invalid.")
-          (let [credentials' (assoc credentials
-                                    :id (str (java.util.UUID/randomUUID))
-                                    :created (str (util/db-now)))
-                added-user (assoc (user/add! db credentials')
-                                  :group-id (str (java.util.UUID/randomUUID)))]
-            (add-self-group db added-user)
-            (send-user-created-event! communications added-user)
-            (success {:message "User successfully created!"}))))
-      (fail (str "Please match the required format: " res)))))
+  (let [user' (-> params
+                  (select-keys [:username :password])
+                  (update :username clojure.string/lower-case))
+        [ok? res] (user/validate user')
+        stored-user (user/find-by-username db {:username (:username user')})
+        user (merge user'
+                    stored-user)]
+    (cond
+      (not (spec/valid? ::schema/login user)) (fail (str "Please match the required format: " res))
+      (not stored-user) (fail "Pre-signup user not found")
+      (not (:pre-signup user)) (fail "User is not in pre-sign up state")
+      (not (invites/consume! db (:invite-code params) (:username user))) (fail "The invite code was invalid.")
+      :else (let [user' (assoc user
+                               :signed-up (str (util/db-now))
+                               :pre-signup false)
+                  added-user (user/signed-up! db user')]
+              (send-user-created-event! communications added-user)
+              (success {:message "User successfully created"})))))
+
+(defn create-user-data
+  [user]
+  (assoc user
+         :id (str (java.util.UUID/randomUUID))
+         :created (str (util/db-now))
+         :pre-signup true
+         :group-id (str (java.util.UUID/randomUUID))))
+
+(defn user-invite-event!
+  [stored-user {:keys [username name] :as user'}]
+  (let [user (-> user'
+                 (select-keys [:username :name])
+                 (update :username clojure.string/lower-case)
+                 create-user-data)]
+    (cond
+      (not (spec/valid? ::schema/user-invite user)) (invites/failed-event username :invalid-data (spec/explain-data ::schema/user-invite user))     
+      (and stored-user
+           (not (:pre-signup stored-user))) (invites/failed-event username :user-signedup)
+      :else (invites/create-invite-event user))))
+
+(defn invite-user!
+  [db communications {:keys [username name] :as user}]
+  (let [stored-user (user/find-by-username db {:username username})
+        {:keys [kixi.comms.event/key
+                kixi.comms.event/version
+                kixi.comms.event/payload] :as event} (user-invite-event! stored-user user)]
+    (comms/send-event! communications
+                       key
+                       version
+                       payload
+                       {:kixi.comms.event/partition-key username})
+    (if (= :kixi.heimdall/invite-created key)
+      (do (email/send-email! :user-invite communications {:url (:url payload) :username username})
+          (success event))
+      (fail event))))
 
 (defn- add-member
   [db {:keys [user-id group-id] :as member}]
@@ -210,9 +243,9 @@
 
 (defn add-member-event
   [db communications user-id group-id]
-  (let [user-ok? (and (spec/valid? :kixi.heimdall.schema/id user-id)
+  (let [user-ok? (and (spec/valid? ::schema/id user-id)
                       (user/find-by-id db user-id))
-        group-ok? (and (spec/valid? :kixi.heimdall.schema/id group-id)
+        group-ok? (and (spec/valid? ::schema/id group-id)
                        (group/find-by-id db group-id))]
     (if (and user-ok? group-ok?)
       (do (comms/send-event! communications
@@ -232,9 +265,9 @@
 
 (defn remove-member-event
   [db communications user-id group-id]
-  (let [user-ok? (and (spec/valid? :kixi.heimdall.schema/id user-id)
+  (let [user-ok? (and (spec/valid? ::schema/id user-id)
                       (user/find-by-id db user-id))
-        group-ok? (and (spec/valid? :kixi.heimdall.schema/id group-id)
+        group-ok? (and (spec/valid? ::schema/id group-id)
                        (group/find-by-id db group-id))]
     (if (and user-ok? group-ok?)
       (do (comms/send-event! communications
@@ -262,9 +295,9 @@
 
 (defn update-group-event
   [db communications group-id new-group-name]
-  (let [group-ok? (and (spec/valid? :kixi.heimdall.schema/id group-id)
+  (let [group-ok? (and (spec/valid? ::schema/id group-id)
                        (group/find-by-id db group-id))
-        name-ok? (spec/valid? :kixi.heimdall.schema/group-name new-group-name)]
+        name-ok? (spec/valid? ::schema/group-name new-group-name)]
     (if (and group-ok? name-ok?)
       (and (comms/send-event! communications
                               :kixi.heimdall/group-updated
@@ -294,13 +327,13 @@
 (defn users
   [db user-ids]
   (keep #(when-let [raw-user (user/find-by-id db %)]
-           (clojure.set/rename-keys  (select-keys raw-user
-                                                  [:id :name :created_by :created :username])
-                                     {:id :kixi.user/id
-                                      :name :kixi.user/name
-                                      :created-by :kixi.user/created-by
-                                      :created :kixi.user/created
-                                      :username :kixi.user/username}))
+           (clojure.set/rename-keys (select-keys raw-user
+                                                 [:id :name :created_by :created :username])
+                                    {:id :kixi.user/id
+                                     :name :kixi.user/name
+                                     :created-by :kixi.user/created-by
+                                     :created :kixi.user/created
+                                     :username :kixi.user/username}))
         (vec-if-not user-ids)))
 
 (defn groups
@@ -315,36 +348,11 @@
                                       :created :kixi.group/created}))
         (vec-if-not group-ids)))
 
-(defn invite-user!
-  "Use this to invite a new user to the system."
-  [db communications username]
-  (let [username (clojure.string/lower-case username)
-        {:keys [kixi.comms.event/key
-                kixi.comms.event/version
-                kixi.comms.event/payload] :as event}
-        (cond
-          ;; Username invalid
-          (not (s/valid? ::schema/username username))
-          (invites/create-invite-failed-event (str "The provided username was not valid: " username) username)
-          ;; User already signed up
-          (user/find-by-username db {:username username})
-          (invites/create-invite-failed-event (str "The user is already signed up: " username) username)
-          ;;
-          :else
-          (invites/create-invite-event username))]
-    (comms/send-event! communications
-                       key
-                       version
-                       payload
-                       {:kixi.comms.event/partition-key username})
-    (when (= :kixi.heimdall/invite-created key)
-      (email/send-email! :user-invite communications {:url (:url payload) :username username}))
-    event))
-
 (defn save-invite
-  "Persist details of an invite"
-  [db {:keys [invite-code username]}]
-  (invites/save! db invite-code username))
+  "Create pre-signup user and store invite"
+  [db {:keys [invite-code user]}]
+  (create-user db user)
+  (invites/save! db invite-code (:username user)))
 
 (defn reset-password!
   [db communications {:keys [username]}]

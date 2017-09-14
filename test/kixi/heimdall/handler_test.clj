@@ -271,24 +271,28 @@
           (is (= (:body response) "Group successfully created"))
           (is (= (:event (first (get-in @events [:comms :sent]))) :kixi.heimdall/group-created)))))))
 
+(defn uuid
+  []
+  (java.util.UUID/randomUUID))
+
 (deftest new-user-test
   (testing "new user can be added if password passes the validation"
-    (with-redefs [user/add! (fn [_ _] {:user-id (java.util.UUID/randomUUID)})
-                  user/find-by-username (fn [_ _] nil)
+    (with-redefs [user/find-by-username (fn [_ _] {:pre-signup true})
+                  user/signed-up! (fn [_ _]
+                                    {:pre-signup false})
                   invites/consume! (fn [_ _ _] true)
                   group/add! (fn [_ _] {:group-id (java.util.UUID/randomUUID)})
                   member/add! (fn [_ _] '())]
       (let [response (comms-app app (heimdall-request
                                      (mock/request :post "/user"
-                                                   (transit-encode {:username "user@boo.com"
+                                                   (transit-encode {:username (str "user-" (str (uuid)) "@boo.com")
                                                                     :password "secret1Pass"
                                                                     :name "Jane Doe"}))))]
         (is (= (:status response) 201)))))
   (testing "new user can not be added if password fails the validation"
-    (with-redefs [user/add! (fn [_ _] {:user-id (java.util.UUID/randomUUID)})
-                  user/find-by-username (fn [_ _] nil)
+    (with-redefs [user/find-by-username (fn [_ _] nil)
                   group/add! (fn [_ _] {:group-id (java.util.UUID/randomUUID)})
-                  member/add! (fn [_ _ _] '())]
+                  member/add! (fn [_ _] '())]
       (let [response (comms-app app (heimdall-request
                                      (mock/request :post "/user"
                                                    (transit-encode {:username "user@boo.com"
@@ -300,8 +304,8 @@
 
 (deftest reset-password-test
   (testing "passwords can be reset"
-    (with-redefs [user/add! (fn [_ _] {:user-id (java.util.UUID/randomUUID)})
-                  user/find-by-username (fn [_ _] nil)
+    (with-redefs [user/find-by-username (fn [_ _] {:pre-signup true})
+                  user/signed-up! (fn [_ _] {:pre-signup false})
                   invites/consume! (fn [_ _ _] true)
                   group/add! (fn [_ _] {:group-id (java.util.UUID/randomUUID)})
                   member/add! (fn [_ _] '())]

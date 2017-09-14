@@ -11,8 +11,12 @@
   (let [username-wacky-case (random-email)
         user {:id (str (java.util.UUID/randomUUID))
               :username username-wacky-case
-              :password "changeme"}]
+              :password "changeme"
+              :signed-up "timestamp"
+              :pre-signup true}]
     (add! @db-session user)
+    (signed-up! @db-session (assoc user
+                                   :pre-signup false))
     (is (first (auth @db-session (update user :username clojure.string/lower-case))))))
 
 (deftest change-password-test-success
