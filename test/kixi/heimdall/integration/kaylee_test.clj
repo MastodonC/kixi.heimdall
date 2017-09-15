@@ -59,8 +59,7 @@
         username (str name "@mastodonc.com")
         unwanted-name (str "unwanted-group-member-" (java.util.UUID/randomUUID))
         unwanted-username (str unwanted-name "@mastodonc.com")
-        groupname (str "remove-usergroup-name-" (java.util.UUID/randomUUID))
-        new-pass "Barfoo321"]
+        groupname (str "remove-usergroup-name-" (java.util.UUID/randomUUID))]
     (with-redefs [k/db    (fn [] @db-session)
                   k/comms (fn [] @comms)]
       (k/invite-user! username name)
