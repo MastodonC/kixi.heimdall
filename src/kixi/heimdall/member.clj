@@ -3,6 +3,8 @@
 
 (def members-table "members-groups")
 
+(def group-members-dex "groups-members")
+
 (defn retrieve-groups-ids
   [db id]
   (map :group-id (db/query db
@@ -11,6 +13,14 @@
                            { ;;:index members-table
                             :return [:group-id :s]
                             :consistent? true})))
+
+(defn retrieve-member-ids
+  [db group-id]
+  (map :user-id (db/query db
+                           members-table
+                           {:group-id [:eq group-id]}
+                           {:index group-members-dex
+                            :return [:user-id :s]})))
 
 (defn add!
   [db {:keys [user-id group-id]}]

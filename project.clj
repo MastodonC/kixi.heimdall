@@ -22,6 +22,7 @@
                  [kixi/joplin.dynamodb "0.3.10-SNAPSHOT"]
                  [cider/cider-nrepl "0.13.0"]
                  ;; these are dependencies around running the server in the repl
+                 [org.clojure/core.async "0.3.443"]
                  [org.clojure/tools.namespace    "0.2.11"]
                  [org.clojure/tools.nrepl        "0.2.12"]
                  [org.clojure/tools.cli "0.3.5"]

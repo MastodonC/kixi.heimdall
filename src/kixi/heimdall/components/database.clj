@@ -7,7 +7,7 @@
             [kixi.heimdall.config :as config]
             [kixi.heimdall.application :as app]
             [taoensso.faraday :as far]
-            [kixi.heimdall.cloudwatch :refer [table-dynamo-alarms]]            ))
+            [kixi.heimdall.cloudwatch :refer [table-dynamo-alarms]]))
 
 (def app "kixi.heimdall")
 
