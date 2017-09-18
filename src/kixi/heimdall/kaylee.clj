@@ -29,6 +29,11 @@
       (do (Thread/sleep 10)
           (recur)))))
 
+(defn find-user
+  [username]
+  (-> (user/find-by-username (db) {:username username})
+      (dissoc :password)))
+
 (defn create-group!
   [group-name owner-name]
   (if-let [user (user/find-by-username (db) {:username owner-name})]
@@ -70,13 +75,13 @@
      (if ok?
        (do
          (wait-for #(user/find-by-username (db) {:username username}))
-         (doall 
+         (doall
           (for [group-name group-names]
-               (let [group-result (create-group! group-name username)]
-                 (if (= group-result
-                        :failed-group-exists)
-                   (add-user-to-group! group-name username)
-                   group-result)))))
+            (let [group-result (create-group! group-name username)]
+              (if (= group-result
+                     :failed-group-exists)
+                (add-user-to-group! group-name username)
+                group-result)))))
        [ok? user]))))
 
 (defn remove-user-from-group!

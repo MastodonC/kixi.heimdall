@@ -69,15 +69,16 @@
 
 (defn find-by-username
   [db {:keys [username]}]
-  (some->> (db/query db
-                     user-table
-                     {:username [:eq (clojure.string/lower-case username)]}
-                     {:index users-by-username
-                      :limit 1
-                      :return [:id]})
-           first
-           :id
-           (find-by-id db)))
+  (when-not (clojure.string/blank? username)
+    (some->> (db/query db
+                       user-table
+                       {:username [:eq (clojure.string/lower-case username)]}
+                       {:index users-by-username
+                        :limit 1
+                        :return [:id]})
+             first
+             :id
+             (find-by-id db))))
 
 (defn auth
   [db {:keys [username password]}]

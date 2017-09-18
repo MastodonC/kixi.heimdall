@@ -92,34 +92,40 @@ The public key to use in combination with this development setup is the test_pub
 
 Beforehand:
 
-```
+``` clojure
 (require '[kixi.heimdall.kaylee :as k])
 ```
 
-**To invite a new user:**
+**To find a user (name, ID, etc), by username/email:
+``` clojure
+(k/find-user "foo@bar.com")
+
 ```
+
+**To invite a new user:**
+``` clojure
 (k/invite-user! "foo@bar.com" "FooBar")
 ```
 This will create the user, their self group, and produce an 'invite code' which the user can then use to signup via the `/signup` route.
 
-```
+``` clojure
 (k/invite-user! "foo@bar.com" "FooBar" ["Group"])
 ```
 This will create the user, their self group, ensure they are a member (creating as required) of "Group", and produce an 'invite code' which the user can then use to signup via the `/signup` route.
 
 **To change a user's password:**
-```
+``` clojure
 (k/change-user-password! "foo@bar.com" "S3cr3t!123")
 ```
 
 **To create a group:**
-```
+``` clojure
 (k/create-group! "New Group" "foo@bar.com")
 ```
 This will create a group called 'New Group' and assign the 'foo@bar.com' user as the group *owner*.
 
 **To add and remove group members:**
-```
+``` clojure
 (k/add-user-to-group! "New Group" "baz@bar.com")
 
 (k/remove-user-from-group! "New Group" "baz@bar.com")
