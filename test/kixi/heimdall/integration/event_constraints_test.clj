@@ -42,8 +42,8 @@
         groupname (str "groupname" (uid))]
     (with-redefs [k/db    (fn [] @db-session)
                   k/comms (fn [] @comms)]
-      (k/invite-user! username1 name1 [groupname])
-      (k/invite-user! username2 name2 [groupname])
+      (prn "Invite user1: " username1 ". Result: " (k/invite-user! username1 name1 [groupname]))
+      (prn "Invite user2: " username2 ". Result: " (k/invite-user! username2 name2 [groupname]))
       (let [user1-ic (wait-for-user-invite username1)
             user2-ic (wait-for-user-invite username2)]
         (is user1-ic)

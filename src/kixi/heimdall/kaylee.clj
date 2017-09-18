@@ -53,7 +53,8 @@
                                   (comms)
                                   (:id user) (:id group))
       (wait-for #(let [groups (member/retrieve-groups-ids (db) (:id user))]
-                   (contains? (set groups) (:id group))))
+                   (when (contains? (set groups) (:id group))
+                     :success-user-added-to-group)))
       :failed-add-user-to-group)))
 
 (defn invite-user!
@@ -66,13 +67,17 @@
                      (comms)
                      {:username username
                       :name name})]
-     (when ok?
-       (wait-for #(user/find-by-username (db) {:username username}))
-       (doseq [group-name group-names]
-         (let [group-result (create-group! group-name username)]
-           (when (= group-result
-                    :failed-group-exists)
-             (add-user-to-group! group-name username))))))))
+     (if ok?
+       (do
+         (wait-for #(user/find-by-username (db) {:username username}))
+         (doall 
+          (for [group-name group-names]
+               (let [group-result (create-group! group-name username)]
+                 (if (= group-result
+                        :failed-group-exists)
+                   (add-user-to-group! group-name username)
+                   group-result)))))
+       [ok? user]))))
 
 (defn remove-user-from-group!
   [group-name user-name]
@@ -82,5 +87,6 @@
                                      (comms)
                                      (:id user) (:id group))
       (wait-for #(let [groups (member/retrieve-groups-ids (db) (:id user))]
-                   (not (contains? (set groups) (:id group)))))
+                   (when-not (contains? (set groups) (:id group))
+                     :success-user-removed-from-group)))
       :failed-remove-user-from-group)))
