@@ -3,7 +3,8 @@
             [kixi.heimdall.user :as user]
             [kixi.heimdall.group :as group]
             [kixi.heimdall.member :as member]
-            [kixi.heimdall.util :as util]))
+            [kixi.heimdall.util :as util]
+            [clojure.pprint :refer [pprint]]))
 
 ;; This namespace is for useful functions, designed too make ops a bunch easier
 
@@ -31,8 +32,12 @@
 
 (defn find-user
   [username]
-  (-> (user/find-by-username (db) {:username username})
-      (dissoc :password)))
+  (let [user (user/find-by-username (db) {:username username})]
+    (pprint
+     (-> user
+         (dissoc :password)
+         (assoc :groups (map (juxt :group-name :id :group-type)
+                             (group/find-by-user (db) (:id user))))))))
 
 (defn create-group!
   [group-name owner-name]
