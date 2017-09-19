@@ -32,7 +32,7 @@
 
 (defn find-user
   [username]
-  (let [user (user/find-by-username (db) {:username username})]
+  (when-let [user (user/find-by-username (db) {:username username})]
     (pprint
      (-> user
          (dissoc :password)
