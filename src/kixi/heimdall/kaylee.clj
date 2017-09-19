@@ -33,11 +33,14 @@
 (defn find-user
   [username]
   (when-let [user (user/find-by-username (db) {:username username})]
-    (pprint
-     (-> user
-         (dissoc :password)
-         (assoc :groups (map (juxt :group-name :id :group-type)
-                             (group/find-by-user (db) (:id user))))))))
+    (let [grp-ftlr (juxt :group-name :id :group-type)]
+      (pprint
+       (-> user
+           (dissoc :password)
+           (assoc :groups {:owns (map grp-ftlr (group/find-by-user (db) (:id user)))
+                           :member-of (map
+                                       #(grp-ftlr (group/find-by-id (db) %))
+                                       (member/retrieve-groups-ids (db) (:id user)))}))))))
 
 (defn create-group!
   [group-name owner-name]
