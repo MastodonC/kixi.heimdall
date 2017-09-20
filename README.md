@@ -96,7 +96,7 @@ Beforehand:
 (require '[kixi.heimdall.kaylee :as k])
 ```
 
-**To find a user (name, ID, etc), by username/email:
+**To find a user (name, ID, etc), by username/email:**
 ``` clojure
 (k/find-user "foo@bar.com")
 
