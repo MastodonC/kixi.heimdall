@@ -53,7 +53,8 @@
                                         {:group-name group-name
                                          :group-id group-id
                                          :created (util/db-now)
-                                         :user-id (:id user)})
+                                         :user-id (:id user)
+                                         :group-type "group"})
           (wait-for #(group/find-by-name (db) group-name))
           :failed-create-group)))
     :failed-no-user))

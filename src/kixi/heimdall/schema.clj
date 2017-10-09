@@ -30,8 +30,7 @@
 (spec/def ::group-name string?)
 (spec/def ::group-type #{"user" "group"})
 (spec/def ::group-params
-  (spec/keys :req-un [::group-name ::group-id ::user-id ::created]
-             :opts [::group-type]))
+  (spec/keys :req-un [::group-name ::group-id ::user-id ::created ::group-type]))
 
 (spec/def ::groups (spec/coll-of ::uuid))
 (spec/def ::user-groups (spec/keys :req-un [::groups] :opts []))
