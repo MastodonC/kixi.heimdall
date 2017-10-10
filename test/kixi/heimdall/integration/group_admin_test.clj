@@ -31,7 +31,8 @@
           group-created (#'service/create-group @db-session {:group-id (uid)
                                                              :group-name (str "fantastic four " (java.util.UUID/randomUUID))
                                                              :user-id user-id
-                                                             :created (util/db-now)})]
+                                                             :created (util/db-now)
+                                                             :group-type "group"})]
       (is (== (count (member/retrieve-groups-ids @db-session user-id)) 1))))
 
   (testing "creation after sending an event"
@@ -41,7 +42,8 @@
           creation-params {:group-id (uid)
                            :group-name (str "the avengers " (java.util.UUID/randomUUID))
                            :user-id user-id
-                           :created (util/db-now)}
+                           :created (util/db-now)
+                           :group-type "group"}
           event-ok? (service/create-group-event @db-session @comms creation-params)]
       (is (true? event-ok?))
       (wait-for #(first (member/retrieve-groups-ids @db-session user-id))

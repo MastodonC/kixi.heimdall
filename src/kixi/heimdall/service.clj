@@ -216,7 +216,7 @@
                  (update :username clojure.string/lower-case)
                  create-user-data)]
     (cond
-      (not (spec/valid? ::schema/user-invite user)) (invites/failed-event username :invalid-data (spec/explain-data ::schema/user-invite user))     
+      (not (spec/valid? ::schema/user-invite user)) (invites/failed-event username :invalid-data (spec/explain-data ::schema/user-invite user))
       (and stored-user
            (not (:pre-signup stored-user))) (invites/failed-event username :user-signedup)
       :else (invites/create-invite-event user))))

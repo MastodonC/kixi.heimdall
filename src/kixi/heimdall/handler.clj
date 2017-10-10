@@ -85,7 +85,8 @@
                                          {:group-name group-name
                                           :group-id group-id
                                           :user-id (:user-id req)
-                                          :created created}))]
+                                          :created created
+                                          :group-type "group"}))]
     (if ok?
       {:status 201 :body "Group successfully created"}
       (return-error {:msg "Please provide valid parameters (name for the group)" :fn "create-group"} :group-creation-failed 400))))
