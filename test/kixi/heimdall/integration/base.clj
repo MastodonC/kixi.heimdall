@@ -132,5 +132,6 @@
         _ (#'service/create-group session {:group-id group-id
                                            :created (util/db-now)
                                            :group-name group-name
-                                           :user-id (str owner-id)})]
+                                           :user-id (str owner-id)
+                                           :group-type "group"})]
     [owner-id group-id]))
