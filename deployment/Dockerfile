@@ -1,4 +1,4 @@
-FROM phusion/baseimage:0.9.19
+FROM zittix/docker-baseimage-java8
 MAINTAINER Elise Huard <elise@mastodonc.com>
 
 ENV SECRETS_BUCKET=$SECRETS_BUCKET
@@ -6,21 +6,15 @@ ENV AWS_REGION=$AWS_REGION
 
 CMD ["/sbin/my_init"]
 
-RUN apt-get install software-properties-common
-RUN add-apt-repository -y ppa:webupd8team/java \
-&& apt-get update \
-&& echo oracle-java8-installer shared/accepted-oracle-license-v1-1 select true | /usr/bin/debconf-set-selections \
-&& apt-get install -y \
+RUN apt-get update
+RUN apt-get install -y \
 software-properties-common \
-oracle-java8-installer \
-oracle-java8-set-default
+python2.7 \
+unzip
 
 ADD deploy-jars/bcpkix-jdk15on-1.55.jar /usr/lib/jvm/java-8-oracle/jre/lib/ext/bcpkix-jdk15on-1.55.jar
 ADD deploy-jars/bcprov-jdk15on-1.55.jar /usr/lib/jvm/java-8-oracle/jre/lib/ext/bcprov-jdk15on-1.55.jar
 ADD deploy-jars/java.security /etc/java-8-oracle/security/java.security
-
-RUN apt-get install -y python2.7 \
-unzip
 
 RUN ln -s /usr/bin/python2.7 /usr/bin/python
 
