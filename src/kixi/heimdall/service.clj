@@ -309,14 +309,20 @@
       false)))
 
 (defn all-groups
-  [db]
-  (map #(clojure.set/rename-keys %
-                                 {:id :kixi.group/id
-                                  :group-name :kixi.group/name
-                                  :group-type :kixi.group/type
-                                  :created-by :kixi.group/created-by
-                                  :created :kixi.group/created})
-       (group/all db)))
+  [db dex cnt sort-order]
+  (let [groups (group/all db)]
+    [(count groups)
+     (->> groups
+          (sort-by :group-name)
+          (#(if (= "desc" sort-order) (reverse %) %))
+          (drop dex)
+          (map #(clojure.set/rename-keys %
+                                         {:id         :kixi.group/id
+                                          :group-name :kixi.group/name
+                                          :group-type :kixi.group/type
+                                          :created-by :kixi.group/created-by
+                                          :created    :kixi.group/created}))
+          (take cnt))]))
 
 (defn vec-if-not
   [value]

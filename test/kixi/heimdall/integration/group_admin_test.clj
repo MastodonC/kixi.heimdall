@@ -117,13 +117,30 @@
 (deftest return-groups
   ;; TODO: all groups this user can search -> add groups parameter for permissions
   (testing "return all groups" ;; add 3 people with self-groups and groups
-    (let [cnt (count (service/all-groups @db-session))
-          _ (doseq [[username group] [[(rand-username) "planets1"]
+    (let [_ (doseq [[username group] [[(rand-username) "planets1"]
                                       [(rand-username) "planets2"]
                                       [(rand-username) "planets3"]]]
               (create-group! @db-session username group))
-          all-groups (service/all-groups @db-session)
+          [total all-groups] (service/all-groups @db-session 0 9999 nil)
           all-group-names (map :kixi.group/name all-groups)]
       (is (some #{"planets1"} all-group-names))
       (is (some #{"planets2"} all-group-names))
-      (is (some #{"planets3"} all-group-names)))))
+      (is (some #{"planets3"} all-group-names)))
+    (testing "Paging works as expected"
+      (let [nth-name (fn [groups n] (:kixi.group/name (nth groups n)))
+            [total groups] (service/all-groups @db-session 0 10 nil)
+            [total2 groups2] (service/all-groups @db-session 9 10 nil)
+            [total3 groups3] (service/all-groups @db-session 0 10 "desc")
+            [total4 groups4] (service/all-groups @db-session 0 10 "asc")]
+        (is (= 10 (count groups)))
+        (is (= 10 (count groups2)))
+        (is (= 1 (count (clojure.set/intersection (set groups) (set groups2)))))
+        (is (= 0 (count (clojure.set/intersection (set groups) (set groups3)))))
+        (is (every? true? (map (fn [n]
+                                 (let [x (compare (nth-name groups3 n) (nth-name groups3 (inc n)))]
+                                   (or (pos? x) (zero? x))))
+                               (range (dec (count groups3))))))
+        (is (every? true? (map (fn [n]
+                                 (let [x (compare (nth-name groups4 (inc n)) (nth-name groups4 n))]
+                                   (or (pos? x) (zero? x))))
+                               (range (dec (count groups4))))))))))
