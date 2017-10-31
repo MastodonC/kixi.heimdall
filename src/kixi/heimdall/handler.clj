@@ -99,7 +99,7 @@
 
 (defn get-all-groups [req]
   (let [dex (Integer/parseInt (get-in req [:params :index] "0"))
-        cnt (Integer/parseInt (get-in req [:params :count] "100"))
+        cnt (min (Integer/parseInt (get-in req [:params :count] "100")) 100)
         sort-order (get-in req [:params :sort-order] "desc")]
     (cond
       (neg? dex) (return-error {:fn "get-all-groups"
