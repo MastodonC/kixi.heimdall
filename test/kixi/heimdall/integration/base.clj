@@ -22,8 +22,10 @@
   (str (java.util.UUID/randomUUID)))
 
 (defn rand-str
-  [len]
-  (apply str (take len (repeatedly #(if (zero? (rand-int 2)) (char (+ (rand 26) 65)) (char (+ (rand 26) 97)))))))
+  ([]
+   (rand-str 10))
+  ([len]
+   (apply str (take len (repeatedly #(if (zero? (rand-int 2)) (char (+ (rand 26) 65)) (char (+ (rand 26) 97))))))))
 
 (defn random-email
   ([]
