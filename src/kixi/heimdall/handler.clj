@@ -97,9 +97,12 @@
 (defn get-groups [req]
   {:status 200 :body {:type "groups" :items (service/groups (dynamodb req) (get (:params req) "id"))}})
 
+
+
 (defn get-all-groups [req]
-  (let [dex (Integer/parseInt (get-in req [:params "index"] "0"))
-        cnt (min (Integer/parseInt (get-in req [:params "count"] "100")) 100)
+  (let [max-count 100
+        dex (util/str->int (get-in req [:params "index"]) 0)
+        cnt (min (util/str->int (get-in req [:params "count"]) max-count) max-count)
         sort-order (get-in req [:params :sort-order] "desc")]
     (cond
       (neg? dex) (return-error {:fn "get-all-groups"
