@@ -19,7 +19,8 @@
             [kixi.comms :as comms]
             [taoensso.timbre :as log]
             [environ.core :refer [env]]
-            [cognitect.transit :as tr])
+            [cognitect.transit :as tr]
+            [kixi.heimdall.integration.base :refer [rand-str]])
   (:import [java.io ByteArrayInputStream ByteArrayOutputStream]
            [org.httpkit.BytesInputStream]))
 
@@ -314,6 +315,37 @@
                                                    (transit-encode {:username "user@boo.com"
                                                                     :password "secret1Pass"
                                                                     :name "Jane Doe"}))))]
-        (is (= (:status response) 201)
-            (when (= (:status response) 201)
-              (let [_ ()])))))))
+        (is (= (:status response) 201))))))
+
+(deftest groups-can-be-returned-and-paged
+  (let [random-group (fn []
+                       {:group-id (java.util.UUID/randomUUID)
+                        :group-name (rand-str)
+                        :type "group"})]
+    (testing "groups-are-returned"
+      (with-redefs [group/all (fn [_] (repeatedly 10 random-group))]
+        (let [response (comms-app app (heimdall-request
+                                       (mock/request :get "/groups/search")))]
+          (is (= (:status response) 200)))))
+    (testing "groups-are-returned- count=10"
+      (with-redefs [group/all (fn [_] (repeatedly 20 random-group))]
+        (let [response (comms-app app (heimdall-request
+                                       (mock/request :get "/groups/search?count=10")))]
+          (is (= (:status response) 200))
+          (when (= 200 (:status response))
+            (let [body-resp (transit-decode-stream (:body response))]
+              (is (= 10 (count (:items body-resp))))
+              (is (= 10 (get-in body-resp [:paging :count])))
+              (is (= 20 (get-in body-resp [:paging :total])))
+              (is (= 0 (get-in body-resp [:paging :index]))))))))
+
+    (testing "groups-are-returned- index=7"
+      (with-redefs [group/all (fn [_] (repeatedly 20 random-group))]
+        (let [response (comms-app app (heimdall-request
+                                       (mock/request :get "/groups/search?index=7")))]
+          (is (= (:status response) 200))
+          (when (= 200 (:status response))
+            (let [body-resp (transit-decode-stream (:body response))]
+              (is (= 13 (get-in body-resp [:paging :count])))
+              (is (= 20 (get-in body-resp [:paging :total])))
+              (is (= 7 (get-in body-resp [:paging :index]))))))))))

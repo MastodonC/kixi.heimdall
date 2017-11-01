@@ -47,3 +47,11 @@
                              (map char)
                              (apply str)))]
     (clojure.string/join "-" (take 4 (repeatedly gen-block)))))
+
+(defn str->int
+  [s d]
+  (if s
+    (try
+      (Integer/parseInt s)
+      (catch Exception e d))
+    d))
