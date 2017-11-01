@@ -33,7 +33,7 @@
     "instances": @@INSTANCES@@,
     "constraints": [["hostname", "UNIQUE"]],
     "healthChecks": [{
-        "protocol": "TCP",
+        "protocol": "HTTP",
         "path": "/healthcheck",
         "gracePeriodSeconds": 600,
         "intervalSeconds": 30,
