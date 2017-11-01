@@ -12,3 +12,5 @@ pom.xml.asc
 heimdall.json
 resources/secrets.edn
 gc.log.*
+/.idea
+*.iml

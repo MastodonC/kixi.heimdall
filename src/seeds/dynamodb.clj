@@ -34,6 +34,7 @@
                             {:group-name "Test Group"
                              :user-id (str (:id test-user))
                              :group-id (uuid)
+                             :group-type "group"
                              :created (util/db-now)})))
 
 

@@ -98,8 +98,8 @@
   {:status 200 :body {:type "groups" :items (service/groups (dynamodb req) (get (:params req) "id"))}})
 
 (defn get-all-groups [req]
-  (let [dex (Integer/parseInt (get-in req [:params :index] "0"))
-        cnt (min (Integer/parseInt (get-in req [:params :count] "100")) 100)
+  (let [dex (Integer/parseInt (get-in req [:params "index"] "0"))
+        cnt (min (Integer/parseInt (get-in req [:params "count"] "100")) 100)
         sort-order (get-in req [:params :sort-order] "desc")]
     (cond
       (neg? dex) (return-error {:fn "get-all-groups"
@@ -112,12 +112,12 @@
                                                                :msg "Sort order must be either asc or desc"}
                                                               :query-sort-order-invalid 400)
       :else (let [[total groups] (service/all-groups (dynamodb req) dex cnt sort-order)]
-              {:status 200 :body
-                             {:type  "groups"
-                              :items groups
-                              :paging {:total total
-                                       :count (count groups)
-                                       :index dex}}}))))
+              {:status 200
+               :body {:type "groups"
+                      :items groups
+                      :paging {:total total
+                               :count (count groups)
+                               :index dex}}}))))
 
 (defn reset-password
   [req]
