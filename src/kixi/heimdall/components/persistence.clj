@@ -1,5 +1,5 @@
 (ns kixi.heimdall.components.persistence
-  (:require [clojure.spec :as spec]
+  (:require [clojure.spec.alpha :as spec]
             [taoensso.timbre :as log]
             [com.stuartsierra.component :as component]
             [kixi.heimdall.service :as service]

@@ -1,6 +1,6 @@
 (ns kixi.heimdall.user
   (:require [buddy.hashers :as hs]
-            [clojure.spec :as spec]
+            [clojure.spec.alpha :as spec]
             [kixi.heimdall
              [schema :as schema]
              [util :as util]]

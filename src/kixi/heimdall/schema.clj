@@ -1,5 +1,5 @@
 (ns kixi.heimdall.schema
-  (:require [clojure.spec :as spec]
+  (:require [clojure.spec.alpha :as spec]
             [kixi.heimdall.util :as util]))
 
 (defn uuid?

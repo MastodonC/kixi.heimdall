@@ -1,6 +1,6 @@
 (ns kixi.heimdall.password-resets
   (:require [taoensso.timbre :as log]
-            [clojure.spec :as s]
+            [clojure.spec.alpha :as s]
             [kixi.heimdall.components.database :as db]
             [kixi.heimdall.util :as util]
             [kixi.heimdall
@@ -13,16 +13,22 @@
   [rc un]
   (str "/#/reset?rc=" rc "&un=" un))
 
+(defn uuid
+  []
+  (str (java.util.UUID/randomUUID)))
+
 (defn reject-reset-event
   [reason username']
   (let [username (clojure.string/lower-case username')]
     (if (s/valid? ::schema/username username)
       {:kixi.comms.event/key :kixi.heimdall/password-reset-request-rejected
        :kixi.comms.event/version "1.0.0"
-       :kixi.comms.event/payload {:reason reason :username username}}
+       :kixi.comms.event/payload {:reason reason :username username}
+       :kixi.comms.event/partition-key (uuid)}
       {:kixi.comms.event/key :kixi.heimdall/password-reset-request-failed
        :kixi.comms.event/version "1.0.0"
-       :kixi.comms.event/payload {:error (str "The provided username was not valid: " username)}})))
+       :kixi.comms.event/payload {:error (str "The provided username was not valid: " username)}
+       :kixi.comms.event/partition-key (uuid)})))
 
 (defn create-reset-event
   [user _]
@@ -33,14 +39,16 @@
                                           (dissoc :password)
                                           (update :username clojure.string/lower-case))
                                 :reset-code rc
-                                :url (reset-code->url rc (:username user))}}))
+                                :url (reset-code->url rc (:username user))}
+     :kixi.comms.event/partition-key (:id user)}))
 
 (defn create-reset-completed-event
   [username']
   (let [username (clojure.string/lower-case username')]
     {:kixi.comms.event/key :kixi.heimdall/password-reset-completed
      :kixi.comms.event/version "1.0.0"
-     :kixi.comms.event/payload {:username username}}))
+     :kixi.comms.event/payload {:username username}
+     :kixi.comms.event/partition-key (uuid)}))
 
 (defn save!
   [db reset-code user]

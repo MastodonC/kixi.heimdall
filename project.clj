@@ -4,7 +4,7 @@
   :description "Authentication and authorization service"
   :url "http://example.com/FIXME"
   :min-lein-version "2.0.0"
-  :dependencies [[org.clojure/clojure "1.9.0-alpha13"]
+  :dependencies [[org.clojure/clojure "1.9.0-alpha17"]
                  [compojure "1.5.1"]
                  [ring/ring-defaults "0.2.1"]
                  [kixi/buddy "1.2.1" :exclusions [cheshire]]
@@ -28,7 +28,7 @@
                  [org.clojure/tools.cli "0.3.5"]
                  [environ "1.1.0"]
                  [aero "1.0.0"]
-                 [kixi/kixi.comms "0.2.15"]
+                 [kixi/kixi.comms "0.2.27"]
                  [org.clojure/tools.analyzer "0.6.9"]
                  [de.ubercode.clostache/clostache "1.4.0"]
                  [ring-middleware-format "0.7.2"] ;; transit

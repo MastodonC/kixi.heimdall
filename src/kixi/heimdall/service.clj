@@ -5,7 +5,7 @@
             [buddy.core.keys :as ks]
             [clj-time.core :as t]
             [clj-time.coerce :as c]
-            [clojure.spec :as s]
+            [clojure.spec.alpha :as s]
             [clojure.java.io :as io]
             [kixi.heimdall.user :as user]
             [kixi.heimdall.group :as group]
@@ -16,7 +16,6 @@
             [kixi.heimdall.util :as util]
             [kixi.heimdall.email :as email]
             [kixi.heimdall.schema :as schema]
-            [clojure.spec :as spec]
             [kixi.comms :refer [Communications] :as comms]))
 
 (defn fail
@@ -123,9 +122,9 @@
 
 (defn create-group-event
   [db communications {:keys [group-name group-id user-id] :as input}]
-  (let [group-ok? (and (spec/valid? ::schema/group-params input)
+  (let [group-ok? (and (s/valid? ::schema/group-params input)
                        (not (group/find-by-name db group-name)))
-        user-ok? (spec/valid? ::schema/id user-id)
+        user-ok? (s/valid? ::schema/id user-id)
         input-dated (assoc input
                            :created (str (util/db-now)))]
     (if (and user-ok? group-ok?)
@@ -190,7 +189,7 @@
         user (merge user'
                     stored-user)]
     (cond
-      (not (spec/valid? ::schema/login user)) (fail (str "Please match the required format: " res))
+      (not (s/valid? ::schema/login user)) (fail (str "Please match the required format: " res))
       (not stored-user) (fail "Pre-signup user not found")
       (not (:pre-signup user)) (fail "User is not in pre-sign up state")
       (not (invites/consume! db (:invite-code params) (:username user))) (fail "The invite code was invalid.")
@@ -216,7 +215,7 @@
                  (update :username clojure.string/lower-case)
                  create-user-data)]
     (cond
-      (not (spec/valid? ::schema/user-invite user)) (invites/failed-event username :invalid-data (spec/explain-data ::schema/user-invite user))
+      (not (s/valid? ::schema/user-invite user)) (invites/failed-event username :invalid-data (s/explain-data ::schema/user-invite user))
       (and stored-user
            (not (:pre-signup stored-user))) (invites/failed-event username :user-signedup)
       :else (invites/create-invite-event user))))
@@ -243,9 +242,9 @@
 
 (defn add-member-event
   [db communications user-id group-id]
-  (let [user-ok? (and (spec/valid? ::schema/id user-id)
+  (let [user-ok? (and (s/valid? ::schema/id user-id)
                       (user/find-by-id db user-id))
-        group-ok? (and (spec/valid? ::schema/id group-id)
+        group-ok? (and (s/valid? ::schema/id group-id)
                        (group/find-by-id db group-id))]
     (if (and user-ok? group-ok?)
       (do (comms/send-event! communications
@@ -265,9 +264,9 @@
 
 (defn remove-member-event
   [db communications user-id group-id]
-  (let [user-ok? (and (spec/valid? ::schema/id user-id)
+  (let [user-ok? (and (s/valid? ::schema/id user-id)
                       (user/find-by-id db user-id))
-        group-ok? (and (spec/valid? ::schema/id group-id)
+        group-ok? (and (s/valid? ::schema/id group-id)
                        (group/find-by-id db group-id))]
     (if (and user-ok? group-ok?)
       (do (comms/send-event! communications
@@ -295,9 +294,9 @@
 
 (defn update-group-event
   [db communications group-id new-group-name]
-  (let [group-ok? (and (spec/valid? ::schema/id group-id)
+  (let [group-ok? (and (s/valid? ::schema/id group-id)
                        (group/find-by-id db group-id))
-        name-ok? (spec/valid? ::schema/group-name new-group-name)]
+        name-ok? (s/valid? ::schema/group-name new-group-name)]
     (if (and group-ok? name-ok?)
       (and (comms/send-event! communications
                               :kixi.heimdall/group-updated

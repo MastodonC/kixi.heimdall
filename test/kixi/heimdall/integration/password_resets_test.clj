@@ -1,5 +1,5 @@
 (ns kixi.heimdall.integration.password-resets-test
-  (:require [kixi.heimdall.password-resets :refer :all]
+  (:require [kixi.heimdall.password-resets :refer :all :exclude [uuid]]
             [kixi.heimdall.util :as util]
             [kixi.heimdall.integration.base :refer :all]
             [clojure.test :refer :all]

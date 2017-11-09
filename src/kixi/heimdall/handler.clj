@@ -14,7 +14,7 @@
             [environ.core :refer [env]]
             [buddy.sign.jwt :as jwt]
             [buddy.core.keys :as ks]
-            [clojure.spec :as spec]))
+            [clojure.spec.alpha :as spec]))
 
 (defn- dynamodb
   [req]

@@ -2,7 +2,7 @@
   (:require [kixi.heimdall.components.database :as db]
             [kixi.heimdall.util :as util]
             [taoensso.timbre :as log]
-            [clojure.spec :as spec]))
+            [clojure.spec.alpha :as spec]))
 
 (def groups-table "groups")
 (def created-by-index "groups-by-created-by-and-type")

@@ -8,7 +8,7 @@
             [clj-http.client :as client]
             [environ.core :refer [env]]
             [taoensso.timbre :as log :refer [debug]]
-            [clojure.spec :as spec]))
+            [clojure.spec.alpha :as spec]))
 
 (use-fixtures :once cycle-system extract-db-session extract-comms)
 
@@ -44,7 +44,7 @@
                            :password "Secret123"
                            :name "Bravo Charlie"})
           conf (config/config (keyword (env :system-profile "test")))
-          auth-fn (fn [pword] 
+          auth-fn (fn [pword]
                     (:body (post-to-auth (str "http://localhost:" (config/webserver-port conf) "/create-auth-token")
                                          (merge {:username username}
                                                 (when pword
