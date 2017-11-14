@@ -51,7 +51,8 @@
                             :kixi.heimdall/create-password-reset-request
                             "1.0.0"
                             nil
-                            {:username username})
+                            {:username username}
+                            {:kixi.comms.command/partition-key username})
       (wait-for get-reset-code-fn
                 #(throw (Exception. "Reset code never arrived.")))
       (when-let [reset-code-item (get-reset-code-fn)]

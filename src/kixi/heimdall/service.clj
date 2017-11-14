@@ -220,6 +220,12 @@
            (not (:pre-signup stored-user))) (invites/failed-event username :user-signedup)
       :else (invites/create-invite-event user))))
 
+(defn user-invite-event-payload->kixi-user
+  [{{:keys [id group-id]}
+    :user}]
+  {:kixi.user/id id
+   :kixi.user/groups [group-id]})
+
 (defn invite-user!
   [db communications {:keys [username name] :as user}]
   (let [stored-user (user/find-by-username db {:username username})
@@ -232,7 +238,9 @@
                        payload
                        {:kixi.comms.event/partition-key username})
     (if (= :kixi.heimdall/invite-created key)
-      (do (email/send-email! :user-invite communications {:url (:url payload) :username username})
+      (do (email/send-email! :user-invite communications {:url (:url payload)
+                                                          :username username
+                                                          :user (user-invite-event-payload->kixi-user payload)})
           (success event))
       (fail event))))
 
@@ -383,12 +391,15 @@
         (if result
           (let [{:keys [kixi.comms.event/key
                         kixi.comms.event/version
-                        kixi.comms.event/payload]} (password-resets/create-reset-completed-event username)]
+                        kixi.comms.event/payload]
+                 :as event} (password-resets/create-reset-completed-event username)]
             (user/change-password! db username password)
             (comms/send-event! communications
                                key
                                version
-                               payload)
+                               payload
+                               (select-keys event
+                                            [:kixi.comms.event/partition-key]))
             (success {:message "Password was reset"}))
           (fail (str "No matching reset code - requested for " username))))
       (fail (str "Please match the required format: " res)))))

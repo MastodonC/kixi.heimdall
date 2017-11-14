@@ -12,7 +12,7 @@
                  [ring/ring-jetty-adapter "1.5.0"]
                  [com.taoensso/timbre "4.8.0"]
                  [com.taoensso/faraday "1.9.0" :exclusions [com.amazonaws/aws-java-sdk-dynamodb]]
-                 [kixi/kixi.log "0.1.4"]
+                 [kixi/kixi.log "0.1.5"]
                  [kixi/kixi.metrics "0.4.1"]
                  [metrics-clojure ~metrics-version]
                  [metrics-clojure-jvm ~metrics-version]
@@ -28,7 +28,7 @@
                  [org.clojure/tools.cli "0.3.5"]
                  [environ "1.1.0"]
                  [aero "1.0.0"]
-                 [kixi/kixi.comms "0.2.27"]
+                 [kixi/kixi.comms "0.2.28"]
                  [org.clojure/tools.analyzer "0.6.9"]
                  [de.ubercode.clostache/clostache "1.4.0"]
                  [ring-middleware-format "0.7.2"] ;; transit
