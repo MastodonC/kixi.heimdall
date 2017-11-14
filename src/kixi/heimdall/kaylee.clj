@@ -22,13 +22,23 @@
   [username new-password]
   (user/change-password! (db) username new-password))
 
+(def wait-tries 120)
+(def wait-per-try 500)
+
 (defn wait-for
-  [f]
-  (loop []
-    (if-let [x (f)]
-      x
-      (do (Thread/sleep 10)
-          (recur)))))
+  ([fn]
+   (wait-for fn #(throw (ex-info "Operation never succeeded." {}))))
+  ([fn fail-fn]
+   (wait-for fn fail-fn 1))
+  ([fn fail-fn cnt]
+   (if (< cnt wait-tries)
+     (let [value (fn)]
+       (or
+         value
+         (do
+           (Thread/sleep wait-per-try)
+           (recur fn fail-fn (inc cnt)))))
+     (fail-fn))))
 
 (defn find-user
   [username]
