@@ -55,23 +55,18 @@
 
 (defrecord DummyCommunications []
   comms/Communications
-  (send-event! [_ _ _ _]
-    nil)
   (send-event! [_ _ _ _ _]
     nil)
-  (send-command! [_ _ _ _ _]
+  (send-command! [_ _ _ _ _ _]
     nil)
   (attach-event-handler! [_ _ _ _ _]
     nil))
 
 (defrecord MockCommunications [triggered]
   comms/Communications
-  (send-event! [_ event version payload]
-    (log/info "send-event!")
-    (swap! triggered update-in  [:comms :sent] concat [{:event event :version version :payload payload}]))
   (send-event! [_ event version payload opts]
     (swap! triggered update-in [:comms :sent] concat [{:event event :version version :payload payload :opts opts}]))
-  (send-command! [_ command version user payload]
+  (send-command! [_ command version user payload opts]
     (swap! triggered update-in [:comms :command] concat [{:command command :user user :version version :payload payload}]))
   (attach-event-handler! [_ group-id event version handler]
     nil))

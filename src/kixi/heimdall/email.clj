@@ -12,7 +12,8 @@
     (kcomms/send-command! comms :kixi.mailer/send-mail
                           "1.0.0"
                           user
-                          mail)))
+                          mail
+                          {:kixi.comms.command/partition-key (:kixi.user/id user)})))
 
 (defmulti send-email!
   (fn [email-type comms opts] email-type))
@@ -33,4 +34,4 @@
         body-txt (mustache/render-resource "emails/invite.txt" opts)
         subject "Witan For Cities - You have been invited!"
         destination {:to-addresses [(get opts :username)]}]
-    (send-email-command! comms nil destination subject body-html body-txt)))
+    (send-email-command! comms (:user opts) destination subject body-html body-txt)))
