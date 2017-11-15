@@ -13,7 +13,8 @@
                           "1.0.0"
                           user
                           mail
-                          {:kixi.comms.command/partition-key (:kixi.user/id user)})))
+                          {:kixi.comms.command/partition-key (or (:kixi.user/id user)
+                                                                 (:id user))})))
 
 (defmulti send-email!
   (fn [email-type comms opts] email-type))
