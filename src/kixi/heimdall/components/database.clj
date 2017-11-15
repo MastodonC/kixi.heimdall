@@ -91,7 +91,10 @@
                      opts))
   (scan [this table]
     (far/scan (db this)
-              (decorated-table table (prefix this))))
+              (decorated-table table (prefix this))
+              {:limit 50
+               :span-reqs {:max 100
+                           :throttle-ms 100}}))
 
   component/Lifecycle
   (start [component]
