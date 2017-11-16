@@ -34,27 +34,28 @@
   [u]
   (service/send-user-created-event! (comms) u))
 
+(comment
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;; Users
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-(def users
-  (map #(dissoc % :password) (user/all (db))))
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;; Groups
+  ;; Users
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-(def groups
-  (group/all (:db @kixi.heimdall.application/system)))
+  (def users
+    (map #(dissoc % :password) (user/all (db))))
 
-(defn send-group-created-event!
-  [group]
-  (comms/send-event! (comms) :kixi.heimdall/group-created "2.0.0" group))
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+  ;; Groups
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+  (def groups
+    (group/all (:db @kixi.heimdall.application/system)))
+
+  (defn send-group-created-event!
+    [group]
+    (comms/send-event! (comms) :kixi.heimdall/group-created "2.0.0" group))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-(defn apply-patch!
-  []
-  (run! send-user-created-event! users)
-  (run! send-group-created-event! groups))
+  (defn apply-patch!
+    []
+    (run! send-user-created-event! users)
+    (run! send-group-created-event! groups)))

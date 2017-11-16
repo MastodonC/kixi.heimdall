@@ -1,42 +1,40 @@
 (ns kixi.heimdall.schema
   (:require [clojure.spec.alpha :as spec]
-            [kixi.heimdall.util :as util]))
+                        [clojure.spec.gen.alpha :as gen]
+            [kixi.heimdall.util :as util]
+            [kixi.spec.conformers :as ks]))
 
-(defn uuid?
-  [s]
-  (when-not (clojure.string/blank? s)
-    (re-find #"^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$" s)))
-
-;; regex from here http://www.lispcast.com/clojure.spec-vs-schema
 (defn email?
   [s]
   (when-not (clojure.string/blank? s)
-    (re-find #"^[a-z0-9._%+-]+@[a-z0-9.-]+\.[a-z]{2,63}" s)))
+    (re-find (re-pattern (str "^" ks/email-re-str "$")) s)))
 
 (defn password?
   [s]
   (when-not (clojure.string/blank? s)
     (re-find #"(?=.*\d.*)(?=.*[a-z].*)(?=.*[A-Z].*).{8,}" s)))
 
-(spec/def ::uuid #(instance? java.util.UUID %))
-(spec/def ::id uuid?)
-(spec/def ::username email?)
-(spec/def ::created util/date-time?)
+(spec/def ::id ks/uuid?)
+(spec/def ::username ks/email?)
+(spec/def ::created (ks/var-timestamp? :date-time))
 (spec/def ::exp integer?)
 (spec/def ::pre-signup boolean?)
 
-(spec/def ::user-id uuid?)
-(spec/def ::group-id uuid?)
+(spec/def ::user-id ks/uuid?)
+(spec/def ::group-id ks/uuid?)
 (spec/def ::group-name string?)
 (spec/def ::group-type #{"user" "group"})
 (spec/def ::group-params
   (spec/keys :req-un [::group-name ::group-id ::user-id ::created ::group-type]))
 
-(spec/def ::groups (spec/coll-of ::uuid))
+(spec/def ::groups (spec/coll-of ks/uuid?))
 (spec/def ::user-groups (spec/keys :req-un [::groups] :opts []))
 (spec/def ::user
-  (spec/keys :req-un [::id]
-             :opts [::username ::name ::created ::user-groups ::pre-signup]))
+  (spec/keys :req-un [::id ::username]
+             :opt-un [::name ::created ::user-groups ::pre-signup]))
+
+(spec/def ::stored-user
+  (spec/keys :req-un [::id ::username ::name ::created ::group-id ::pre-signup]))
 
 
 (spec/def ::password password?)

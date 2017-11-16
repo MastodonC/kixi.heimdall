@@ -4,7 +4,8 @@
   :description "Authentication and authorization service"
   :url "http://example.com/FIXME"
   :min-lein-version "2.0.0"
-  :dependencies [[org.clojure/clojure "1.9.0-alpha17"]
+  :dependencies [[org.clojure/clojure "1.9.0-beta1"]
+                 [org.clojure/test.check "0.9.0"]
                  [compojure "1.5.1"]
                  [ring/ring-defaults "0.2.1"]
                  [kixi/buddy "1.2.1" :exclusions [cheshire]]
@@ -14,6 +15,7 @@
                  [com.taoensso/faraday "1.9.0" :exclusions [com.amazonaws/aws-java-sdk-dynamodb]]
                  [kixi/kixi.log "0.1.5"]
                  [kixi/kixi.metrics "0.4.1"]
+                 [kixi/kixi.spec "0.1.13"]
                  [metrics-clojure ~metrics-version]
                  [metrics-clojure-jvm ~metrics-version]
                  [metrics-clojure-ring ~metrics-version]
