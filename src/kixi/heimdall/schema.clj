@@ -45,7 +45,7 @@
   (spec/keys :req-un [::username ::name]))
 
 (spec/def ::name string?)
-(spec/def ::self-group uuid?)
+(spec/def ::self-group ks/uuid?)
 (spec/def ::user-groups (spec/coll-of ::id))
 (spec/def ::auth-token
   (spec/keys :req-un [::id
