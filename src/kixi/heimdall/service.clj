@@ -17,7 +17,8 @@
             [kixi.heimdall.email :as email]
             [kixi.heimdall.schema :as schema]
             [kixi.heimdall.components.database :as database]
-            [kixi.comms :refer [Communications] :as comms]))
+            [kixi.comms :refer [Communications] :as comms]
+            [kixi.spec.conformers :as kc]))
 
 (defn fail
   [message]
@@ -185,14 +186,12 @@
                      :communications (s/keys)
                      :params (s/keys :req-un [::schema/username
                                               ::schema/password])))
+(s/def ::message kc/not-empty-string)
+(s/def ::signup-user-response (s/tuple boolean? (s/keys :req-un [::message])))
 
 (defn signup-user!
   [db communications params]
-  {:post [(vector? %)
-          (boolean? (first %))
-          (map? (second %))
-          (not-empty (:message (second %)))
-          (string? (:message (second %)))]}
+  {:post [(s/valid? ::signup-user-response %)]}
   (let [user' (-> params
                   (select-keys [:username :password])
                   (update :username clojure.string/lower-case))
