@@ -208,14 +208,34 @@
          :pre-signup true
          :group-id (str (java.util.UUID/randomUUID))))
 
-(defn user-invite-event!
+(s/fdef user-invite-event
+        :args (s/cat :stored-user (s/nilable ::schema/stored-user)
+                     :invitee (s/keys :req-un [::schema/username ::schema/name]))
+        :fn (fn [{:keys [args ret]}]
+              (let [{:keys [stored-user invitee]} args
+                    [_ event] ret
+                    tested-keys [:id :group-id :created]]
+                (cond
+                  (:pre-signup stored-user)
+                  (= (select-keys stored-user
+                                  tested-keys)
+                     (select-keys (get-in event [:kixi.comms.event/payload :user])
+                                  tested-keys))
+                  :else true)))
+
+        :ret (s/or :created ::invites/create-invite-event
+                   :failed ::invites/failed-event))
+
+(defn user-invite-event
   [stored-user {:keys [username name] :as user'}]
   (let [user (-> user'
                  (select-keys [:username :name])
                  (update :username clojure.string/lower-case)
-                 create-user-data)]
+                 create-user-data
+                 (merge (select-keys stored-user [:id :group-id :created])))]
     (cond
-      (not (s/valid? ::schema/user-invite user)) (invites/failed-event username :invalid-data (s/explain-data ::schema/user-invite user))
+      (not (s/valid? ::schema/user-invite user)) (invites/failed-event username :invalid-data
+                                                                       (s/explain-data ::schema/user-invite user))
       (and stored-user
            (not (:pre-signup stored-user))) (invites/failed-event username :user-signedup)
       :else (invites/create-invite-event user))))
@@ -231,7 +251,7 @@
   (let [stored-user (user/find-by-username db {:username username})
         {:keys [kixi.comms.event/key
                 kixi.comms.event/version
-                kixi.comms.event/payload] :as event} (user-invite-event! stored-user user)]
+                kixi.comms.event/payload] :as event} (user-invite-event stored-user user)]
     (comms/send-event! communications
                        key
                        version
