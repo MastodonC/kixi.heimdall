@@ -4,6 +4,7 @@
             [kixi.comms.components.kinesis :as kinesis]
             [taoensso.timbre :as log]
             [amazonica.aws.dynamodbv2 :as ddb]
+            [clojure.spec.test.alpha :as stest]
             [kixi.heimdall.config :as config]
             [kixi.heimdall.util :as util]
             [kixi.heimdall.service :as service]
@@ -57,13 +58,21 @@
   (log/info "Deleting streams...")
   (kinesis/delete-streams! endpoint (vals streams)))
 
+(defn instrument-fns
+  []
+  (stest/instrument ['kixi.heimdall.service/signup-user!]))
+
+
 (defn cycle-system
   [all-tests]
   (kixi.comms/set-verbose-logging! true)
+  (instrument-fns)
+  (set! *assert* true)
   (repl/start)
   (try
     (all-tests)
     (finally
+      (set! *assert* false)
       (let [config (config/config (keyword (env :system-profile "test")))
             {:keys [endpoint dynamodb-endpoint streams app profile] :as args}
             (first (vals (:communications config)))

@@ -16,6 +16,7 @@
             [kixi.heimdall.util :as util]
             [kixi.heimdall.email :as email]
             [kixi.heimdall.schema :as schema]
+            [kixi.heimdall.components.database :as database]
             [kixi.comms :refer [Communications] :as comms]))
 
 (defn fail
@@ -179,8 +180,19 @@
       (comment "This should only work on event replay, when the condition will succeed.")))
   nil)
 
+(s/fdef signup-user!
+        :args (s/cat :db (s/keys)
+                     :communications (s/keys)
+                     :params (s/keys :req-un [::schema/username
+                                              ::schema/password])))
+
 (defn signup-user!
   [db communications params]
+  {:post [(vector? %)
+          (boolean? (first %))
+          (map? (second %))
+          (not-empty (:message (second %)))
+          (string? (:message (second %)))]}
   (let [user' (-> params
                   (select-keys [:username :password])
                   (update :username clojure.string/lower-case))

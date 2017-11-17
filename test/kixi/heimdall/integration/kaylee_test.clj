@@ -78,7 +78,7 @@
                                                     :password "Foobar123"
                                                     :invite-code (:invite-code unwanted-ic)})
           (is (map? (k/create-group! groupname username)))
-         
+
           (let [unwanted-user (user/find-by-username @db-session {:username unwanted-username})
                 user (user/find-by-username @db-session {:username username})]
             (is (= 2
@@ -110,7 +110,7 @@
                                     {:consistent? true})
                       #(throw (Exception. "Invite code never arrived.")))]
       (is r)
-      (when r          
+      (when r
         (let [user (user/find-by-username @db-session {:username username})
               groups (group/find-by-user @db-session (:id user))]
           (is (= 2
