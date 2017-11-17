@@ -238,7 +238,7 @@
                                                                        (s/explain-data ::schema/user-invite user))
       (and stored-user
            (not (:pre-signup stored-user))) (invites/failed-event username :user-signedup)
-      :else  (invites/create-invite-event user))))
+      :else (invites/create-invite-event user))))
 
 (defn user-invite-event-payload->kixi-user
   [{{:keys [id group-id]}
