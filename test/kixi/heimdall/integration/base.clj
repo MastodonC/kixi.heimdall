@@ -4,11 +4,15 @@
             [kixi.comms.components.kinesis :as kinesis]
             [taoensso.timbre :as log]
             [amazonica.aws.dynamodbv2 :as ddb]
+            [clojure.spec.alpha :as s]
+            [clojure.spec.test.alpha :as stest]
+            [clojure.spec.gen.alpha :as gen]
             [kixi.heimdall.config :as config]
             [kixi.heimdall.util :as util]
             [kixi.heimdall.service :as service]
             [kixi.heimdall.invites :refer [get-invite]]
-            [kixi.heimdall.user :as u :refer [find-by-username]]))
+            [kixi.heimdall.user :as u :refer [find-by-username]]
+            [kixi.spec.conformers :as kc]))
 
 (def system (atom nil))
 (def comms-mode (first (keys (:communications (config/config (keyword (env :system-profile "test")))))))
@@ -28,10 +32,8 @@
    (apply str (take len (repeatedly #(if (zero? (rand-int 2)) (char (+ (rand 26) 65)) (char (+ (rand 26) 97))))))))
 
 (defn random-email
-  ([]
-   (random-email 10 10))
-  ([pl sl]
-   (apply str (rand-str pl) "@" (rand-str sl) "." (rand-str 3))))
+  []
+  (first (gen/sample (s/gen kc/email?) 1)))
 
 (defn table-exists?
   [endpoint table]
@@ -57,13 +59,21 @@
   (log/info "Deleting streams...")
   (kinesis/delete-streams! endpoint (vals streams)))
 
+(defn instrument-fns
+  []
+  (stest/instrument ['kixi.heimdall.service/signup-user!]))
+
+
 (defn cycle-system
   [all-tests]
   (kixi.comms/set-verbose-logging! true)
+  (instrument-fns)
+  (set! *assert* true)
   (repl/start)
   (try
     (all-tests)
     (finally
+      (set! *assert* false)
       (let [config (config/config (keyword (env :system-profile "test")))
             {:keys [endpoint dynamodb-endpoint streams app profile] :as args}
             (first (vals (:communications config)))
