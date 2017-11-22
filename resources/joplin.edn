@@ -17,12 +17,16 @@
                 :db-staging {:type :dynamo
                              :endpoint "http://dynamodb.eu-central-1.amazonaws.com"
                              :migration-table "staging-kixi.heimdall-migrations"}
+                :db-replay {:type :dynamo
+                            :endpoint "http://dynamodb.eu-central-1.amazonaws.com"
+                            :migration-table "staging-replay-kixi.heimdall-migrations"}
                 :db-prod {:type :dynamo
                           :endpoint "http://dynamodb.eu-west-1.amazonaws.com"
                           :migration-table "prod-kixi.heimdall-migrations"}}
  :environments {:development [{:db :db-dev, :migrator :db-mig, :seed :db-seed-dev}]
                 :dev-docker [{:db :db-dev-docker, :migrator :db-mig, :seed :db-seed-dev}]
                 :staging-jenkins [{:db :db-jenkins, :migrator :db-mig, :seed :db-seed-staging}]
+                :staging-replay [{:db :db-replay, :migrator :db-mig, :seed :db-seed-staging}]
                 :prod [{:db :db-prod, :migrator :db-mig, :seed :db-seed-prod}]
                 :staging [{:db :db-staging, :migrator :db-mig, :seed :db-seed-staging}]
                 :test [{:db :db-test, :migrator :db-mig, :seed :db-seed-dev}]}}
