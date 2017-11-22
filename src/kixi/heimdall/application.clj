@@ -13,3 +13,4 @@
 ;; See https://github.com/stuartsierra/component
 (def system (atom nil))
 (def profile (atom :staging))
+(def config-location (atom "conf.edn"))
