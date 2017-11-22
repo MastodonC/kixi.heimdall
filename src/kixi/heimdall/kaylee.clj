@@ -73,13 +73,17 @@
   [group-name user-name]
   (let [user (user/find-by-username (db) {:username user-name})
         group (group/find-by-name (db) group-name)]
-    (if (service/add-member-event (db)
-                                  (comms)
-                                  (:id user) (:id group))
+    (if (and user
+             group
+             (service/add-member-event (db)
+                                       (comms)
+                                       (:id user) (:id group)))
       (wait-for #(let [groups (member/retrieve-groups-ids (db) (:id user))]
                    (when (contains? (set groups) (:id group))
-                     :success-user-added-to-group)))
-      :failed-add-user-to-group)))
+                     {:success-user-added-to-group {:user user
+                                                    :group group}})))
+      {:failed-add-user-to-group {:user user
+                                  :group group}})))
 
 (defn invite-user!
   ([username name]

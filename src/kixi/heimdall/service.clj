@@ -211,13 +211,17 @@
               (send-user-created-event! communications added-user)
               (success {:message "User successfully created"})))))
 
+(defn uuid
+  []
+  (str (java.util.UUID/randomUUID)))
+
 (defn create-user-data
   [user]
   (assoc user
-         :id (str (java.util.UUID/randomUUID))
+         :id (uuid)
          :created (str (util/db-now))
          :pre-signup true
-         :group-id (str (java.util.UUID/randomUUID))))
+         :group-id (uuid)))
 
 (s/fdef user-invite-event
         :args (s/cat :stored-user (s/nilable ::schema/stored-user)
@@ -291,7 +295,8 @@
                              "1.0.0"
                              {:user-id user-id
                               :group-id group-id}
-                             {:kixi.comms.event/partition-key group-id}) true)
+                             {:kixi.comms.event/partition-key group-id})
+          true)
       (do (comms/send-event! communications
                              :kixi.heimdall/member-added-failed
                              "1.0.0"
@@ -299,7 +304,8 @@
                               :group-valid group-ok?
                               :group-id group-id
                               :user-id user-id}
-                             {:kixi.comms.event/partition-key group-id}) false))))
+                             {:kixi.comms.event/partition-key (or group-id user-id (uuid))})
+          false))))
 
 (defn remove-member-event
   [db communications user-id group-id]
