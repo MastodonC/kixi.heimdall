@@ -327,7 +327,7 @@
                               :group-valid group-ok?
                               :group-id group-id
                               :user-id user-id}
-                             {:kixi.comms.event/partition-key group-id}) false))))
+                             {:kixi.comms.event/partition-key (or group-id user-id (uuid))}) false))))
 
 (defn remove-member
   [db {:keys [user-id group-id] :as member}]

@@ -66,7 +66,10 @@
                                          :user-id (:id user)
                                          :group-type "group"})
           (wait-for #(group/find-by-name (db) group-name))
-          :failed-create-group)))
+          {:failed-create-group {:user user
+                                 :group-id group-id
+                                 :owner-name owner-name
+                                 :group-name group-name}})))
     :failed-no-user))
 
 (defn add-user-to-group!
@@ -80,8 +83,7 @@
                                        (:id user) (:id group)))
       (wait-for #(let [groups (member/retrieve-groups-ids (db) (:id user))]
                    (when (contains? (set groups) (:id group))
-                     {:success-user-added-to-group {:user user
-                                                    :group group}})))
+                     :success-user-added-to-group)))
       {:failed-add-user-to-group {:user user
                                   :group group}})))
 
@@ -89,7 +91,7 @@
   ([username name]
    (invite-user! username name []))
   ([username name group-names]
-   {:pre [(string? username) (string? name) (vector? group-names)]}
+   {:pre [(string? username) (string? name) (vector? group-names) (every? string? group-names)]}
    (let [[ok? user] (service/invite-user!
                      (db)
                      (comms)
@@ -111,10 +113,13 @@
   [group-name user-name]
   (let [user (user/find-by-username (db) {:username user-name})
         group (group/find-by-name (db) group-name)]
-    (if (service/remove-member-event (db)
-                                     (comms)
-                                     (:id user) (:id group))
+    (if (and user
+             group
+             (service/remove-member-event (db)
+                                          (comms)
+                                          (:id user) (:id group)))
       (wait-for #(let [groups (member/retrieve-groups-ids (db) (:id user))]
                    (when-not (contains? (set groups) (:id group))
                      :success-user-removed-from-group)))
-      :failed-remove-user-from-group)))
+      {:failed-remove-user-from-group {:user user
+                                       :group group}})))
