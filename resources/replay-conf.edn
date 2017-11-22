@@ -22,25 +22,11 @@
                                                        :initial-lease-table-read-capacity  1
                                                        :initial-lease-table-write-capacity 1
                                                        :streams                            {:event   #or [#env EVENT_STREAM "staging-replay-heimdall-event"]
-                                                                                            :command #or [#env COMMAND_STREAM "staging-replay-heimdall-command"]}}}}
- :auth-conf      {:privkey    #profile {:default         "/root/prod_privkey.pem"
-                                        :development     "auth_privkey.pem"
-                                        :test            "test_privkey.pem"
-                                        :staging-jenkins "test_privkey.pem"}
-                  :pubkey     #profile {:default         "/root/prod_pubkey.pem"
-                                        :development     "auth_pubkey.pem"
-                                        :test            "test_pubkey.pem"
-                                        :staging-jenkins "test_pubkey.pem"}
-                  :secrets    #profile {:development    #include #join [#env HOME "/.secrets.edn"]
-                                        :dev-docker     #include "/root/.secrets.edn"
-                                        :staging-replay #include "/root/.secrets.edn"
-                                        :prod           #include "/root/.secrets.edn"}
-                  :passphrase #profile {:development     ^:ref [:auth-conf :secrets :dev-passphrase]
-                                        :dev-docker      ^:ref [:auth-conf :secrets :test-passphrase]
-                                        :test            "test"
-                                        :staging-jenkins "test"
-                                        :staging-replay  ^:ref [:auth-conf :secrets :prod-passphrase]
-                                        :prod            ^:ref [:auth-conf :secrets :prod-passphrase]}}
+                                                                                            :command #or [#env COMMAND_STREAM "staging-replay-heimdall-command "]}}}}
+ :auth-conf      {:privkey    #profile {:default         "/root/prod_privkey.pem"}
+                  :pubkey     #profile {:default         "/root/prod_pubkey.pem"}
+                  :secrets    #profile {:staging-replay #include "/root/.secrets.edn"}
+                  :passphrase #profile {:staging-replay  ^:ref [:auth-conf :secrets :prod-passphrase]}}
 
  :metrics        {:json-reporter {:seconds #profile {:default        600
                                                      :prod           60
