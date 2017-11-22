@@ -12,7 +12,7 @@
                                              :alerts {:sns    ^:ref [:aws :eu-central-1 :sns]
                                                       :region ^:ref [:aws :eu-central-1 :region]}}
                            }
- :jetty-server   {:port #profile {:staging-replay  3301}}
+ :jetty-server   {:port #profile {:staging-replay  3000}}
 
  :communications #profile {:staging-replay  {:kinesis {:profile                            "staging-replay"
                                                        :app                                ^:ref [:service-name]
