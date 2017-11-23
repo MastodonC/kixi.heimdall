@@ -52,7 +52,7 @@
     (try
       (reset! kixi.heimdall.application/system
               (component/start (build-application opts)))
-      (catch Throwable t (log/error t))) ;; just to really be sure, should be caught elsewhere
+      (catch Throwable t (log/error "Uncaught exception: " t))) ;; just to really be sure, should be caught elsewhere
 
     (with-handler :term
       (log/info "SIGTERM was caught: shutting down...")
