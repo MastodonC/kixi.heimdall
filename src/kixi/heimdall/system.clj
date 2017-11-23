@@ -32,16 +32,17 @@
        (log/info "Switching on Kixi Comms verbose logging...")
        (comms/set-verbose-logging! true))
      (log/info "System with" profile)
-     (-> (component/system-map
-          :metrics (metrics/map->Metrics (:metrics config))
-          :web-server (web/new-http-server (config/webserver-port config) config)
-          :repl-server (Object.)                           ; dummy - replaced when invoked via uberjar.
-          :db (db/new-session (:dynamodb config) profile)
-          :communications (case (first (keys (:communications config)))
-                            :kinesis (kinesis/map->Kinesis (:kinesis (:communications config)))
-                            :coreasync (coreasync/map->CoreAsync (:coreasync (:communications config))))
-          :persistence (persistence/->Persistence)
-          :commands (commands/->Commands))
+     (-> (merge {:metrics (metrics/map->Metrics (:metrics config))
+                 :web-server (web/new-http-server (config/webserver-port config) config)
+                 :repl-server (Object.) ; dummy - replaced when invoked via uberjar.
+                 :db (db/new-session (:dynamodb config) profile)
+                 :communications (case (first (keys (:communications config)))
+                                   :kinesis (kinesis/map->Kinesis (:kinesis (:communications config)))
+                                   :coreasync (coreasync/map->CoreAsync (:coreasync (:communications config))))
+                 :persistence (persistence/->Persistence)}
+                (when (:commands config)
+                  {:commands (commands/->Commands)}))
+         ((partial apply component/system-map))
          (component/system-using
           {:web-server  [:metrics :communications :db]
            :persistence [:communications :db]
