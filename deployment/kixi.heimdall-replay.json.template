@@ -7,27 +7,29 @@
                 {"key": "env", "value": "ENVIRONMENT=@@ENVIRONMENT@@"},
                 {"key": "env", "value": "JAVA_OPTS=@@JAVA_OPTS@@"},
                 {"key": "env", "value": "PROFILE=@@PROFILE@@"},
+                {"key": "env", "value": "EVENT_STREAM=@@EVENT_STREAM@@"},
+                {"key": "env", "value": "COMMAND_STREAM=@@COMMAND_STREAM@@"},
                 {"key": "env", "value": "SECRETS_BUCKET=@@SECRETS_BUCKET@@"},
                 {"key": "env", "value": "AWS_REGION=@@AWS_REGION@@"},
                 {"key": "label", "value": "cluster=@@ENVIRONMENT@@"},
-                {"key": "label", "value": "application=heimdall"}
+                {"key": "label", "value": "application=heimdall-replay"}
             ],
             "network": "BRIDGE",
             "portMappings": [
                 {
                     "containerPort": 3000,
-                    "hostPort": 10010,
+                    "hostPort": @@HOST_PORT@@,
                     "protocol": "tcp"
                 },
                 {
                     "containerPort": 5001,
-                    "hostPort": 10011,
+                    "hostPort": @@HOST_NREPL_PORT@@,
                     "protocol": "tcp"
                 }
             ]
         }
     },
-    "id": "kixi.heimdall",
+    "id": "kixi.heimdall-replay",
     "cpus": @@CPUS@@,
     "mem": @@MEM@@,
     "instances": @@INSTANCES@@,
