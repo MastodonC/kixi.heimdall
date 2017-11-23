@@ -34,14 +34,17 @@
      (log/info "System with" profile)
      (component/system-using
       (apply component/system-map
-             {:metrics (metrics/map->Metrics (:metrics config))
-              :web-server (web/new-http-server (config/webserver-port config) config)
-              :repl-server (Object.) ; dummy - replaced when invoked via uberjar.
-              :db (db/new-session (:dynamodb config) profile)
-              :communications (case (first (keys (:communications config)))
-                                :kinesis (kinesis/map->Kinesis (:kinesis (:communications config)))
-                                :coreasync (coreasync/map->CoreAsync (:coreasync (:communications config))))
-              :persistence (persistence/->Persistence)})
+             ((comp flatten seq merge)
+              {:metrics (metrics/map->Metrics (:metrics config))
+               :web-server (web/new-http-server (config/webserver-port config) config)
+               :repl-server (Object.) ; dummy - replaced when invoked via uberjar.
+               :db (db/new-session (:dynamodb config) profile)
+               :communications (case (first (keys (:communications config)))
+                                 :kinesis (kinesis/map->Kinesis (:kinesis (:communications config)))
+                                 :coreasync (coreasync/map->CoreAsync (:coreasync (:communications config))))
+               :persistence (persistence/->Persistence)}
+              (when (:commands config)
+                {:commands (commands/->Commands)})))
       {:web-server  [:metrics :communications :db]
        :persistence [:communications :db]
        :commands    [:communications :db]}))))
