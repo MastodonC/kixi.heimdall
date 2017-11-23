@@ -45,6 +45,7 @@
                :persistence (persistence/->Persistence)}
               (when (:commands config)
                 {:commands (commands/->Commands)})))
-      {:web-server  [:metrics :communications :db]
-       :persistence [:communications :db]
-       :commands    [:communications :db]}))))
+      (merge {:web-server  [:metrics :communications :db]
+              :persistence [:communications :db]}
+             (when (:commands config)
+               {:commands [:communications :db]}))))))
