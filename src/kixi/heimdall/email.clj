@@ -13,8 +13,12 @@
                           "1.0.0"
                           user
                           mail
-                          {:kixi.comms.command/partition-key (or (:kixi.user/id user)
-                                                                 (:id user))})))
+                          {:kixi.comms.command/partition-key (:kixi.user/id user)})))
+
+(defn- namespace-user-kws
+  [user]
+  (zipmap (map #(keyword "kixi.user" (name %)) (keys user))
+          (vals user)))
 
 (defmulti send-email!
   (fn [email-type comms opts] email-type))
@@ -26,7 +30,7 @@
         body-txt (mustache/render-resource "emails/password-reset-request.txt" opts)
         subject "Witan For Cities - Password Reset Request"
         destination {:to-addresses [(get-in opts [:user :username])]}]
-    (send-email-command! comms (:user opts) destination subject body-html body-txt)))
+    (send-email-command! comms (namespace-user-kws (:user opts)) destination subject body-html body-txt)))
 
 (defmethod send-email!
   :user-invite
@@ -35,4 +39,4 @@
         body-txt (mustache/render-resource "emails/invite.txt" opts)
         subject "Witan For Cities - You have been invited!"
         destination {:to-addresses [(get opts :username)]}]
-    (send-email-command! comms (:user opts) destination subject body-html body-txt)))
+    (send-email-command! comms (namespace-user-kws (:user opts)) destination subject body-html body-txt)))
