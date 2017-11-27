@@ -1,4 +1,4 @@
-(ns migrators.dynamodb.20171127120500_presignup_bool_type_change
+(ns migrators.dynamodb.20171127120500-presignup-bool-type-change
   (:require [kixi.heimdall.components.database :as db]
             [kixi.heimdall.config :as config]
             [kixi.heimdall.application :as app]
@@ -19,7 +19,8 @@
                              (db/update-item conn
                                              "users"
                                              {:id id}
-                                             {:update-expr    "SET pre-signup = :v"
+                                             {:update-expr    "SET #ps = :v"
+                                              :expr-attr-names {"#ps" "pre-signup"}
                                               :expr-attr-vals {":v" pre-signup}}))]
     (run! pre-signup-type-fn users)))
 
