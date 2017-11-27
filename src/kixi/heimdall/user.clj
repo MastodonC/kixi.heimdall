@@ -33,12 +33,10 @@
                       (update :username clojure.string/lower-case))]
     (db/put-item db
                  user-table
-                 (update user-data :pre-signup far/freeze)
+                 user-data
                  {:return :none
                   :cond-expr "attribute_not_exists(id)"})
     user-data))
-
-(def frozen-true (far/freeze true))
 
 (defn signed-up!
   [db user]
@@ -47,17 +45,17 @@
     (db/update-item db
                     user-table
                     {:id (:id user-data)}
-                    {:update-expr (str "SET password = :p, "
-                                       "#ps = :ps, "
-                                       "#su = :su")
-                     :expr-attr-vals {":p" (:password user-data)
-                                      ":ps" (far/freeze (:pre-signup user-data))
-                                      ":su" (:signed-up user-data)
-                                      ":true" frozen-true}
+                    {:update-expr     (str "SET password = :p, "
+                                           "#ps = :ps, "
+                                           "#su = :su")
+                     :expr-attr-vals  {":p"    (:password user-data)
+                                       ":ps"   (:pre-signup user-data)
+                                       ":su"   (:signed-up user-data)
+                                       ":true" true}
                      :expr-attr-names {"#ps" "pre-signup"
                                        "#su" "signed-up"}
-                     :return :none
-                     :cond-expr "attribute_exists(id) AND #ps = :true"})
+                     :return          :none
+                     :cond-expr       "attribute_exists(id) AND #ps = :true"})
     user-data))
 
 (defn find-by-id
