@@ -19,9 +19,9 @@
                              (db/update-item conn
                                              "users"
                                              {:id id}
-                                             {:update-expr    "SET #ps = :v"
+                                             {:update-expr     "SET #ps = :v"
                                               :expr-attr-names {"#ps" "pre-signup"}
-                                              :expr-attr-vals {":v" pre-signup}}))]
+                                              :expr-attr-vals  {":v" (or pre-signup false)}}))]
     (run! pre-signup-type-fn users)))
 
 (defn down
