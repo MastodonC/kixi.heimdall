@@ -29,7 +29,7 @@
 (defn add!
   [db user]
   (let [user-data (-> user
-                      (select-keys [:id :created :username :name :pre-signup :group-id])
+                      (select-keys [:id :created :username :name :pre-signup :signed-up :group-id])
                       (update :username clojure.string/lower-case))]
     (db/put-item db
                  user-table
