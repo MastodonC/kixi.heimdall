@@ -30,7 +30,7 @@
                  [org.clojure/tools.cli "0.3.5"]
                  [environ "1.1.0"]
                  [aero "1.0.0"]
-                 [kixi/kixi.comms "0.2.29"]
+                 [kixi/kixi.comms "0.2.30"]
                  [org.clojure/tools.analyzer "0.6.9"]
                  [de.ubercode.clostache/clostache "1.4.0"]
                  [ring-middleware-format "0.7.2"] ;; transit
