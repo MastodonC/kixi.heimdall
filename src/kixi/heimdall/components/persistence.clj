@@ -37,6 +37,11 @@
                                     "1.0.0"
                                     (comp (constantly nil) (partial #'service/update-group db) :kixi.comms.event/payload))
            (c/attach-event-handler! communications
+                                    :kixi.heimdall/persistence-group-deleted
+                                    :kixi.heimdall/group-deleted
+                                    "1.0.0"
+                                    (comp (constantly nil) (partial #'service/delete-group db) :kixi.comms.event/payload))
+           (c/attach-event-handler! communications
                                     :kixi.heimdall/persistence-invite-create
                                     :kixi.heimdall/invite-created
                                     "2.0.0"

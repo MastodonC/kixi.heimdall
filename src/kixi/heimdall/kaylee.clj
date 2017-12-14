@@ -52,6 +52,17 @@
                                        #(grp-ftlr (group/find-by-id (db) %))
                                        (member/retrieve-groups-ids (db) (:id user)))}))))))
 
+(defn- find-group-members
+  [group-name]
+  (when-let [group (group/find-by-name (db) group-name)]
+    (not-empty (member/retrieve-member-ids (db) (:id group)))))
+
+(defn find-group
+  [group-name]
+  (when-let [members (find-group-members group-name)]
+    (let [user-ftlr (juxt :name :username)]
+      (pprint (map #(user-ftlr (user/find-by-id (db) %)) members)))))
+
 (defn create-group!
   [group-name owner-name]
   (if-let [user (user/find-by-username (db) {:username owner-name})]
@@ -123,3 +134,15 @@
                      :success-user-removed-from-group)))
       {:failed-remove-user-from-group {:user user
                                        :group group}})))
+
+(defn delete-group!
+  [group-name deleter-username]
+  (if-let [members (find-group-members group-name)]
+    :failed-group-still-has-members
+    (if-let [user (user/find-by-username (db) {:username deleter-username})]
+      (do (service/delete-group-event (db)
+                                      (comms)
+                                      (:id (group/find-by-name (db) group-name))
+                                      (:id user))
+          :success-group-deleted)
+      :failed-user-not-found)))

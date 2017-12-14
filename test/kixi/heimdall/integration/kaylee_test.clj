@@ -13,6 +13,52 @@
 
 (use-fixtures :once cycle-system extract-db-session extract-comms)
 
+(defn wait-for-user-invite
+  [username]
+  (wait-for #(db/get-item @db-session
+                          invites/invites-table
+                          {:username username}
+                          {:consistent? true})
+            #(throw (Exception. "Invite code never arrived."))))
+
+(defmacro with-user
+  [uname username rest]
+  `(do
+     (with-redefs [k/db    (fn [] @db-session)
+                   k/comms (fn [] @comms)]
+       (k/invite-user! ~username ~uname))
+     (let [r# (wait-for-user-invite ~username)]
+       (is r#)
+       (when r#
+         (service/signup-user! @db-session @comms {:username ~username
+                                                   :name ~uname
+                                                   :password "Foobar123"
+                                                   :invite-code (:invite-code r#)})
+         ~rest))))
+
+(deftest delete-group-test
+  (let [uname (str "kaylee-test-" (java.util.UUID/randomUUID))
+        groupname (str "group-name-" (java.util.UUID/randomUUID))
+        username (str uname "@mastodonc.com")]
+    (with-user uname username
+      (with-redefs [k/db    (fn [] @db-session)
+                    k/comms (fn [] @comms)]
+        (let [group (k/create-group! groupname username)]
+          (if (map? group)
+            (let [r (wait-for #(db/get-item @db-session
+                                            group/groups-table
+                                            {:id (:id group)}
+                                            {:consistent? true})
+                              #(throw (Exception. "Group was never created.")))]
+              (is (= :failed-group-still-has-members (k/delete-group! groupname username)))
+              (k/remove-user-from-group! groupname username)
+              (wait-for #(nil? (not-empty (member/retrieve-member-ids @db-session (:id group))))
+                        #(throw (Exception. "User was never removed from group")))
+              (is (= :success-group-deleted (k/delete-group! groupname username)))
+              (wait-for #(nil? (group/find-by-id @db-session (:id group)))
+                        #(throw (Exception. "Group was never deleted"))))
+            (is false (str "Failed to create group " group))))))))
+
 (deftest kaylee-fns
   (let [name (str "kaylee-test-" (java.util.UUID/randomUUID))
         username (str name "@mastodonc.com")
@@ -22,11 +68,7 @@
       (with-redefs [k/db    (fn [] @db-session)
                     k/comms (fn [] @comms)]
         (k/invite-user! username name))
-      (let [r (wait-for #(db/get-item @db-session
-                                      invites/invites-table
-                                      {:username username}
-                                      {:consistent? true})
-                        #(throw (Exception. "Invite code never arrived.")))]
+      (let [r (wait-for-user-invite username)]
         (is r)
         (when r
           (service/signup-user! @db-session @comms {:username username
@@ -41,14 +83,6 @@
       (with-redefs [k/db    (fn [] @db-session)
                     k/comms (fn [] @comms)]
         (is (map? (k/create-group! groupname username)))))))
-
-(defn wait-for-user-invite
-  [username]
-  (wait-for #(db/get-item @db-session
-                          invites/invites-table
-                          {:username username}
-                          {:consistent? true})
-            #(throw (Exception. "Invite code never arrived."))))
 
 (defn user-groups
   [user]
