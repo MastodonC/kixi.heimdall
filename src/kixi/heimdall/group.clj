@@ -68,6 +68,13 @@
                                   :return :updated-new})]
     new-vals))
 
+(defn delete!
+  [db group-id]
+  (db/delete-item db
+                  groups-table
+                  {:id group-id}
+                  {}))
+
 (defn all
   [db]
   (db/scan db

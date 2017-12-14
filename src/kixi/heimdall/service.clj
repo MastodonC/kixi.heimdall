@@ -352,6 +352,26 @@
            true)
       false)))
 
+(defn delete-group
+  [db {:keys [group-id]}]
+  (group/delete! db group-id))
+
+(defn delete-group-event
+  [db communications group-id user-id]
+  (let [group-ok? (and (s/valid? ::schema/id group-id)
+                       (group/find-by-id db group-id))
+        user-ok? (s/valid? ::schema/user-id user-id)
+        group-empty? (empty? (member/retrieve-member-ids db group-id))]
+    (if (and group-ok? user-ok? group-empty?)
+      (and (comms/send-event! communications
+                              :kixi.heimdall/group-deleted
+                              "1.0.0"
+                              {:group-id group-id
+                               :user-id user-id}
+                              {:kixi.comms.event/partition-key group-id})
+           true)
+      false)))
+
 (defn all-groups
   [db dex cnt sort-order]
   (let [groups (group/all db)]
