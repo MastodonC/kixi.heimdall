@@ -20,7 +20,7 @@
             [taoensso.timbre :as log]
             [environ.core :refer [env]]
             [cognitect.transit :as tr]
-            [kixi.heimdall.integration.base :refer [rand-str]])
+            [kixi.heimdall.integration.base :refer [rand-str random-email]])
   (:import [java.io ByteArrayInputStream ByteArrayOutputStream]
            [org.httpkit.BytesInputStream]))
 
@@ -344,3 +344,19 @@
               (is (= 13 (get-in body-resp [:paging :count])))
               (is (= 20 (get-in body-resp [:paging :total])))
               (is (= 7 (get-in body-resp [:paging :index]))))))))))
+
+(deftest get-all-group-members
+  (let [random-user (fn []
+                      {:username (random-email)
+                       :name (rand-str)
+                       :id (java.util.UUID/randomUUID)})
+        uid (str (java.util.UUID/randomUUID))]
+    (with-redefs [member/retrieve-member-ids (fn [_ _] [uid])
+                  user/find-by-id (fn [_ _] (random-user))]
+      (let [response (comms-app app (heimdall-request
+                                     (mock/request :get (str "/group/users?id=" uid))))]
+        (is (= (:status response) 200))
+        (when (= 200 (:status response))
+          (let [body-resp (transit-decode-stream (:body response))]
+            (is (= "users" (get body-resp :type)))
+            (is (seq? (get body-resp :items)))))))))

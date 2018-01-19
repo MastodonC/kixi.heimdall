@@ -418,6 +418,11 @@
                                       :created :kixi.group/created}))
         (vec-if-not group-ids)))
 
+(defn members-of-group
+  [db group-id]
+  (let [members (not-empty (member/retrieve-member-ids db group-id))]
+    (map (partial user/find-by-id db) members)))
+
 (defn save-invite
   "Create pre-signup user and store invite"
   [db {:keys [invite-code user]}]
