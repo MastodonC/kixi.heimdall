@@ -394,16 +394,20 @@
     value
     (vector value)))
 
+(defn rename-user-keys
+  [raw-user]
+  (clojure.set/rename-keys
+   (select-keys raw-user [:id :name :created-by :username :created])
+   {:id :kixi.user/id
+    :name :kixi.user/name
+    :username :kixi.user/username
+    :created-by :kixi.user/created-by
+    :created :kixi.user/created}))
+
 (defn users
   [db user-ids]
   (keep #(when-let [raw-user (user/find-by-id db %)]
-           (clojure.set/rename-keys (select-keys raw-user
-                                                 [:id :name :created_by :created :username])
-                                    {:id :kixi.user/id
-                                     :name :kixi.user/name
-                                     :created-by :kixi.user/created-by
-                                     :created :kixi.user/created
-                                     :username :kixi.user/username}))
+           (rename-user-keys raw-user))
         (vec-if-not user-ids)))
 
 (defn groups
@@ -420,8 +424,7 @@
 
 (defn members-of-group
   [db group-id]
-  (let [members (not-empty (member/retrieve-member-ids db group-id))]
-    (map (partial user/find-by-id db) members)))
+  (users db (not-empty (member/retrieve-member-ids db group-id))))
 
 (defn save-invite
   "Create pre-signup user and store invite"
