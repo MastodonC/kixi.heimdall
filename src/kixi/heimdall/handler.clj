@@ -97,7 +97,8 @@
 (defn get-groups [req]
   {:status 200 :body {:type "groups" :items (service/groups (dynamodb req) (get (:params req) "id"))}})
 
-
+(defn get-members-of-group [req]
+  {:status 200 :body {:type "users" :items (service/members-of-group (dynamodb req) (get (:params req) "id"))}})
 
 (defn get-all-groups [req]
   (let [max-count 100
@@ -176,6 +177,7 @@
 
 (defroutes secured-routes
   (POST "/group" [] create-group)
+  (GET "/group/users" [] get-members-of-group)
   (GET "/users" [] get-users)
   (GET "/groups/search" [] get-all-groups)
   (GET "/groups" [] get-groups))
