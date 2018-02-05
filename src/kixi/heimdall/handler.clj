@@ -101,7 +101,7 @@
   {:status 200 :body {:type "users" :items (service/members-of-group (dynamodb req) (get (:params req) "id"))}})
 
 (defn get-all-groups [req]
-  (let [max-count 100
+  (let [max-count 200
         dex (util/str->int (get-in req [:params "index"]) 0)
         cnt (min (util/str->int (get-in req [:params "count"]) max-count) max-count)
         sort-order (get-in req [:params :sort-order] "desc")]
