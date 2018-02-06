@@ -20,7 +20,7 @@
                  (str "." (:uri request))
                  safe-name
                  (str "." (:status response)))]
-    ["info" "resources" name]))
+    ["resources" name]))
 
 (defn wrap-per-resource-metrics
   "A middleware function to add metrics for all routes in the given
