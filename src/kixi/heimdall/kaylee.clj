@@ -3,6 +3,7 @@
             [kixi.heimdall.user :as user]
             [kixi.heimdall.group :as group]
             [kixi.heimdall.member :as member]
+            [kixi.heimdall.invites :as invites]
             [kixi.heimdall.util :as util]
             [clojure.pprint :refer [pprint]]))
 
@@ -51,6 +52,10 @@
                            :member-of (map
                                        #(grp-ftlr (group/find-by-id (db) %))
                                        (member/retrieve-groups-ids (db) (:id user)))}))))))
+
+(defn find-invite
+  [username]
+  (invites/get-invite (db) username))
 
 (defn- find-group-members
   [group-name]
