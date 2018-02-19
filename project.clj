@@ -15,7 +15,7 @@
                  [com.taoensso/faraday "1.9.0" :exclusions [com.amazonaws/aws-java-sdk-dynamodb]]
                  [kixi/kixi.log "0.1.5"]
                  [kixi/kixi.metrics "0.4.1"]
-                 [kixi/kixi.spec "0.1.13"]
+                 [kixi/kixi.spec "0.1.18"]
                  [metrics-clojure ~metrics-version]
                  [metrics-clojure-jvm ~metrics-version]
                  [metrics-clojure-ring ~metrics-version]
