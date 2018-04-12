@@ -229,10 +229,11 @@
         :fn (fn [{:keys [args ret]}]
               (let [{:keys [stored-user invitee]} args
                     [_ event] ret
-                    tested-keys [:id :group-id :created]]
+                    tested-keys [:id :group-id :created]
+                    stored-user' (s/unform ::schema/stored-user stored-user)]
                 (cond
-                  (:pre-signup stored-user)
-                  (= (select-keys stored-user
+                  (:pre-signup stored-user')
+                  (= (select-keys stored-user'
                                   tested-keys)
                      (select-keys (get-in event [:kixi.comms.event/payload :user])
                                   tested-keys))
