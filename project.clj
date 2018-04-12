@@ -15,7 +15,7 @@
                  [com.taoensso/faraday "1.9.0" :exclusions [com.amazonaws/aws-java-sdk-dynamodb]]
                  [kixi/kixi.log "0.1.6" :upgrade :kixi]
                  [kixi/kixi.metrics "0.4.1" :upgrade :kixi]
-                 [kixi/kixi.spec "0.1.18" :upgrade :kixi]
+                 [kixi/kixi.spec "0.1.27" :upgrade :kixi]
                  [metrics-clojure ~metrics-version]
                  [metrics-clojure-jvm ~metrics-version]
                  [metrics-clojure-ring ~metrics-version]
@@ -30,7 +30,7 @@
                  [org.clojure/tools.cli "0.3.5"]
                  [environ "1.1.0"]
                  [aero "1.0.0"]
-                 [kixi/kixi.comms "0.2.31" :upgrade :kixi]
+                 [kixi/kixi.comms "0.2.37" :upgrade :kixi]
                  [org.clojure/tools.analyzer "0.6.9"]
                  [de.ubercode.clostache/clostache "1.4.0"]
                  [ring-middleware-format "0.7.2"] ;; transit
