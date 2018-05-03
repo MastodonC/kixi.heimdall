@@ -123,7 +123,7 @@
                                               :prod 60
                                               :staging 60}}}
  :logging {:level #profile {:default :info
-                            :kops-spike :warn
+                            :kops-spike :info
                             :staging :warn
                             :prod :warn} ; e/o #{:trace :debug :info :warn :error :fatal :report}
            ;; Control log filtering by namespaces/patterns. Useful for turning off
