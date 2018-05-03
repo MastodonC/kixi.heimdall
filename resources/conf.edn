@@ -133,7 +133,7 @@
            :kixi-comms-verbose-logging #profile {:development true
                                                  :dev-docker true
                                                  :test true
-                                                 :kops-spike false
+                                                 :kops-spike true
                                                  :staging-jenkins true
                                                  :staging false
                                                  :prod false}}}

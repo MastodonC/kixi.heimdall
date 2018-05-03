@@ -14,6 +14,9 @@
                 :db-jenkins {:type :dynamo
                              :endpoint "http://dynamodb.eu-central-1.amazonaws.com"
                              :migration-table "staging-jenkins-kixi.heimdall-migrations"}
+                :db-kops-spike {:type :dynamo
+                                :endpoint "http://dynamodb.eu-west-1.amazonaws.com"
+                                :migration-table "kops-spike-kixi.heimdall-migrations"}
                 :db-staging {:type :dynamo
                              :endpoint "http://dynamodb.eu-central-1.amazonaws.com"
                              :migration-table "staging-kixi.heimdall-migrations"}
@@ -22,6 +25,7 @@
                           :migration-table "prod-kixi.heimdall-migrations"}}
  :environments {:development [{:db :db-dev, :migrator :db-mig, :seed :db-seed-dev}]
                 :dev-docker [{:db :db-dev-docker, :migrator :db-mig, :seed :db-seed-dev}]
+                :kops-spike [{:db :db-kops-spike, :migrator :db-mig, :seed :db-seed-prod}]
                 :staging-jenkins [{:db :db-jenkins, :migrator :db-mig, :seed :db-seed-staging}]
                 :prod [{:db :db-prod, :migrator :db-mig, :seed :db-seed-prod}]
                 :staging [{:db :db-staging, :migrator :db-mig, :seed :db-seed-staging}]
