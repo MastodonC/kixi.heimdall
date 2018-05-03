@@ -17,6 +17,6 @@ check_success
 echo "aws s3 cp s3://$SECRETS_BUCKET/prod_pubkey.pem /root/prod_pubkey.pem --region $AWS_REGION"
 aws s3 cp s3://$SECRETS_BUCKET/prod_pubkey.pem /root/prod_pubkey.pem --region $AWS_REGION
 check_success
-echo "aws s3 cp s3://$SECRETS_BUCKET/prod_pubkey.pem /root/prod_pubkey.pem --region $AWS_REGION"
+echo "aws s3 cp s3://$SECRETS_BUCKET/priv_pubkey.pem /root/priv_pubkey.pem --region $AWS_REGION"
 aws s3 cp s3://$SECRETS_BUCKET/prod_privkey.pem /root/prod_privkey.pem --region $AWS_REGION
 check_success
