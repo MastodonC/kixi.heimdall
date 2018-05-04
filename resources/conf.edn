@@ -108,9 +108,7 @@
                                :test "test_pubkey.pem"
                                :staging-jenkins "test_pubkey.pem"}
              :secrets #profile {:development #include #join [#env HOME "/.secrets.edn"]
-                                :dev-docker #include "/root/.secrets.edn"
-                                :staging #include "/root/.secrets.edn"
-                                :prod #include "/root/.secrets.edn"}
+                                :default #include "/root/.secrets.edn"}
              :passphrase #profile {:development ^:ref [:auth-conf :secrets :dev-passphrase]
                                    :dev-docker ^:ref [:auth-conf :secrets :test-passphrase]
                                    :test "test"
