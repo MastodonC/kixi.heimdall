@@ -167,8 +167,6 @@ component [witan.gateway] #Orchid
 
 The above diagram shows a more detailed layout of Heimdall's internal application design.
 
-There is also an ~::email~ component however this is deprecated and should be removed. It has been replaced by ~kixi.mailer~.
-
 ** Component Summary
 
 This section aims to address each of the high-level components currently being used by Heimdall.
