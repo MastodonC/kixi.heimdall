@@ -1,0 +1,312 @@
+* kixi.heimdall
+
+**** June 2018
+
+/This document assumes familiarity with the Witan architecture, CQRS and event-sourcing./
+
+*kixi.heimdall* (aka 'Heimdall') is the service concerned with /Users/, /Groups/, authentication and authorization.
+
+The 'User' concept is fairly straight-forward: when a user is signed up to Witan they are given a User record in Heimdall. Currently it only contains a
+small number of fields: id, name, username (always an email address), password (salted+hashed), date joined, groups.
+
+The 'Group' concept is also simple: it is a container for users, with a name and a type. For example, a group called 'Mastodon C' would contain all of the
+employees that have signed up as users. Groups cannot contain other groups.
+
+When a user signs up, as well as a User record they are also created a group with their own name. For example, if 'Alice Smith' signed up there would be
+a User 'Alice Smith' and a Group 'Alice Smith'. These are referred to as 'self groups'. The reason for this is that microservices in Witan *only ever
+deal with Groups, rather than Users*. This is for a couple of reasons: it's simpler for the services and it means that when users leave organisations they
+can be disassociated from their self group - or it could be assigned to their replacement - rather than each service having to process the fact that the
+user is no longer part of the system.
+
+Heimdall issues 'authentication tokens' and 'refresh tokens' (known as a 'token pair'). These are signed with a private key and can be checked with a
+public key. Certain services, usually on the edge of the cluster (~witan.gateway~ and ~witan.httpapi~) are responsible for checking the authenticity of
+any tokens with the public key before accepting commands or queries from them. Refresh tokens can be used by applications to update token pairs without
+having to re-supply usernames and passwords. Currenty authentication tokens expire after 30 minutes.
+
+** History
+
+Heimdall is actually one of the oldest microservices, a relic from the days of Witan Alpha. As a result it hasn't benefited from the learning that has
+happened since and CQRS support was retrofit into the application, not too successfully.
+
+Work was done recently to test whether services were restore-able from the event log and it was found that Heimdall was not. As far as is currently known
+it is the only service that suffers from this, but the result is that the aggregate is critical and needs to be backed up (this isn't true for other
+services which can restore purely from the event log).
+
+** Component Diagrams
+
+*** System Overview
+
+#+BEGIN_SRC plantuml :file docs/components.png :results silent
+package "Witan Cluster" {
+  [kixi.heimdall] #LightGreen
+  [witan.gateway]
+}
+
+cloud {
+  [witan.ui] #Pink
+}
+
+node "AWS" {
+
+database "kinesis" {
+  [streams]
+}
+
+database "dynamodb" {
+  [tables]
+}
+
+database "s3" {
+  [file bucket]
+}
+
+}
+
+User -> [witan.ui]
+[witan.ui] -> [witan.gateway]
+[witan.gateway] -> [streams] #Green
+[witan.gateway] --> [kixi.heimdall]
+[streams] -> [witan.gateway] #Blue
+[streams] -> [kixi.heimdall] #Blue
+[kixi.heimdall] -> [streams] #Green
+[kixi.heimdall] -> [tables]
+[witan.ui] -> [file bucket]
+#+END_SRC
+
+[[file:docs/components.png]]
+
+The above diagram illustrates Heimdall's dependencies (not including components that depend on Heimdall. witan.ui and witan.gateway are included to
+demonstrate how traffic flows in from the Internet).
+
+*** Application Overview
+
+#+BEGIN_SRC plantuml :file docs/application.png :results silent
+package "kixi.heimdall" {
+  package "components" #LightGreen {
+    [::components/commands]
+    [::components/database]
+    [::components/jettyserver]
+    [::components/metrics]
+    [::components/persistence]
+  }
+
+  [::application]
+  [::bootstrap]
+  [::config]
+  [::handler]
+  [::kaylee]
+  [::schema]
+  [::service] #LightBlue
+  [::system]
+  [::email]
+
+  rectangle "aggregates" #Pink {
+    [::group]
+    [::invites]
+    [::member]
+    [::password-resets]
+    [::refresh-token]
+    [::user]
+  }
+}
+
+database "kinesis" {
+  [commands]
+  [events]
+}
+
+database "dynamodb" {
+  [tables]
+}
+
+component [witan.gateway] #Orchid
+
+[witan.gateway] --> [commands] #Purple : forwards messages
+[witan.gateway] --> [::components/jettyserver] #Purple : http, queries
+
+' Connections
+
+[::bootstrap] -> [::application]
+[::bootstrap] -left-> [::system]
+[::system] --> [::config]
+[::system] --> components
+[::components/jettyserver] -> [::handler]
+[::handler] --> [::service]
+[::handler] --> [::schema]
+
+[::service] --> [::user]
+[::service] --> [::group]
+[::service] --> [::member]
+[::service] --> [::invites]
+[::service] --> [::password-resets]
+[::service] --> [::refresh-token]
+
+[::service] --> [::schema]
+[::service] --> [::email]
+
+[::components/database] <-- [::user]
+[::components/database] <-- [::group]
+[::components/database] <-- [::member]
+[::components/database] <-- [::invites]
+[::components/database] <-- [::password-resets]
+[::components/database] <-- [::refresh-token]
+
+[::components/database] -up-> [tables] #Purple
+
+[::components/persistence] -> [::service]
+[::components/commands] -> [::service]
+
+[::components/commands] <- [commands] #Blue
+[::email] -> [commands] #Blue
+[::service] -> [events] #Green
+[events] -> [::components/persistence] #Green
+
+#+END_SRC
+
+[[file:docs/application.png]]
+
+The above diagram shows a more detailed layout of Heimdall's internal application design.
+
+** Component Summary
+
+This section aims to address each of the high-level components currently being used by Heimdall.
+
+*** System
+
+| Key Namespaces            | Description                                  |
+|---------------------------+----------------------------------------------|
+| kixi.heimdall.application | System atoms                                 |
+| kixi.heimdall.bootstrap   | Application entry point                      |
+| kixi.heimdall.schema      | Specs used for most of the application types |
+| kixi.heimdall.kaylee      | Functions for Kaylee ops                     |
+| kixi.heimdall.system      | Component system definition and creation     |
+| kixi.heimdall.handler     | HTTP endpoints                               |
+| kixi.heimdall.email       | Sends emails via ~kixi.mailer~               |
+
+The System component describes all the parts of Heimdall essential to getting it up and running.
+As with all the Witan microservices, it uses [[https://github.com/stuartsierra/component][Stuart sierra's Component library]] to manage the start-up of service components and [[https://github.com/juxt/aero][Juxt's Aero]] to provide
+parameterised and environment-aware configuration.
+
+The entrypoint for Heimdall is via the ~kixi.heimdall.bootstrap~ namespace, which creates the system. Once reified, the system can be accessed via a
+selection of atoms in the ~kixi.heimdall.application~ namespace, although this is mainly intended to facilitate the functions in the
+~kixi.heimdall.kaylee~ namespace.
+
+~kixi.heimdall.handler~ provides HTTP endpoints for a series of operations and queries, some secured and some unsecured. In order to access secured
+routes the client must provide ~user-id~ and ~user-groups~ headers although these are *not* validated - Heimdall exists within the cluster so it's
+assumed that a DMZ application has already checked the validity of the auth tokens (~witan.gateway~ or ~witan.httpapi~).
+
+~kixi.heimdall.schema~ maintains some clojure.spec relating to types in the system - ideally these would be replaced by specs from ~kixi.spec~.
+
+*** Aggregates
+
+| Key Namespaces                | Description                             |
+|-------------------------------+-----------------------------------------|
+| kixi.heimdall.group           | Logic for the Group aggregate           |
+| kixi.heimdall.invites         | Logic for the Invites aggregate         |
+| kixi.heimdall.member          | Logic for the Member aggregate          |
+| kixi.heimdall.password-resets | Logic for the Password Resets aggregate |
+| kixi.heimdall.reset-token     | Logic for the Reset Token aggregate     |
+| kixi.heimdall.user            | Logic for the User aggregate            |
+
+There has already been some discussion of the core models, Group and User, but it's also worth discussing the aggregates and the other models that
+contribute to Heimdall. These namespaces encapsulate low-level logic exclusive to that aggregate, including database operations.
+
+*Invites* are an aggregate which provide 'invite codes' for a specific User. When /invited/ a User record is corrected but set as ~pre-signup~ meaning
+they have no password and cannot sign-in. They are emailed the invite code and can use it on the website to give their User a password.
+
+*Members* is the data model which connect Groups and Users. There is a specific table and index designed to facilitate the lookup of Users in a Group and
+Groups a User is a member of.
+
+*Password Resets*, similarly to Invites, creates a code which a User can consume to reset their password. These codes are saved in their own table.
+
+*Reset Tokens* are part of the authentication model and can be used to 'reset' an authentication token pair rather than re-send the username and password.
+
+*** Service
+
+| Key Namespaces        | Description                                                                                 |
+|-----------------------+---------------------------------------------------------------------------------------------|
+| kixi.heimdall.service | Domain logic for the application                                                            |
+
+All of the domain-level business logic for Heimdall is encapsulated in a single namespace ~kixi.heimdall.service~. There are both pros and cons to this
+approach. For example, it's easy to locate where this logic is going to be but it's also a very large and complicated namespace that suffers from lack of
+organisation. It's partly the result of shoe-horning in the CQRS/ES support that has left the Service namespace in a bad condition, due to a littering of
+'event' functions which would benefit from being put elsewhere. Also, some of the functions are semantically weak and could do with refreshing.
+
+*** Components
+
+| Key Namespaces                      | Description                                                    |
+|-------------------------------------+----------------------------------------------------------------|
+| kixi.heimdall.components.commands   | Provides command handlers; currently just a single command     |
+| kixi.heimdall.components.database   | A wrapper around DynamoDB                                      |
+| kixi.heimdall.components.jettyserver | Starts a web server                                            |
+| kixi.heimdall.components.persistence | Provides event handlers and connects them to service functions |
+
+Both ~kixi.heimdall.components.commands~ and ~kixi.heimdall.components.persistence~ operate in a similar way although the naming is unclear: both provide
+handlers for commands and events, respectively, but simply forward the messages or payloads on to functions in the ~kixi.heimdall.service~ namespace
+to be processed. As the system was introduce to CQRS/ES late there are some operations that should be command-based that aren't such as inviting users. As
+a result the only command in the system is ~:kixi.heimdall/create-password-reset-request~.
+
+*** Migrations
+
+Heimdall was actually the first service to implement migrations using ~joplin~. Unlike other services, however, it handles migrations at the project level.
+The process is managed by ~kixi.heimdall.components.database~. There is also a ~seed~ file although it's out of date and *should not be used*.
+
+*** Testing
+
+Heimdall has a fair balance of unit and integration tests, although they aren't organised spectacularly well. It's hard to judge just by looking through
+the tests whether there is anything obviously missing.
+
+*** Honourable Mentions
+
+**** joplin
+
+~kixi.collect~ still uses a Mastodon C branch of ~joplin~ because, as far as I can tell, although a pull request was merged, a new version hasn't yet
+been released: https://github.com/juxt/joplin/pull/99.
+**** kixi.comms
+
+Heimdall uses our library, ~kixi.comms~ to connect to Kinesis, to send and receive messages from the queue.
+
+**** kixi.spec
+
+Although Heimdall /does use ~kixi.spec~ in some places many of the specs are still missing from ~kixi.spec~. Some effort should be made, at some point,
+to move all specs over to the library.
+
+** Future
+
+*** Adding new features
+
+**** Are you sure?
+
+Due to its incompatibility with event sourcing at the moment, Heimdall is borderline DNR and therefore adding features is not ideal. There has been some
+discussions about resigning it in favour of a managed service like AWS Cognito or AuthRocket. I would consider this a worthwhile conversation. Also, the
+current trend is toward more, smaller services and so potentially, depending on the feature, it might be better placed elsewhere.
+
+**** I'm sure.
+
+Heimdall does a poor job of presenting the Command and Event cycle for existing features so take care when copying existing code. Think carefully about
+how the feature can best be represented in terms of CQRS/ES and stick to the ~Command -> Command Handler -> Event -> Event Handler~ method where possible.
+Ideally, adding new Commands and Events should be done with some one who has experience implementing them in a different service.
+
+**** Commands
+
+Commands are currently in ~kixi.heimdall.components.commands~ although there are no examples of 'new' style commands (these should still be preferred).
+Because there are no new commands there are also no specs for commands (inc. command payloads and command->event structures) so ensure this is all
+understood.
+
+**** Events
+
+Similarly as with Commands, there are no new events so care and consideration will need to be taken when adding new style event handlers (probably
+into ~kixi.heimdall.components.persistence~).
+
+**** Queries
+
+Fortunately there are plenty of examples of queries in ~kixi.heimdall.handler~. As with any others, queries should be routed via ~kixi.heimdall.service~
+for consistency.
+
+*** Long-term plan
+
+Realistically, I believe the long-term plan for Heimdall is that it will be kept on life-support until a suitable alternative is found. In the meantime
+a couple of small features might be added around user management.
+
+An alternative could be that a serious amount of time and effort is given to re-writing and improving Heimdall. Tom worked on a project known as
+'Cerberus' for a while which was supposed to replace Heimdall, although it was never completed. Code from here could be used to 'reboot' the project.
