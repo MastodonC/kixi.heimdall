@@ -241,7 +241,7 @@ organisation. It's partly the result of shoe-horning in the CQRS/ES support that
 | kixi.heimdall.components.jettyserver | Starts a web server                                            |
 | kixi.heimdall.components.persistence | Provides event handlers and connects them to service functions |
 
-Both ~kixi.heimdall.componets.commands~ and ~kixi.heimdall.componets.persistence~ operate in a similar way although the naming is unclear: both provide
+Both ~kixi.heimdall.components.commands~ and ~kixi.heimdall.components.persistence~ operate in a similar way although the naming is unclear: both provide
 handlers for commands and events, respectively, but simply forward the messages or payloads on to functions in the ~kixi.heimdall.service~ namespace
 to be processed. As the system was introduce to CQRS/ES late there are some operations that should be command-based that aren't such as inviting users. As
 a result the only command in the system is ~:kixi.heimdall/create-password-reset-request~.
@@ -249,7 +249,7 @@ a result the only command in the system is ~:kixi.heimdall/create-password-reset
 *** Migrations
 
 Heimdall was actually the first service to implement migrations using ~joplin~. Unlike other services, however, it handles migrations at the project level.
-The process is managed by ~kixi.heimdall.componets.database~. There is also a ~seed~ file although it's out of date and *should not be used*.
+The process is managed by ~kixi.heimdall.components.database~. There is also a ~seed~ file although it's out of date and *should not be used*.
 
 *** Testing
 
