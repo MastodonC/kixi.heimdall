@@ -191,7 +191,7 @@ The entrypoint for Heimdall is via the ~kixi.heimdall.bootstrap~ namespace, whic
 selection of atoms in the ~kixi.heimdall.application~ namespace, although this is mainly intended to facilitate the functions in the
 ~kixi.heimdall.kaylee~ namespace.
 
-~kixi.heimdall.hander~ provides HTTP endpoints for a series of operations and queries, some secured and some unsecured. In order to access secured
+~kixi.heimdall.handler~ provides HTTP endpoints for a series of operations and queries, some secured and some unsecured. In order to access secured
 routes the client must provide ~user-id~ and ~user-groups~ headers although these are *not* validated - Heimdall exists within the cluster so it's
 assumed that a DMZ application has already checked the validity of the auth tokens (~witan.gateway~ or ~witan.httpapi~).
 
