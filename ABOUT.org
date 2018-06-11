@@ -236,10 +236,10 @@ organisation. It's partly the result of shoe-horning in the CQRS/ES support that
 
 | Key Namespaces                      | Description                                                    |
 |-------------------------------------+----------------------------------------------------------------|
-| kixi.heimdall.componets.commands    | Provides command handlers; currently just a single command     |
-| kixi.heimdall.componets.database    | A wrapper around DynamoDB                                      |
-| kixi.heimdall.componets.jettyserver | Starts a web server                                            |
-| kixi.heimdall.componets.persistence | Provides event handlers and connects them to service functions |
+| kixi.heimdall.components.commands   | Provides command handlers; currently just a single command     |
+| kixi.heimdall.components.database   | A wrapper around DynamoDB                                      |
+| kixi.heimdall.components.jettyserver | Starts a web server                                            |
+| kixi.heimdall.components.persistence | Provides event handlers and connects them to service functions |
 
 Both ~kixi.heimdall.componets.commands~ and ~kixi.heimdall.componets.persistence~ operate in a similar way although the naming is unclear: both provide
 handlers for commands and events, respectively, but simply forward the messages or payloads on to functions in the ~kixi.heimdall.service~ namespace
