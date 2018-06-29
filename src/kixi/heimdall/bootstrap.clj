@@ -7,7 +7,8 @@
             [taoensso.timbre :as log]
             [clojure.tools.nrepl.server :as nrepl-server]
             [com.stuartsierra.component :as component]
-            [signal.handler :refer [with-handler]])
+            [signal.handler :refer [with-handler]]
+            [kixi.heimdall.application :as app])
   (:gen-class))
 
 (defrecord ReplServer [config]
@@ -25,7 +26,7 @@
   (ReplServer. config))
 
 (defn build-application [opts]
-  (let [system (kixi.heimdall.system/system (:profile opts))]
+  (let [system (kixi.heimdall.system/system (:config-location opts) (:profile opts))]
     (cond-> system
       (:repl opts)
       (assoc :repl-server (mk-repl-server {:port (:repl-port opts)})))))
@@ -40,7 +41,9 @@
              ["-r" "--repl-port" "REPL server listen port"
               :default 5001 :parse-fn #(Integer/valueOf %)]
              ["-p" "--profile" "config environment/profile"
-              :default :development :parse-fn keyword])]
+              :default :development :parse-fn keyword]
+             ["-c" "--config-location" "location of config"
+              :default @app/config-location])]
 
     (when (:help opts)
       (println banner)
@@ -49,7 +52,7 @@
     (try
       (reset! kixi.heimdall.application/system
               (component/start (build-application opts)))
-      (catch Throwable t (log/error t))) ;; just to really be sure, should be caught elsewhere
+      (catch Throwable t (log/error "Uncaught exception: " t))) ;; just to really be sure, should be caught elsewhere
 
     (with-handler :term
       (log/info "SIGTERM was caught: shutting down...")

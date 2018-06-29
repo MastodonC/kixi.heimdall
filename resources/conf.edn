@@ -29,7 +29,7 @@
                                 :staging-jenkins 3003
                                 :staging 3000
                                 :prod 3000}}
-
+ :commands {}
  :communications #profile {:development {:kinesis {:profile "dev"
                                                    :app ^:ref [:service-name]
                                                    :endpoint ^:ref [:aws :eu-central-1 :kinesis-endpoint]
